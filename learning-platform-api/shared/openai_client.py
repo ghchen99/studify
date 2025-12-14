@@ -2,24 +2,26 @@ import os
 from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
-from openai import AzureOpenAI
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv()
 
 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 deployment = os.getenv("DEPLOYMENT_NAME", "gpt-5.1")
-subscription_key = os.getenv("AZURE_OPENAI_KEY")
+api_key = os.getenv("AZURE_OPENAI_KEY")
 
-api_version = "2025-03-01-preview"
+# Correct format: base_url should end with /openai/v1/
+# Remove trailing slash from endpoint if it exists
+endpoint = endpoint.rstrip('/')
 
-client = AzureOpenAI(
-    api_version=api_version,
-    azure_endpoint=endpoint,
-    api_key=subscription_key,
+client = OpenAI(
+    base_url=f"{endpoint}/openai/v1/",
+    api_key=api_key,
+    default_headers={"api-key": api_key}
 )
 
-# Define structured response with Pydantic
+# Pydantic models for structured response
 class Sightseeing(BaseModel):
     name: str
     description: str
@@ -28,29 +30,27 @@ class Sightseeing(BaseModel):
 class ParisResponse(BaseModel):
     sights: List[Sightseeing]
 
-# Prompt for structured JSON output
-prompt = """
-You are a helpful travel assistant. Provide 5 must-see places in Paris in JSON format like this:
-{
-  "sights": [
-    {
-      "name": "...",
-      "description": "...",
-      "category": "museum | landmark | park | neighborhood | other"
-    }
-  ]
-}
-"""
+try:
+    # Use the parse() method
+    completion = client.beta.chat.completions.parse(
+        model=deployment,
+        messages=[
+            {"role": "system", "content": "You are a helpful travel assistant."},
+            {"role": "user", "content": "Give me 5 must-see places in Paris."}
+        ],
+        response_format=ParisResponse,
+    )
 
-response = client.responses.create(
-    model=deployment,
-    input=prompt,
-    max_output_tokens=1000
-)
+    # Access the parsed response
+    parsed = completion.choices[0].message.parsed
 
-# Use Pydantic v2 method to validate JSON string
-parsed = ParisResponse.model_validate_json(response.output_text)
-
-# Print nicely
-for sight in parsed.sights:
-    print(f"{sight.name} ({sight.category}): {sight.description}")
+    # Print results
+    for sight in parsed.sights:
+        print(f"{sight.name} ({sight.category}): {sight.description}")
+        
+except Exception as e:
+    print(f"Error: {e}")
+    print("\nTroubleshooting steps:")
+    print("1. Verify your deployment name is correct")
+    print("2. Check if your model supports structured outputs")
+    print("3. Ensure your Azure OpenAI resource has the correct API version")
