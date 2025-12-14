@@ -10,8 +10,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 import logging
 
-from learning_platform_api.shared.models import LessonPlan, LessonPlanItem
-from learning_platform_api.shared.cosmos_client import get_cosmos_service
+from ..shared.models import LessonPlan, LessonPlanItem
+from ..shared.cosmos_client import get_cosmos_service
 
 logger = logging.getLogger(__name__)
 

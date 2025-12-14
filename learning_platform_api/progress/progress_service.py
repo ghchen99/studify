@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 import logging
 
-from learning_platform_api.shared.models import Progress, LessonPlan, QuizAttempt, Lesson
-from learning_platform_api.shared.cosmos_client import get_cosmos_service
+from ..shared.models import Progress, LessonPlan, QuizAttempt, Lesson
+from ..shared.cosmos_client import get_cosmos_service
 
 logger = logging.getLogger(__name__)
 
@@ -122,8 +122,20 @@ class ProgressService:
             raise ValueError(f"Quiz attempt {quiz_attempt_id} not found")
         
         attempt = attempts[0]
-        
-        progress = self._get_or_create_progress(user_id, attempt.lessonId)
+
+        # The QuizAttempt.lessonId is a Lesson id; progress is tracked per LessonPlan.
+        # Retrieve the Lesson to get its parent lessonPlanId.
+        lesson = self.cosmos.get_item(
+            container="Lessons",
+            item_id=attempt.lessonId,
+            partition_key=user_id,
+            model_class=Lesson
+        )
+
+        if not lesson:
+            raise ValueError(f"Lesson {attempt.lessonId} not found")
+
+        progress = self._get_or_create_progress(user_id, lesson.lessonPlanId)
         
         subtopic_id = attempt.subtopicId
         if subtopic_id in progress.subtopicProgress:

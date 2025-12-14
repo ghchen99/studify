@@ -129,14 +129,9 @@ class CosmosService:
             container_client = self._get_container(container)
             item_dict = self._model_to_dict(item)
             
-            # Extract partition key value from item
-            partition_key_path = self.CONTAINERS[container].lstrip('/')
-            partition_key = item_dict.get(partition_key_path)
-            
             result = container_client.replace_item(
                 item=item.id,
-                body=item_dict,
-                partition_key=partition_key
+                body=item_dict
             )
             logger.info(f"Updated item in {container}: {result['id']}")
             return self._dict_to_model(result, type(item))

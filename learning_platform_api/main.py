@@ -2,7 +2,25 @@
 Learning Platform Usage Example
 Demonstrates the complete student workflow
 """
-from learning_platform_api.platform import LearningPlatform
+try:
+    from .platform import LearningPlatform
+except Exception:
+    # Allow running this file directly (python learning_platform_api/main.py)
+    # by adding the project root to sys.path and importing the package module.
+    import sys
+    import os
+
+    # If running the script directly from inside the package folder,
+    # ensure the project root is used as the main entry on sys.path so
+    # top-level stdlib modules (e.g., `platform`) don't get shadowed.
+    script_dir = os.path.dirname(__file__)
+    project_root = os.path.dirname(script_dir)
+    if sys.path and sys.path[0] == script_dir:
+        sys.path[0] = project_root
+    else:
+        sys.path.insert(0, project_root)
+
+    from learning_platform_api.platform import LearningPlatform
 from pprint import pprint
 import logging
 
@@ -269,7 +287,7 @@ def demo_simple_workflow():
         user_id=USER_ID,
         subject="Biology",
         topic="Cell Biology",
-        auto_approve=True
+        auto_approve=False
     )
     print(f"   ✓ Created lesson plan with {len(result['subtopics'])} subtopics\n")
     

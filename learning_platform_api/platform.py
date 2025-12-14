@@ -6,13 +6,13 @@ import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from learning_platform_api.lesson_plans.lesson_plan_service import LessonPlanService
-from learning_platform_api.lessons.lesson_service import LessonService
-from learning_platform_api.quizzes.quiz_service import QuizService
-from learning_platform_api.tutor.tutor_service import TutorService
-from learning_platform_api.progress.progress_service import ProgressService
+from .lesson_plans.lesson_plan_service import LessonPlanService
+from .lessons.lesson_service import LessonService
+from .quizzes.quiz_service import QuizService
+from .tutor.tutor_service import TutorService
+from .progress.progress_service import ProgressService
 
-from learning_platform_api.shared.models import (
+from .shared.models import (
     LessonPlan, LessonPlanItem
 )
 
@@ -457,10 +457,10 @@ class LearningPlatform:
                     "status": plan.status,
                     "subtopicCount": len(plan.structure),
                     "progress": next(
-                        (p for p in progress_summary.get("lessonPlans", [])
-                         if p["lessonPlanId"] == plan.id),
-                        None
-                    )
+                            (p for p in progress_summary.get("lessonPlans", [])
+                             if p["lessonPlanId"] == plan.id),
+                            {}
+                        )
                 }
                 for plan in plans
             ],
