@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 import logging
 
-from ..shared.models import Progress, LessonPlan, QuizAttempt, Lesson
-from ..shared.cosmos_client import get_cosmos_service
+from shared.models import Progress, LessonPlan, QuizAttempt, Lesson
+from shared.cosmos_client import get_cosmos_service
 
 logger = logging.getLogger(__name__)
 

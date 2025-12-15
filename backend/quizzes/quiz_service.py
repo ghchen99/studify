@@ -10,8 +10,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 import logging
 
-from ..shared.models import Quiz, Question, QuizAttempt, QuizAttemptResponse, Lesson
-from ..shared.cosmos_client import get_cosmos_service
+from shared.models import Quiz, Question, QuizAttempt, QuizAttemptResponse, Lesson
+from shared.cosmos_client import get_cosmos_service
 
 logger = logging.getLogger(__name__)
 

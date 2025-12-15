@@ -10,8 +10,8 @@ from typing import Optional, List, Dict, Any
 from openai import OpenAI
 import logging
 
-from ..shared.models import TutorSession, Lesson
-from ..shared.cosmos_client import get_cosmos_service
+from shared.models import TutorSession, Lesson
+from shared.cosmos_client import get_cosmos_service
 
 logger = logging.getLogger(__name__)
 

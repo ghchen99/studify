@@ -6,13 +6,13 @@ import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from .lesson_plans.lesson_plan_service import LessonPlanService
-from .lessons.lesson_service import LessonService
-from .quizzes.quiz_service import QuizService
-from .tutor.tutor_service import TutorService
-from .progress.progress_service import ProgressService
+from lesson_plans.lesson_plan_service import LessonPlanService
+from lessons.lesson_service import LessonService
+from quizzes.quiz_service import QuizService
+from tutor.tutor_service import TutorService
+from progress.progress_service import ProgressService
 
-from .shared.models import (
+from shared.models import (
     LessonPlan, LessonPlanItem
 )
 
