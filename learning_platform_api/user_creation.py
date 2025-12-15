@@ -1,11 +1,9 @@
 import hashlib
 from datetime import datetime
 from pprint import pprint
-import uuid
 
-from cosmos_client import get_cosmos_service
-from models import User, LessonPlan, Lesson, Quiz, QuizAttempt, Question, QuizAttemptResponse, LessonPlanItem
-
+from shared.cosmos_client import get_cosmos_service
+from shared.models import User
 # Deterministic ID function
 def deterministic_id(*parts: str) -> str:
     raw = "|".join(parts)

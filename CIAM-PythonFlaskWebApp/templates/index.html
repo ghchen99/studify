@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <h2>Welcome {{ user.get("name") }}!</h2>
+
+    <!-- There is much hassle to get the local static image to show up on App Service.
+    https://learn.microsoft.com/en-us/azure/app-service/configure-language-python#serve-static-files-for-django-apps
+    For now, we will use a remote image.
+    -->
+    <img src="https://github.com/Azure-Samples/ms-identity-python-webapp-django/raw/main/static/topology.png" alt="Topology">
+
+    <ul>
+    {% if api_endpoint %}
+      <li><a href='/call_api'>Call an API</a></li>
+    {% endif %}
+
+    {% if edit_profile_url %}
+      <li><a href='{{edit_profile_url}}'>Edit Profile</a></li>
+    {% endif %}
+
+    <li><a href="{{ url_for('identity.logout') }}">Logout</a></li>
+    </ul>
+
+    <hr>
+    <footer style="text-align: right">{{ title }}</footer>
+</body>
+</html>
+
