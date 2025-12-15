@@ -1,4 +1,3 @@
 15.12 dev work
 - pull user IDs from actual auth
-- refactor main into fastapi/function app
 - develop simple frontend to test functions
