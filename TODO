@@ -1,3 +1,1 @@
-15.12 dev work
-- pull user IDs from actual auth
-- develop simple frontend to test functions
+- work from simple=frontend/ to get the auth connection working

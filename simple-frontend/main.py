@@ -1,70 +1,59 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from typing import Optional
+import jwt
+from jwt import PyJWKClient
 
-app = FastAPI(title="Simple Auth Test API")
+app = FastAPI()
 
-# Enable CORS for your React app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React app URL
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Your config - same values from authConfig.ts
+CLIENT_ID = "7f63ef05-e7d4-40fc-bccd-90da58cc293c"
+TENANT = "gpteducation"
+JWKS_URL = f"https://{TENANT}.ciamlogin.com/{TENANT}.onmicrosoft.com/discovery/v2.0/keys"
+
+jwks_client = PyJWKClient(JWKS_URL)
+security = HTTPBearer()
+
 
 class UserResponse(BaseModel):
     message: str
     user_id: str
-    received_from: str
+    user_name: str
+
+
+# Simple dependency that validates token (like Flask's @auth.login_required)
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        claims = jwt.decode(token, signing_key.key, algorithms=["RS256"], audience=CLIENT_ID)
+        return claims
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @app.get("/")
 def root():
-    return {
-        "message": "FastAPI is running!",
-        "endpoints": {
-            "test_auth": "/api/test-auth",
-            "docs": "/docs"
-        }
-    }
+    return {"message": "FastAPI with secure auth"}
 
 
-@app.get("/api/test-auth", response_model=UserResponse)
-def test_auth(x_user_id: str = Header(..., description="User ID from frontend")):
-    """
-    Simple endpoint to test that user ID is being received from frontend.
-    
-    The frontend will send the user's 'oid' claim in the X-User-ID header.
-    """
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="No user ID provided")
-    
+# Secure endpoint - just add Depends(get_current_user)
+@app.get("/api/secure-data", response_model=UserResponse)
+def get_data(user: dict = Depends(get_current_user)):
     return UserResponse(
-        message="✅ Successfully received user ID!",
-        user_id=x_user_id,
-        received_from="X-User-ID header"
+        message="✅ Token validated!",
+        user_id=user.get("oid"),
+        user_name=user.get("name", "N/A")
     )
-
-
-@app.get("/api/whoami")
-def whoami(x_user_id: Optional[str] = Header(None)):
-    """
-    Another simple test endpoint that shows what user is making the request.
-    """
-    if not x_user_id:
-        return {
-            "authenticated": False,
-            "message": "No user ID found in request"
-        }
-    
-    return {
-        "authenticated": True,
-        "user_id": x_user_id,
-        "message": f"You are logged in as {x_user_id}"
-    }
 
 
 if __name__ == "__main__":

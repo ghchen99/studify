@@ -70,14 +70,20 @@ const UserInfo = () => {
         throw new Error('User ID not found in token');
       }
 
-      // Call FastAPI backend
-      const response = await fetch('http://localhost:8000/api/test-auth', {
+      // Get access token from MSAL
+        const tokenResponse = await instance.acquireTokenSilent({
+        ...loginRequest,
+        account: account!,
+        });
+
+        // Call API with token in Authorization header
+        const response = await fetch('http://localhost:8000/api/secure-data', {
         method: 'GET',
         headers: {
-          'X-User-ID': userId, // Send user ID in header
-          'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenResponse.accessToken}`,
+            'Content-Type': 'application/json',
         },
-      });
+        });
 
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
