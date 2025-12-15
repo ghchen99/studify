@@ -4,7 +4,6 @@ Unified interface for all learning platform operations
 """
 import logging
 from typing import Optional, List, Dict, Any
-from datetime import datetime
 
 from lesson_plans.lesson_plan_service import LessonPlanService
 from lessons.lesson_service import LessonService
