@@ -1,5 +1,4 @@
 15.12 dev work
-- should main function add user to users table, seems non essential
 - pull user IDs from actual auth
 - refactor main into fastapi/function app
 - develop simple frontend to test functions
