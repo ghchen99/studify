@@ -20,7 +20,7 @@ except Exception:
     else:
         sys.path.insert(0, project_root)
 
-    from learning_platform_api.platform import LearningPlatform
+    from backend.platform import LearningPlatform
 from pprint import pprint
 import logging
 
