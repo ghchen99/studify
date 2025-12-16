@@ -2,7 +2,7 @@
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
 import LoginPage from '@/components/LoginPage';
-import UserInfo from '@/components/UserInfo';
+import Platform from '@/components/Platform';
 
 export default function HomePage() {
   return (
@@ -11,7 +11,7 @@ export default function HomePage() {
         <LoginPage />
       </UnauthenticatedTemplate>
       <AuthenticatedTemplate>
-        <UserInfo />
+        <Platform />
       </AuthenticatedTemplate>
     </div>
   );
