@@ -1,14 +1,11 @@
 from fastapi import FastAPI, Depends
 from auth import verify_access_token
-
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Add this **before your routes**
 origins = [
     "http://localhost:3000",
-    # add other allowed origins if needed
 ]
 
 app.add_middleware(
@@ -18,7 +15,6 @@ app.add_middleware(
     allow_methods=["*"],  # allows GET, POST, OPTIONS, etc.
     allow_headers=["*"],  # allows Authorization, Content-Type, etc.
 )
-
 
 @app.get("/api/secure-data")
 def secure_data(user=Depends(verify_access_token)):

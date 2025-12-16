@@ -2,8 +2,9 @@
 FastAPI Learning Platform API
 RESTful API for the AI-powered learning platform
 """
-from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, status, Depends, APIRouter
+from auth import verify_access_token
 from typing import List, Dict, Any
 from datetime import datetime
 import logging
@@ -41,13 +42,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+api_router = APIRouter(
+    prefix="/api",
+    dependencies=[Depends(verify_access_token)]
+)
+
+app.include_router(api_router)
+
 # Initialize platform
 platform = LearningPlatform()
 
 # ==================== LESSON PLAN ENDPOINTS ====================
 
-@app.post(
-    "/api/lesson-plans",
+@api_router.post(
+    "/lesson-plans",
     response_model=LessonPlanResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new lesson plan",
@@ -85,8 +93,8 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
         )
 
 
-@app.post(
-    "/api/lesson-plans/approve",
+@api_router.post(
+    "/lesson-plans/approve",
     response_model=Dict[str, str],
     summary="Approve a lesson plan",
     description="Approve a lesson plan and initialize progress tracking"
@@ -121,8 +129,8 @@ async def approve_lesson_plan(request: ApproveLessonPlanRequest):
         )
 
 
-@app.get(
-    "/api/lesson-plans/{user_id}",
+@api_router.get(
+    "/lesson-plans/{user_id}",
     response_model=List[Dict[str, Any]],
     summary="Get all lesson plans for a user",
     description="Retrieve all lesson plans associated with a user"
@@ -152,8 +160,8 @@ async def get_lesson_plans(user_id: str):
 
 # ==================== LESSON ENDPOINTS ====================
 
-@app.post(
-    "/api/lessons/start",
+@api_router.post(
+    "/lessons/start",
     response_model=LessonResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Start a lesson",
@@ -197,8 +205,8 @@ async def start_lesson(request: StartLessonRequest):
         )
 
 
-@app.post(
-    "/api/lessons/expand-section",
+@api_router.post(
+    "/lessons/expand-section",
     response_model=ExpandedSectionResponse,
     summary="Expand a lesson section",
     description="Get more detailed content for a specific lesson section"
@@ -231,8 +239,8 @@ async def expand_section(request: ExpandSectionRequest):
         )
 
 
-@app.post(
-    "/api/lessons/complete",
+@api_router.post(
+    "/lessons/complete",
     response_model=CompletionResponse,
     summary="Complete a lesson",
     description="Mark a lesson as complete and update progress"
@@ -270,8 +278,8 @@ async def complete_lesson(request: CompleteLessonRequest):
 
 # ==================== QUIZ ENDPOINTS ====================
 
-@app.post(
-    "/api/quizzes/start",
+@api_router.post(
+    "/quizzes/start",
     response_model=QuizResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Start a quiz",
@@ -310,8 +318,8 @@ async def start_quiz(request: StartQuizRequest):
         )
 
 
-@app.post(
-    "/api/quizzes/submit",
+@api_router.post(
+    "/quizzes/submit",
     response_model=QuizResultResponse,
     summary="Submit quiz answers",
     description="Submit quiz responses and receive AI-graded results"
@@ -359,8 +367,8 @@ async def submit_quiz(request: QuizSubmissionRequest):
 
 # ==================== TUTOR ENDPOINTS ====================
 
-@app.post(
-    "/api/tutor/start",
+@api_router.post(
+    "/tutor/start",
     response_model=TutorResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Start a tutor session",
@@ -400,8 +408,8 @@ async def start_tutor_session(request: StartTutorRequest):
         )
 
 
-@app.post(
-    "/api/tutor/message",
+@api_router.post(
+    "/tutor/message",
     response_model=TutorResponse,
     summary="Send message to tutor",
     description="Send a message in an active tutor session"
@@ -437,8 +445,8 @@ async def send_tutor_message(request: SendTutorMessageRequest):
         )
 
 
-@app.post(
-    "/api/tutor/end/{user_id}/{session_id}",
+@api_router.post(
+    "/tutor/end/{user_id}/{session_id}",
     response_model=Dict[str, str],
     summary="End tutor session",
     description="Mark a tutor session as resolved"
@@ -469,8 +477,8 @@ async def end_tutor_session(user_id: str, session_id: str):
 
 # ==================== PROGRESS & DASHBOARD ENDPOINTS ====================
 
-@app.get(
-    "/api/dashboard/{user_id}",
+@api_router.get(
+    "/dashboard/{user_id}",
     response_model=DashboardResponse,
     summary="Get user dashboard",
     description="Get comprehensive dashboard with progress, plans, and recommendations"
@@ -500,8 +508,8 @@ async def get_dashboard(user_id: str):
         )
 
 
-@app.get(
-    "/api/progress/{user_id}/{lesson_plan_id}",
+@api_router.get(
+    "/progress/{user_id}/{lesson_plan_id}",
     response_model=Dict[str, Any],
     summary="Get progress for a lesson plan",
     description="Get detailed progress for a specific lesson plan"
