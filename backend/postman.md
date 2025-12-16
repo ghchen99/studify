@@ -180,6 +180,110 @@ Useful to confirm plan state and subtopic count.
     }
 ]
 
+Get a Specific Lesson Plan in More Detail
+
+Method: GET
+URL:
+http://localhost:8000/api/lesson-plans/details/e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c?user_id=test_user_1
+
+{
+    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
+    "subject": "Math",
+    "topic": "Algebra",
+    "status": "approved",
+    "subtopics": [
+        {
+            "id": "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f",
+            "title": "1. Algebraic Notation and Basic Manipulation",
+            "order": 1,
+            "duration": 45,
+            "concepts": [
+                "Variables, constants and coefficients",
+                "Terms, expressions, equations and identities",
+                "Like and unlike terms",
+            ]
+        },
+        {
+            "id": "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68",
+            "title": "2. Expanding and Factorising Single Brackets",
+            "order": 2,
+            "duration": 45,
+            "concepts": [
+                "The distributive law: a(b + c) = ab + ac",
+                "Expanding a single bracket with positive and negative terms",
+                "Simplifying expressions after expansion",
+            ]
+        },
+        {
+            "id": "67f4a067d1fc1439cc7c65de34f2a195e5307481571e16fa3d8afc77f92ab89f",
+            "title": "3. Expanding and Factorising Quadratics (Non-Complex Cases)",
+            "order": 3,
+            "duration": 45,
+            "concepts": [
+                "Quadratic expressions (ax² + bx + c)",
+                "Expanding double brackets (x + a)(x + b)",
+                "Recognising patterns: (x + a)(x + b) → x² + (a + b)x + ab",
+            ]
+        },
+        {
+            "id": "59b2477b9db7e7b1ccfdc0e659fc27103601a8d2ef9658f57900470849470005",
+            "title": "4. Solving Linear Equations in One Variable",
+            "order": 4,
+            "duration": 45,
+            "concepts": [
+                "Equation as a balance idea",
+                "Inverse operations",
+                "Solving one-step and two-step equations",
+            ]
+        },
+        {
+            "id": "d5cabd86471753104501b1669bec8fc7953c47593860242b11030569e585d469",
+            "title": "5. Forming and Solving Linear Equations from Problems",
+            "order": 5,
+            "duration": 45,
+            "concepts": [
+                "Translating word problems into algebraic equations",
+                "Using a variable to represent an unknown quantity",
+            ]
+        },
+        {
+            "id": "b9bf103c08696c8be2e9af525114146587e3289a43ad2113f93131d4edd614c1",
+            "title": "6. Inequalities and Number Lines",
+            "order": 6,
+            "duration": 30,
+            "concepts": [
+                "Inequality symbols: <, >, ≤, ≥",
+                "Writing inequalities from statements",
+            ]
+        },
+        {
+            "id": "55d1caf15024bf7bd28332861c919f84324b31c0c3bc65eedf433e89ffe7ae76",
+            "title": "7. Algebraic Substitution and Rearranging Formulae",
+            "order": 7,
+            "duration": 45,
+            "concepts": [
+                "Substituting values into expressions and formulae",
+                "Using correct order of operations (BIDMAS) in substitution",
+                "Rearranging simple formulae to change the subject",
+                "Inverse operations in rearranging",
+                "Rearranging in geometric and physics-type formulae (e.g. v = u + at, A = lw)"
+            ]
+        },
+        {
+            "id": "c43f3be7a522fa3993802cb555e8726b947b4425341dfa3f08e7c09fdfe405bd",
+            "title": "8. Simultaneous Linear Equations (Two Variables)",
+            "order": 8,
+            "duration": 45,
+            "concepts": [
+                "Simultaneous equations meaning and graphical interpretation",
+                "Solution as the point of intersection of two lines",
+                "Solving by substitution method",
+            ]
+        }
+    ],
+    "progress_initialized": true
+}
+
 5️⃣ Start a Lesson (Pick One Subtopic)
 
 Method: POST
