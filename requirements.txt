@@ -5,3 +5,4 @@ pydantic
 openai
 fastapi
 uvicorn
+PyJWT

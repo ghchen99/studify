@@ -2,9 +2,9 @@ import { Configuration, LogLevel } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
-    clientId: 'YOUR_CLIENT_ID_HERE', // Replace with your client ID
-    authority: 'https://YOUR_TENANT_NAME.ciamlogin.com/', // Replace with your tenant
-    redirectUri: 'http://localhost:3000', // Where Microsoft redirects after login
+    clientId: '7f63ef05-e7d4-40fc-bccd-90da58cc293c', // Replace with your client ID
+    authority: 'https://gpteducation.ciamlogin.com/', // Replace with your tenant
+    redirectUri: 'http://localhost:3000/redirect', // Where Microsoft redirects after login
   },
   cache: {
     cacheLocation: 'sessionStorage',

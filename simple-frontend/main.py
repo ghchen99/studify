@@ -4,6 +4,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import jwt
 from jwt import PyJWKClient
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -16,7 +20,7 @@ app.add_middleware(
 )
 
 # Your config - same values from authConfig.ts
-CLIENT_ID = "7f63ef05-e7d4-40fc-bccd-90da58cc293c"
+CLIENT_ID = os.getenv("CLIENT_ID")
 TENANT = "gpteducation"
 JWKS_URL = f"https://{TENANT}.ciamlogin.com/{TENANT}.onmicrosoft.com/discovery/v2.0/keys"
 
