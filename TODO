@@ -1,1 +1,6 @@
-- work from simple=frontend/ to get the auth connection working
+Frontend Bug Fixes
+- POlling API response, something to show loading and waiting for generation
+- Quiz changed a few seconds after rendering
+- Course view is good but maybe need to click into course view page with lessons and a tracker instead of all on homepage.
+- logout greyed out.
+- home page too minimalist, maybe carousel courses, with images.

@@ -1,4339 +1,1399 @@
 DIRECTORY TREE (SOURCE FILES ONLY)
 =================================
 
-📄 api.py
-📄 auth.py
-📄 learning_platform.py
-📁 lesson_plans/
-  📄 lesson_plan_service.py
-📁 lessons/
-  📄 lesson_service.py
-📄 postman.md
-📁 progress/
-  📄 progress_service.py
-📁 quizzes/
-  📄 quiz_service.py
-📁 shared/
-  📄 cosmos-rbac-guide.md
-  📄 cosmos_client.py
-  📄 models.py
-  📄 openai_client.py
-📁 tutor/
-  📄 tutor_service.py
-📄 user_creation.py
+📄 next-env.d.ts
+📄 next.config.ts
+📁 public/
+📄 README.md
+📁 src/
+  📁 app/
+    📄 globals.css
+    📄 layout.tsx
+    📄 page.tsx
+    📁 redirect/
+      📄 page.tsx
+  📁 components/
+    📄 LoginPage.tsx
+    📄 Platform.tsx
+    📁 ui/
+      📄 button.tsx
+      📄 card.tsx
+    📁 views/
+      📄 CreateCourseView.tsx
+      📄 LessonView.tsx
+      📄 QuizView.tsx
+      📄 TutorView.tsx
+  📁 lib/
+    📄 authConfig.ts
+    📄 msalInstance.ts
+    📄 utils.ts
+  📁 types/
+    📄 api.ts
 
 
 FILE CONTENTS
 =================================
 
 
---- FILE: api.py ---
+--- FILE: next-env.d.ts ---
 
-"""
-FastAPI Learning Platform API
-RESTful API for the AI-powered learning platform
-"""
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, status, Depends, APIRouter
-from auth import verify_access_token
-from typing import List, Dict, Any
-from datetime import datetime
-import logging
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
 
-from learning_platform import LearningPlatform
-from shared.models import (
-    CreateLessonPlanRequest, LessonPlanResponse,
-    ApproveLessonPlanRequest, LessonResponse,
-    StartLessonRequest, ExpandSectionRequest, ExpandedSectionResponse,
-    CompleteLessonRequest, CompletionResponse, QuizResponse,
-    StartQuizRequest, QuizSubmissionRequest, QuizResultResponse, TutorResponse,
-    StartTutorRequest, SendTutorMessageRequest, DashboardResponse)
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-# Suppress verbose logs
-logging.getLogger("azure.cosmos._cosmos_http_logging_policy").setLevel(logging.WARNING)
-logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
+--- FILE: next.config.ts ---
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="Learning Platform API",
-    description="AI-powered adaptive learning platform with lesson plans, quizzes, and tutoring",
-    version="1.0.0"
-)
+import type { NextConfig } from "next";
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+const nextConfig: NextConfig = {
+  /* config options here */
+};
 
-api_router = APIRouter(
-    prefix="/api",
-    dependencies=[Depends(verify_access_token)]
-)
+export default nextConfig;
 
-# Initialize platform
-platform = LearningPlatform()
 
-# ==================== LESSON PLAN ENDPOINTS ====================
+--- FILE: README.md ---
 
-@api_router.post(
-    "/lesson-plans",
-    response_model=LessonPlanResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new lesson plan",
-    description="Generate an AI-powered lesson plan for a given subject and topic"
-)
-async def create_lesson_plan(request: CreateLessonPlanRequest):
-    """
-    Create a new lesson plan using AI.
-    
-    The system will generate a structured lesson plan with multiple subtopics,
-    each containing key concepts and estimated duration.
-    """
-    try:
-        result = platform.create_lesson_plan(
-            user_id=request.user_id,
-            subject=request.subject,
-            topic=request.topic,
-            level=request.level,
-            auto_approve=request.auto_approve
-        )
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+--- FILE: src\app\globals.css ---
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes pulse-slow {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+
+
+--- FILE: src\app\layout.tsx ---
+
+'use client';
+
+import './globals.css';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from '@/lib/msalInstance';
+import { ReactNode } from 'react';
+
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <html lang="en">
+      <body className="bg-white text-gray-900 min-h-screen font-sans">
+        {/* MSAL Provider wraps the whole app */}
+        <MsalProvider instance={msalInstance}>
+          <main className="container mx-auto p-4">
+            {children}
+          </main>
+        </MsalProvider>
+      </body>
+    </html>
+  );
+}
+
+
+--- FILE: src\app\page.tsx ---
+
+'use client';
+
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
+import LoginPage from '@/components/LoginPage';
+import Platform from '@/components/Platform';
+
+export default function HomePage() {
+  return (
+    <div>
+      <UnauthenticatedTemplate>
+        <LoginPage />
+      </UnauthenticatedTemplate>
+      <AuthenticatedTemplate>
+        <Platform />
+      </AuthenticatedTemplate>
+    </div>
+  );
+}
+
+
+--- FILE: src\app\redirect\page.tsx ---
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { msalInstance } from '@/lib/msalInstance';
+
+export default function RedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    msalInstance.handleRedirectPromise().then((resp) => {
+      if (resp?.account) msalInstance.setActiveAccount(resp.account);
+      else if (!msalInstance.getActiveAccount()) {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length) msalInstance.setActiveAccount(accounts[0]);
+      }
+      router.push('/');
+    });
+  }, [router]);
+
+  return <p>Loading...</p>;
+}
+
+
+--- FILE: src\components\LoginPage.tsx ---
+
+'use client';
+
+import { useMsal } from '@azure/msal-react';
+import { loginRequest } from '@/lib/authConfig';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'; // Use Framer Motion for animations
+
+export default function LoginPage() {
+  const { instance } = useMsal();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = () => {
+    setLoading(true);
+    instance.loginRedirect(loginRequest);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300 opacity-80 -z-10" />
+
+
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative z-10">
         
-        return LessonPlanResponse(
-            lesson_plan_id=result["lessonPlan"].id,
-            subject=result["lessonPlan"].subject,
-            topic=result["lessonPlan"].topic,
-            status=result["status"],
-            subtopics=result["subtopics"],
-            progress_initialized=result.get("progressInitialized", False)
-        )
-    except Exception as e:
-        logger.error(f"Error creating lesson plan: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create lesson plan: {str(e)}"
-        )
+        {/* Header Section */}
+        <motion.div 
+          className="flex flex-col items-center text-center mb-8"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 1 }}
+        >
+          <div className="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+            <GraduationCap size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-4">
+            Welcome to Learning.AI
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Sign in to access your courses, assignments, and learning resources. Let's get started!
+          </p>
+        </motion.div>
+
+        {/* Login Button */}
+        <motion.div 
+          initial={{ scale: 1 }} 
+          whileHover={{ scale: 1.05 }} 
+          transition={{ duration: 0.2 }}
+        >
+          <Button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium rounded-lg"
+          >
+            {loading ? 'Signing in...' : 'Sign in with Microsoft'}
+          </Button>
+        </motion.div>
+
+        {/* Trust Section */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+          <ShieldCheck size={16} />
+          <span>Secure login powered by Microsoft</span>
+        </div>
+
+        {/* Footer Section */}
+        <div className="mt-8 text-center text-xs text-gray-400">
+          <p>
+            By signing in, you agree to our{' '}
+            <a href="/terms" className="underline hover:text-gray-600">
+              Terms
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" className="underline hover:text-gray-600">
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
-@api_router.post(
-    "/lesson-plans/approve",
-    response_model=Dict[str, str],
-    summary="Approve a lesson plan",
-    description="Approve a lesson plan and initialize progress tracking"
-)
-async def approve_lesson_plan(request: ApproveLessonPlanRequest):
-    """
-    Approve a lesson plan and initialize progress tracking.
-    
-    Once approved, the student can start working through the lessons.
-    """
-    try:
-        approved_plan = platform.approve_lesson_plan(
-            user_id=request.user_id,
-            plan_id=request.plan_id
-        )
-        
-        return {
-            "status": "approved",
-            "lesson_plan_id": approved_plan.id,
-            "message": "Lesson plan approved and progress initialized"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error approving lesson plan: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to approve lesson plan: {str(e)}"
-        )
+--- FILE: src\components\Platform.tsx ---
 
+'use client';
 
-@api_router.get(
-    "/lesson-plans/{user_id}",
-    response_model=List[Dict[str, Any]],
-    summary="Get all lesson plans for a user",
-    description="Retrieve all lesson plans associated with a user"
-)
-async def get_lesson_plans(user_id: str):
-    """Get all lesson plans for a user"""
-    try:
-        plans = platform.lesson_plans.get_user_lesson_plans(user_id)
-        return [
-            {
-                "id": plan.id,
-                "subject": plan.subject,
-                "topic": plan.topic,
-                "status": plan.status,
-                "subtopic_count": len(plan.structure),
-                "created_at": plan.aiGeneratedAt.isoformat() if plan.aiGeneratedAt else None
-            }
-            for plan in plans
-        ]
-    except Exception as e:
-        logger.error(f"Error retrieving lesson plans: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve lesson plans: {str(e)}"
-        )
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api';
 
+// Import Views
+import LessonView from './views/LessonView';
+import QuizView from './views/QuizView';
+import TutorView from './views/TutorView';
+import CreateCourseView from './views/CreateCourseView';
 
-# ==================== LESSON ENDPOINTS ====================
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE';
 
-@api_router.post(
-    "/lessons/start",
-    response_model=LessonResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start a lesson",
-    description="Generate or retrieve lesson content for a subtopic"
-)
-async def start_lesson(request: StartLessonRequest):
-    """
-    Start a lesson for a specific subtopic.
-    
-    If the lesson already exists, it will be returned. Otherwise, new content
-    will be generated using AI.
-    """
-    try:
-        result = platform.start_lesson(
-            user_id=request.user_id,
-            lesson_plan_id=request.lesson_plan_id,
-            subtopic_id=request.subtopic_id
-        )
-        
-        return LessonResponse(
-            lesson_id=result["lessonId"],
-            subject=result["subject"],
-            topic=result["topic"],
-            subtopic=result["subtopic"],
-            introduction=result["introduction"],
-            sections=result["sections"],
-            summary=result["summary"],
-            key_terms=result["keyTerms"],
-            status=result["status"]
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error starting lesson: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start lesson: {str(e)}"
-        )
+export default function Platform() {
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const [account, setAccount] = useState(accounts[0] || null);
 
+  // Application State
+  const [view, setView] = useState<AppState>('DASHBOARD');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-@api_router.post(
-    "/lessons/expand-section",
-    response_model=ExpandedSectionResponse,
-    summary="Expand a lesson section",
-    description="Get more detailed content for a specific lesson section"
-)
-async def expand_section(request: ExpandSectionRequest):
-    """
-    Expand a lesson section with more detailed content, examples, and explanations.
-    """
-    try:
-        result = platform.expand_lesson_section(
-            user_id=request.user_id,
-            lesson_id=request.lesson_id,
-            section_id=request.section_id
-        )
-        
-        return ExpandedSectionResponse(
-            section_id=result["sectionId"],
-            expanded_content=result["expandedContent"]
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error expanding section: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to expand section: {str(e)}"
-        )
+  // Data State
+  const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
+  const [activePlan, setActivePlan] = useState<LessonPlan | null>(null);
+  const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
 
-
-@api_router.post(
-    "/lessons/complete",
-    response_model=CompletionResponse,
-    summary="Complete a lesson",
-    description="Mark a lesson as complete and update progress"
-)
-async def complete_lesson(request: CompleteLessonRequest):
-    """
-    Mark a lesson as complete and update the student's progress.
-    
-    This will track study time and update overall completion percentage.
-    """
-    try:
-        result = platform.complete_lesson(
-            user_id=request.user_id,
-            lesson_id=request.lesson_id,
-            study_time=request.study_time
-        )
-        
-        return CompletionResponse(
-            lesson_completed=result["lessonCompleted"],
-            next_action=result["nextAction"],
-            progress=result["progress"]
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error completing lesson: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to complete lesson: {str(e)}"
-        )
-
-
-# ==================== QUIZ ENDPOINTS ====================
-
-@api_router.post(
-    "/quizzes/start",
-    response_model=QuizResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start a quiz",
-    description="Generate a quiz for a completed lesson"
-)
-async def start_quiz(request: StartQuizRequest):
-    """
-    Generate a quiz with questions based on the lesson content.
-    
-    Questions can be multiple choice, short answer, or long answer format.
-    """
-    try:
-        result = platform.start_quiz(
-            user_id=request.user_id,
-            lesson_id=request.lesson_id,
-            subtopic_id=request.subtopic_id,
-            difficulty=request.difficulty,
-            question_count=request.question_count
-        )
-        
-        return QuizResponse(
-            quiz_id=result["quizId"],
-            questions=result["questions"],
-            total_questions=result["totalQuestions"]
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error starting quiz: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start quiz: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/quizzes/submit",
-    response_model=QuizResultResponse,
-    summary="Submit quiz answers",
-    description="Submit quiz responses and receive AI-graded results"
-)
-async def submit_quiz(request: QuizSubmissionRequest):
-    """
-    Submit quiz answers and receive immediate AI-powered grading.
-    
-    The system will:
-    - Grade multiple choice questions automatically
-    - Use AI to grade written answers based on mark schemes
-    - Convert bullet points to coherent answers
-    - Provide detailed feedback on each response
-    - Calculate mastery level
-    - Determine if tutoring is needed
-    """
-    try:
-        result = platform.submit_quiz(
-            user_id=request.user_id,
-            quiz_id=request.quiz_id,
-            responses=request.responses
-        )
-        
-        return QuizResultResponse(
-            attempt_id=result["attemptId"],
-            score=result["score"],
-            responses=result["responses"],
-            mastery_level=result["masteryLevel"],
-            next_action=result["nextAction"],
-            trigger_tutor=result["triggerTutor"],
-            weak_concepts=result["weakConcepts"]
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error submitting quiz: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to submit quiz: {str(e)}"
-        )
-
-
-# ==================== TUTOR ENDPOINTS ====================
-
-@api_router.post(
-    "/tutor/start",
-    response_model=TutorResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start a tutor session",
-    description="Start an AI tutoring session for personalized help"
-)
-async def start_tutor_session(request: StartTutorRequest):
-    """
-    Start a one-on-one AI tutoring session.
-    
-    The AI tutor will:
-    - Use Socratic method to guide learning
-    - Provide hints rather than direct answers
-    - Use analogies and examples
-    - Be patient and encouraging
-    """
-    try:
-        result = platform.start_tutor_session(
-            user_id=request.user_id,
-            trigger=request.trigger,
-            lesson_id=request.lesson_id,
-            subtopic_id=request.subtopic_id,
-            question_id=request.question_id,
-            concept=request.concept,
-            initial_message=request.initial_message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context=result["context"]
-        )
-    except Exception as e:
-        logger.error(f"Error starting tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start tutor session: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/message",
-    response_model=TutorResponse,
-    summary="Send message to tutor",
-    description="Send a message in an active tutor session"
-)
-async def send_tutor_message(request: SendTutorMessageRequest):
-    """
-    Send a message to the AI tutor in an active session.
-    
-    The tutor maintains conversation context and provides personalized guidance.
-    """
-    try:
-        result = platform.send_tutor_message(
-            user_id=request.user_id,
-            session_id=request.session_id,
-            message=request.message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context={}
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error sending tutor message: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/end/{user_id}/{session_id}",
-    response_model=Dict[str, str],
-    summary="End tutor session",
-    description="Mark a tutor session as resolved"
-)
-async def end_tutor_session(user_id: str, session_id: str):
-    """
-    End an active tutoring session.
-    """
-    try:
-        platform.end_tutor_session(user_id, session_id)
-        return {
-            "status": "resolved",
-            "session_id": session_id,
-            "message": "Tutor session ended successfully"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error ending tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to end session: {str(e)}"
-        )
-
-
-# ==================== PROGRESS & DASHBOARD ENDPOINTS ====================
-
-@api_router.get(
-    "/dashboard/{user_id}",
-    response_model=DashboardResponse,
-    summary="Get user dashboard",
-    description="Get comprehensive dashboard with progress, plans, and recommendations"
-)
-async def get_dashboard(user_id: str):
-    """
-    Get the complete user dashboard including:
-    - Overall progress and statistics
-    - All lesson plans with their progress
-    - Active tutor sessions
-    - Personalized recommendations
-    """
-    try:
-        result = platform.get_dashboard(user_id)
-        
-        return DashboardResponse(
-            user=result["user"],
-            lesson_plans=result["lessonPlans"],
-            active_tutor_sessions=result["activeTutorSessions"],
-            recommendations=result["recommendations"]
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving dashboard: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve dashboard: {str(e)}"
-        )
-
-
-@api_router.get(
-    "/progress/{user_id}/{lesson_plan_id}",
-    response_model=Dict[str, Any],
-    summary="Get progress for a lesson plan",
-    description="Get detailed progress for a specific lesson plan"
-)
-async def get_progress(user_id: str, lesson_plan_id: str):
-    """
-    Get detailed progress information for a specific lesson plan.
-    
-    Includes subtopic-by-subtopic progress, scores, and mastery levels.
-    """
-    try:
-        progress = platform.progress.get_progress(user_id, lesson_plan_id)
-        
-        if not progress:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Progress not found"
-            )
-        
-        return {
-            "lesson_plan_id": progress.lessonPlanId,
-            "subtopic_progress": progress.subtopicProgress,
-            "overall_progress": progress.overallProgress,
-            "updated_at": progress.updatedAt.isoformat() if progress.updatedAt else None
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving progress: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve progress: {str(e)}"
-        )
-
-
-# ==================== HEALTH CHECK ====================
-
-@app.get(
-    "/health",
-    summary="Health check",
-    description="Check if the API is running"
-)
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0"
+  useEffect(() => {
+    if (accounts.length > 0 && !instance.getActiveAccount()) {
+      instance.setActiveAccount(accounts[0]);
+      setAccount(accounts[0]);
     }
+  }, [accounts, instance]);
 
+  // --- API Helper ---
+  const callApi = async (endpoint: string, method = 'GET', body?: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const tokenRes = await instance.acquireTokenSilent({
+        scopes: ['api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+        account: account!,
+      });
+      
+      const res = await fetch(`http://localhost:8000${endpoint}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${tokenRes.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
 
-# ==================== ROOT ====================
-
-@app.get("/")
-async def root():
-    """Root endpoint with API information"""
-    return {
-        "name": "Learning Platform API",
-        "version": "1.0.0",
-        "description": "AI-powered adaptive learning platform",
-        "docs": "/docs",
-        "endpoints": {
-            "lesson_plans": "/api/lesson-plans",
-            "lessons": "/api/lessons",
-            "quizzes": "/api/quizzes",
-            "tutor": "/api/tutor",
-            "dashboard": "/api/dashboard/{user_id}",
-            "progress": "/api/progress/{user_id}/{lesson_plan_id}"
-        }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API Error: ${res.status} ${text}`);
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
     }
-
-app.include_router(api_router)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
---- FILE: auth.py ---
-
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
-import requests
-
-TENANT_ID = "c7abd11f-7e42-4817-aeb6-69456e02dbb2"
-API_CLIENT_ID = "c36c0096-67af-4aba-9b01-e9a31f550c67"
-
-ISSUER = f"https://{TENANT_ID}.ciamlogin.com/{TENANT_ID}/v2.0"
-JWKS_URL = f"https://{TENANT_ID}.ciamlogin.com/{TENANT_ID}/discovery/v2.0/keys"
-
-security = HTTPBearer()
-
-# Cache keys on startup (fine for dev)
-jwks = requests.get(JWKS_URL).json()
-
-def verify_access_token(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-):
-    token = credentials.credentials
-
-    try:
-        header = jwt.get_unverified_header(token)
-        kid = header["kid"]
-
-        key = next(k for k in jwks["keys"] if k["kid"] == kid)
-
-        payload = jwt.decode(
-            token,
-            key,
-            algorithms=["RS256"],
-            audience=API_CLIENT_ID,
-            issuer=ISSUER,
-        )
-
-        return payload
-
-    except StopIteration:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid signing key",
-        )
-    except JWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token validation failed: {str(e)}",
-        )
-
-
---- FILE: learning_platform.py ---
-
-"""
-Learning Platform Facade
-Unified interface for all learning platform operations
-"""
-import logging
-from typing import Optional, List, Dict, Any
-
-from lesson_plans.lesson_plan_service import LessonPlanService
-from lessons.lesson_service import LessonService
-from quizzes.quiz_service import QuizService
-from tutor.tutor_service import TutorService
-from progress.progress_service import ProgressService
-
-from shared.models import (
-    LessonPlan, LessonPlanItem
-)
-
-logger = logging.getLogger(__name__)
-
-
-class LearningPlatform:
-    """
-    Unified interface for the learning platform
-    
-    This facade simplifies frontend interactions by providing
-    a single entry point for all learning operations.
-    """
-    
-    def __init__(self):
-        self.lesson_plans = LessonPlanService()
-        self.lessons = LessonService()
-        self.quizzes = QuizService()
-        self.tutor = TutorService()
-        self.progress = ProgressService()
-    
-    # ==================== LESSON PLAN WORKFLOWS ====================
-    
-    def create_lesson_plan(
-        self,
-        user_id: str,
-        subject: str,
-        topic: str,
-        level: str = "GCSE",
-        auto_approve: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Create a new lesson plan
-        
-        Args:
-            user_id: User identifier
-            subject: Subject name (e.g., "Math", "Biology")
-            topic: Topic name (e.g., "Algebra", "Cell Biology")
-            level: Education level
-            auto_approve: If True, automatically approve and initialize progress
-        
-        Returns:
-            Dict with lesson plan and status
-        """
-        logger.info(f"Creating lesson plan: {subject} - {topic}")
-        
-        # Generate the lesson plan
-        lesson_plan = self.lesson_plans.generate_lesson_plan(
-            user_id=user_id,
-            subject=subject,
-            topic=topic,
-            level=level
-        )
-        
-        result = {
-            "lessonPlan": lesson_plan,
-            "status": lesson_plan.status,
-            "subtopics": [
-                {
-                    "id": st.subtopicId,
-                    "title": st.title,
-                    "order": st.order,
-                    "duration": st.estimatedDuration,
-                    "concepts": st.concepts
-                }
-                for st in lesson_plan.structure
-            ]
-        }
-        
-        # Auto-approve if requested
-        if auto_approve:
-            approved_plan = self.approve_lesson_plan(user_id, lesson_plan.id)
-            result["lessonPlan"] = approved_plan
-            result["status"] = "approved"
-            result["progressInitialized"] = True
-        
-        return result
-    
-    def approve_lesson_plan(
-        self,
-        user_id: str,
-        plan_id: str,
-        modified_structure: Optional[List[LessonPlanItem]] = None
-    ) -> LessonPlan:
-        """
-        Approve a lesson plan and initialize progress tracking
-        
-        Args:
-            user_id: User identifier
-            plan_id: Lesson plan ID
-            modified_structure: Optional modified structure
-        
-        Returns:
-            Approved lesson plan
-        """
-        # Approve the plan
-        approved_plan = self.lesson_plans.approve_lesson_plan(
-            user_id=user_id,
-            plan_id=plan_id,
-            modified_structure=modified_structure
-        )
-        
-        # Initialize progress tracking
-        self.progress.initialize_progress(user_id, plan_id)
-        
-        return approved_plan
-    
-    # ==================== LESSON WORKFLOWS ====================
-    
-    def start_lesson(
-        self,
-        user_id: str,
-        lesson_plan_id: str,
-        subtopic_id: str
-    ) -> Dict[str, Any]:
-        """
-        Start a lesson for a subtopic
-        
-        Args:
-            user_id: User identifier
-            lesson_plan_id: Lesson plan ID
-            subtopic_id: Subtopic ID
-        
-        Returns:
-            Dict with lesson content and metadata
-        """
-        logger.info(f"Starting lesson for subtopic: {subtopic_id}")
-        
-        # Check if lesson already exists
-        existing_lesson = self.lessons.get_lesson_for_subtopic(user_id, subtopic_id)
-        
-        if existing_lesson:
-            lesson = existing_lesson
-        else:
-            # Generate new lesson
-            lesson = self.lessons.generate_lesson(
-                user_id=user_id,
-                lesson_plan_id=lesson_plan_id,
-                subtopic_id=subtopic_id
-            )
-        
-        return {
-            "lessonId": lesson.id,
-            "subject": lesson.subject,
-            "topic": lesson.topic,
-            "subtopic": lesson.subtopic,
-            "introduction": lesson.content.get("introduction"),
-            "sections": lesson.content.get("sections"),
-            "summary": lesson.content.get("summary"),
-            "keyTerms": lesson.content.get("keyTerms"),
-            "status": lesson.status
-        }
-    
-    def expand_lesson_section(
-        self,
-        user_id: str,
-        lesson_id: str,
-        section_id: str
-    ) -> Dict[str, Any]:
-        """
-        Expand a section for more detail
-        
-        Returns:
-            Dict with expanded content
-        """
-        updated_lesson = self.lessons.expand_section(
-            user_id=user_id,
-            lesson_id=lesson_id,
-            section_id=section_id
-        )
-        
-        # Find the expanded section
-        section = next(
-            (s for s in updated_lesson.content.get("sections", [])
-             if s.get("sectionId") == section_id),
-            None
-        )
-        
-        return {
-            "sectionId": section_id,
-            "expandedContent": section.get("expanded") if section else None
-        }
-    
-    def complete_lesson(
-        self,
-        user_id: str,
-        lesson_id: str,
-        study_time: int = 0
-    ) -> Dict[str, Any]:
-        """
-        Mark lesson as complete and update progress
-        
-        Args:
-            user_id: User identifier
-            lesson_id: Lesson ID
-            study_time: Time spent in minutes
-        
-        Returns:
-            Dict with completion status and updated progress
-        """
-        # Mark lesson complete
-        lesson = self.lessons.mark_lesson_complete(user_id, lesson_id)
-        
-        # Update progress
-        progress = self.progress.update_lesson_completion(
-            user_id=user_id,
-            lesson_id=lesson_id,
-            study_time=study_time
-        )
-        
-        return {
-            "lessonCompleted": True,
-            "nextAction": "quiz",
-            "progress": {
-                "percentComplete": progress.overallProgress.get("percentComplete"),
-                "totalStudyTime": progress.overallProgress.get("totalStudyTime")
-            }
-        }
-    
-    # ==================== QUIZ WORKFLOWS ====================
-    
-    def start_quiz(
-        self,
-        user_id: str,
-        lesson_id: str,
-        subtopic_id: str,
-        difficulty: str = "mixed",
-        question_count: int = 5
-    ) -> Dict[str, Any]:
-        """
-        Generate and start a quiz
-        
-        Args:
-            user_id: User identifier
-            lesson_id: Lesson ID
-            subtopic_id: Subtopic ID
-            difficulty: Difficulty level
-            question_count: Number of questions
-        
-        Returns:
-            Dict with quiz questions
-        """
-        logger.info(f"Starting quiz for lesson: {lesson_id}")
-        
-        # Generate quiz
-        quiz = self.quizzes.generate_quiz(
-            user_id=user_id,
-            lesson_id=lesson_id,
-            subtopic_id=subtopic_id,
-            difficulty=difficulty,
-            count=question_count
-        )
-        
-        return {
-            "quizId": quiz.id,
-            "questions": [
-                {
-                    "questionId": q.questionId,
-                    "type": q.type,
-                    "question": q.question,
-                    "options": q.options if q.type == "multiple_choice" else None,
-                    "difficulty": q.difficulty
-                }
-                for q in quiz.questions
-            ],
-            "totalQuestions": len(quiz.questions)
-        }
-    
-    def submit_quiz(
-        self,
-        user_id: str,
-        quiz_id: str,
-        responses: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """
-        Submit quiz and get results
-        
-        Args:
-            user_id: User identifier
-            quiz_id: Quiz ID
-            responses: List of responses
-        
-        Returns:
-            Dict with results and next actions
-        """
-        logger.info(f"Submitting quiz: {quiz_id}")
-        
-        # Submit and grade
-        attempt = self.quizzes.submit_quiz(
-            user_id=user_id,
-            quiz_id=quiz_id,
-            responses=responses
-        )
-        
-        # Update progress
-        progress = self.progress.update_quiz_completion(
-            user_id=user_id,
-            quiz_attempt_id=attempt.id
-        )
-        
-        # Prepare results
-        score_data = attempt.score
-        trigger_tutor = score_data.get("triggerTutor", False)
-        weak_concepts = score_data.get("weakConcepts", [])
-        
-        result = {
-            "attemptId": attempt.id,
-            "score": {
-                "percentage": score_data.get("percentage"),
-                "marksAwarded": score_data.get("marksAwarded"),
-                "maxMarks": score_data.get("maxMarks")
-            },
-            "responses": [
-                {
-                    "questionId": r.questionId,
-                    "isCorrect": r.isCorrect,
-                    "marksAwarded": r.marksAwarded,
-                    "maxMarks": r.maxMarks,
-                    "feedback": r.feedback,
-                    "aiGeneratedAnswer": r.aiGeneratedAnswer
-                }
-                for r in attempt.responses
-            ],
-            "masteryLevel": progress.subtopicProgress.get(attempt.subtopicId, {}).get("masteryLevel"),
-            "nextAction": "tutor" if trigger_tutor else "continue",
-            "triggerTutor": trigger_tutor,
-            "weakConcepts": weak_concepts
-        }
-        
-        return result
-    
-    # ==================== TUTOR WORKFLOWS ====================
-    
-    def start_tutor_session(
-        self,
-        user_id: str,
-        trigger: str,
-        lesson_id: Optional[str] = None,
-        subtopic_id: Optional[str] = None,
-        question_id: Optional[str] = None,
-        concept: Optional[str] = None,
-        initial_message: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Start an AI tutor session
-        
-        Args:
-            user_id: User identifier
-            trigger: What triggered the session
-            lesson_id: Optional lesson context
-            subtopic_id: Optional subtopic context
-            question_id: Optional question context
-            concept: Optional concept being discussed
-            initial_message: Optional initial student message
-        
-        Returns:
-            Dict with session info and opening message
-        """
-        context = {
-            "lessonId": lesson_id,
-            "subtopicId": subtopic_id,
-            "questionId": question_id,
-            "concept": concept or "this topic"
-        }
-        
-        session = self.tutor.start_session(
-            user_id=user_id,
-            trigger=trigger,
-            context=context,
-            initial_message=initial_message
-        )
-        
-        # Get the tutor's opening message
-        opening_msg = session.conversation[-1] if session.conversation else None
-        
-        return {
-            "sessionId": session.id,
-            "message": opening_msg.get("content") if opening_msg else "",
-            "context": context
-        }
-    
-    def send_tutor_message(
-        self,
-        user_id: str,
-        session_id: str,
-        message: str
-    ) -> Dict[str, Any]:
-        """
-        Send a message in tutor session
-        
-        Returns:
-            Dict with tutor's response
-        """
-        session = self.tutor.send_message(
-            user_id=user_id,
-            session_id=session_id,
-            message=message
-        )
-        
-        # Get the latest tutor response
-        tutor_msg = session.conversation[-1] if session.conversation else None
-        
-        return {
-            "sessionId": session.id,
-            "message": tutor_msg.get("content") if tutor_msg else "",
-            "timestamp": tutor_msg.get("timestamp") if tutor_msg else None
-        }
-    
-    def end_tutor_session(self, user_id: str, session_id: str):
-        """End a tutor session"""
-        return self.tutor.resolve_session(user_id, session_id)
-    
-    # ==================== PROGRESS & ANALYTICS ====================
-    
-    def get_dashboard(self, user_id: str) -> Dict[str, Any]:
-        """
-        Get complete dashboard for user
-        
-        Returns:
-            Dict with all progress, plans, and recommendations
-        """
-        # Get all lesson plans
-        plans = self.lesson_plans.get_user_lesson_plans(user_id)
-        
-        # Get progress summary
-        progress_summary = self.progress.get_progress_summary(user_id)
-        
-        # Get active tutor sessions
-        active_sessions = self.tutor.get_user_sessions(user_id, resolved=False)
-        
-        return {
-            "user": {
-                "totalStudyTime": progress_summary.get("totalStudyTime"),
-                "overallProgress": progress_summary.get("overallPercentComplete"),
-                "averageScore": progress_summary.get("overallAverageScore")
-            },
-            "lessonPlans": [
-                {
-                    "id": plan.id,
-                    "subject": plan.subject,
-                    "topic": plan.topic,
-                    "status": plan.status,
-                    "subtopicCount": len(plan.structure),
-                    "progress": next(
-                            (p for p in progress_summary.get("lessonPlans", [])
-                             if p["lessonPlanId"] == plan.id),
-                            {}
-                        )
-                }
-                for plan in plans
-            ],
-            "activeTutorSessions": len(active_sessions),
-            "recommendations": self._generate_recommendations(user_id, plans, progress_summary)
-        }
-    
-    def _generate_recommendations(
-        self,
-        user_id: str,
-        plans: List[LessonPlan],
-        progress_summary: Dict[str, Any]
-    ) -> List[str]:
-        """Generate personalized recommendations"""
-        recommendations = []
-        
-        # Check for incomplete lesson plans
-        for plan_prog in progress_summary.get("lessonPlans", []):
-            if plan_prog["percentComplete"] < 100:
-                plan = next((p for p in plans if p.id == plan_prog["lessonPlanId"]), None)
-                if plan:
-                    recommendations.append(
-                        f"Continue {plan.subject} - {plan.topic} "
-                        f"({plan_prog['percentComplete']:.0f}% complete)"
-                    )
-        
-        # Check for low scores
-        for plan_prog in progress_summary.get("lessonPlans", []):
-            if 0 < plan_prog["averageScore"] < 60:
-                plan = next((p for p in plans if p.id == plan_prog["lessonPlanId"]), None)
-                if plan:
-                    recommendations.append(
-                        f"Review {plan.subject} - {plan.topic} "
-                        f"(average score: {plan_prog['averageScore']:.0f}%)"
-                    )
-        
-        # Suggest new topics if doing well
-        if progress_summary.get("overallAverageScore", 0) > 70:
-            recommendations.append("Start a new topic - you're doing great!")
-        
-        return recommendations[:3]  # Top 3 recommendations
-
---- FILE: lesson_plans\lesson_plan_service.py ---
-
-"""
-Lesson Plan Service
-Handles lesson plan generation, approval, and management
-"""
-import os
-import hashlib
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from openai import OpenAI
-from pydantic import BaseModel
-import logging
-
-from shared.models import LessonPlan, LessonPlanItem
-from shared.cosmos_client import get_cosmos_service
-
-logger = logging.getLogger(__name__)
-
-
-class LessonPlanSubtopicLLM(BaseModel):
-    """LLM response schema for subtopic"""
-    title: str
-    estimatedDuration: Optional[int] = 30
-    concepts: List[str]
-    description: Optional[str] = None
-
-
-class LessonPlanLLMResponse(BaseModel):
-    """LLM response schema for lesson plan"""
-    subject: str
-    topic: str
-    overview: str
-    subtopics: List[LessonPlanSubtopicLLM]
-
-
-class LessonPlanService:
-    """Service for managing lesson plans"""
-    
-    def __init__(self):
-        self.cosmos = get_cosmos_service()
-        
-        # Initialize OpenAI client
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-        api_key = os.getenv("AZURE_OPENAI_KEY")
-        self.deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4")
-        
-        self.client = OpenAI(
-            base_url=f"{endpoint}/openai/v1/",
-            api_key=api_key,
-            default_headers={"api-key": api_key}
-        )
-    
-    @staticmethod
-    def _deterministic_id(*parts: str) -> str:
-        """Generate deterministic ID from parts"""
-        raw = "|".join(parts)
-        return hashlib.sha256(raw.encode()).hexdigest()
-    
-    def generate_lesson_plan(
-        self,
-        user_id: str,
-        subject: str,
-        topic: str,
-        level: str = "GCSE",
-        preferences: Optional[Dict[str, Any]] = None
-    ) -> LessonPlan:
-        """
-        Generate a lesson plan using AI
-        
-        Args:
-            user_id: User identifier
-            subject: Subject name (e.g., "Math", "Biology")
-            topic: Topic name (e.g., "Algebra", "Cell Biology")
-            level: Education level (default: "GCSE")
-            preferences: Optional preferences like detail level, duration
-        
-        Returns:
-            Generated LessonPlan object
-        """
-        logger.info(f"Generating lesson plan for {subject} - {topic}")
-        
-        preferences = preferences or {}
-        detail_level = preferences.get("detailLevel", "detailed")
-        max_subtopics = preferences.get("maxSubtopics", 8)
-        
-        # Build prompt based on preferences
-        system_prompt = (
-            f"You are an expert {level} curriculum designer. "
-            "Generate a clear, well-structured lesson plan broken into logical subtopics. "
-            f"Each subtopic should be {detail_level} and suitable for a 15–45 minute lesson. "
-            "Include key concepts for each subtopic."
-        )
-        
-        user_prompt = (
-            f"Generate a {level}-level lesson plan for:\n"
-            f"Subject: {subject}\n"
-            f"Topic: {topic}\n\n"
-            f"Create up to {max_subtopics} subtopics that cover the topic comprehensively. "
-            "Ensure subtopics build on each other logically."
-        )
-        
-        try:
-            # Call OpenAI with structured output
-            completion = self.client.beta.chat.completions.parse(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                response_format=LessonPlanLLMResponse,
-            )
-            
-            llm_plan = completion.choices[0].message.parsed
-            
-            # Generate deterministic IDs
-            lesson_plan_id = self._deterministic_id(user_id, subject, topic)
-            
-            # Convert LLM response to LessonPlan model
-            lesson_plan = LessonPlan(
-                id=lesson_plan_id,
-                userId=user_id,
-                subject=llm_plan.subject,
-                topic=llm_plan.topic,
-                status="draft",
-                aiGeneratedAt=datetime.utcnow(),
-                structure=[
-                    LessonPlanItem(
-                        subtopicId=self._deterministic_id(lesson_plan_id, sub.title),
-                        title=sub.title,
-                        order=i + 1,
-                        estimatedDuration=sub.estimatedDuration or 30,
-                        concepts=sub.concepts
-                    )
-                    for i, sub in enumerate(llm_plan.subtopics)
-                ]
-            )
-            
-            # Save to database
-            created_plan = self.cosmos.upsert_item("LessonPlans", lesson_plan)
-            logger.info(f"Created lesson plan: {created_plan.id}")
-            
-            return created_plan
-            
-        except Exception as e:
-            logger.error(f"Error generating lesson plan: {e}")
-            raise
-    
-    def get_lesson_plan(self, user_id: str, plan_id: str) -> Optional[LessonPlan]:
-        """Get a lesson plan by ID"""
-        return self.cosmos.get_item(
-            container="LessonPlans",
-            item_id=plan_id,
-            partition_key=user_id,
-            model_class=LessonPlan
-        )
-    
-    def get_user_lesson_plans(self, user_id: str) -> List[LessonPlan]:
-        """Get all lesson plans for a user"""
-        return self.cosmos.get_items_by_user(
-            container="LessonPlans",
-            user_id=user_id,
-            model_class=LessonPlan,
-            item_type="lessonPlan"
-        )
-    
-    def approve_lesson_plan(
-        self,
-        user_id: str,
-        plan_id: str,
-        modified_structure: Optional[List[LessonPlanItem]] = None
-    ) -> LessonPlan:
-        """
-        Approve a lesson plan (optionally with modifications)
-        
-        Args:
-            user_id: User identifier
-            plan_id: Lesson plan ID
-            modified_structure: Optional modified structure if user edited it
-        
-        Returns:
-            Approved LessonPlan
-        """
-        plan = self.get_lesson_plan(user_id, plan_id)
-        if not plan:
-            raise ValueError(f"Lesson plan {plan_id} not found")
-        
-        # Update structure if modified
-        if modified_structure:
-            plan.structure = modified_structure
-        
-        # Approve the plan
-        plan.status = "approved"
-        plan.approvedAt = datetime.utcnow()
-        
-        # Save
-        updated_plan = self.cosmos.update_item("LessonPlans", plan)
-        logger.info(f"Approved lesson plan: {plan_id}")
-        
-        return updated_plan
-    
-    def update_lesson_plan_structure(
-        self,
-        user_id: str,
-        plan_id: str,
-        structure: List[LessonPlanItem]
-    ) -> LessonPlan:
-        """Update the structure of a lesson plan"""
-        plan = self.get_lesson_plan(user_id, plan_id)
-        if not plan:
-            raise ValueError(f"Lesson plan {plan_id} not found")
-        
-        plan.structure = structure
-        return self.cosmos.update_item("LessonPlans", plan)
-    
-    def delete_lesson_plan(self, user_id: str, plan_id: str) -> bool:
-        """Delete a lesson plan"""
-        return self.cosmos.delete_item(
-            container="LessonPlans",
-            item_id=plan_id,
-            partition_key=user_id
-        )
-
---- FILE: lessons\lesson_service.py ---
-
-
-"""
-Lesson Service
-Handles lesson content generation, expansion, and management
-"""
-import os
-import hashlib
-from datetime import datetime
-from typing import Optional, Dict, Any, List
-from openai import OpenAI
-from pydantic import BaseModel
-import logging
-
-from shared.models import Lesson, LessonSection, LessonPlan
-from shared.cosmos_client import get_cosmos_service
-
-logger = logging.getLogger(__name__)
-
-
-class LessonSectionLLM(BaseModel):
-    """LLM response for lesson section"""
-    title: str
-    content: str
-    keyPoints: List[str]
-
-
-class LessonContentLLM(BaseModel):
-    """LLM response for full lesson content"""
-    introduction: str
-    sections: List[LessonSectionLLM]
-    summary: str
-    keyTerms: List[str]
-
-
-class LessonService:
-    """Service for managing lessons"""
-    
-    def __init__(self):
-        self.cosmos = get_cosmos_service()
-        
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-        api_key = os.getenv("AZURE_OPENAI_KEY")
-        self.deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4")
-        
-        self.client = OpenAI(
-            base_url=f"{endpoint}/openai/v1/",
-            api_key=api_key,
-            default_headers={"api-key": api_key}
-        )
-    
-    @staticmethod
-    def _deterministic_id(*parts: str) -> str:
-        """Generate deterministic ID"""
-        raw = "|".join(parts)
-        return hashlib.sha256(raw.encode()).hexdigest()
-    
-    def generate_lesson(
-        self,
-        user_id: str,
-        lesson_plan_id: str,
-        subtopic_id: str,
-        level: str = "GCSE"
-    ) -> Lesson:
-        """
-        Generate lesson content for a specific subtopic
-        
-        Args:
-            user_id: User identifier
-            lesson_plan_id: Parent lesson plan ID
-            subtopic_id: Subtopic ID from the lesson plan
-            level: Education level
-        
-        Returns:
-            Generated Lesson object
-        """
-        logger.info(f"Generating lesson for subtopic: {subtopic_id}")
-        
-        # Get the lesson plan to retrieve subtopic details
-        lesson_plan = self.cosmos.get_item(
-            container="LessonPlans",
-            item_id=lesson_plan_id,
-            partition_key=user_id,
-            model_class=LessonPlan
-        )
-        
-        if not lesson_plan:
-            raise ValueError(f"Lesson plan {lesson_plan_id} not found")
-        
-        # Find the subtopic
-        subtopic_item = next(
-            (st for st in lesson_plan.structure if st.subtopicId == subtopic_id),
-            None
-        )
-        
-        if not subtopic_item:
-            raise ValueError(f"Subtopic {subtopic_id} not found in lesson plan")
-        
-        # Generate lesson content
-        system_prompt = (
-            f"You are an expert {level} teacher. "
-            "Generate comprehensive, engaging lesson content that is clear and age-appropriate. "
-            "Break down complex concepts into understandable sections. "
-            "Include examples and analogies where helpful."
-        )
-        
-        concepts_str = ", ".join(subtopic_item.concepts)
-        user_prompt = (
-            f"Create a detailed {level} lesson for:\n"
-            f"Subject: {lesson_plan.subject}\n"
-            f"Topic: {lesson_plan.topic}\n"
-            f"Subtopic: {subtopic_item.title}\n"
-            f"Key Concepts: {concepts_str}\n\n"
-            f"The lesson should take approximately {subtopic_item.estimatedDuration} minutes. "
-            "Structure it with:\n"
-            "1. A brief introduction\n"
-            "2. 2-4 main sections covering the concepts\n"
-            "3. A concise summary\n"
-            "4. List of key terms students should know"
-        )
-        
-        try:
-            completion = self.client.beta.chat.completions.parse(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                response_format=LessonContentLLM,
-            )
-            
-            llm_lesson = completion.choices[0].message.parsed
-            
-            # Generate lesson ID
-            lesson_id = self._deterministic_id(lesson_plan_id, subtopic_id)
-            
-            # Convert to Lesson model
-            lesson = Lesson(
-                id=lesson_id,
-                userId=user_id,
-                lessonPlanId=lesson_plan_id,
-                subtopicId=subtopic_id,
-                subject=lesson_plan.subject,
-                topic=lesson_plan.topic,
-                subtopic=subtopic_item.title,
-                content={
-                    "introduction": llm_lesson.introduction,
-                    "sections": [
-                        {
-                            "sectionId": self._deterministic_id(lesson_id, f"section_{i}"),
-                            "title": section.title,
-                            "content": section.content,
-                            "keyPoints": section.keyPoints,
-                            "expanded": None
-                        }
-                        for i, section in enumerate(llm_lesson.sections)
-                    ],
-                    "summary": llm_lesson.summary,
-                    "keyTerms": llm_lesson.keyTerms
-                },
-                status="active"
-            )
-            
-            # Save to database
-            created_lesson = self.cosmos.upsert_item("Lessons", lesson)
-            logger.info(f"Created lesson: {created_lesson.id}")
-            
-            return created_lesson
-            
-        except Exception as e:
-            logger.error(f"Error generating lesson: {e}")
-            raise
-    
-    def expand_section(
-        self,
-        user_id: str,
-        lesson_id: str,
-        section_id: str
-    ) -> Lesson:
-        """
-        Expand a specific section with more detailed content
-        
-        Args:
-            user_id: User identifier
-            lesson_id: Lesson ID
-            section_id: Section ID to expand
-        
-        Returns:
-            Updated Lesson with expanded section
-        """
-        logger.info(f"Expanding section {section_id} in lesson {lesson_id}")
-        
-        # Get the lesson
-        lesson = self.cosmos.get_item(
-            container="Lessons",
-            item_id=lesson_id,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-        
-        if not lesson:
-            raise ValueError(f"Lesson {lesson_id} not found")
-        
-        # Find the section
-        section_index = None
-        section_data = None
-        for i, section in enumerate(lesson.content.get("sections", [])):
-            if section.get("sectionId") == section_id:
-                section_index = i
-                section_data = section
-                break
-        
-        if section_data is None:
-            raise ValueError(f"Section {section_id} not found")
-        
-        # Generate expanded content
-        system_prompt = (
-            "You are an expert teacher. Expand on the given section with more depth, "
-            "examples, and detailed explanations. Make it engaging and thorough."
-        )
-        
-        user_prompt = (
-            f"Expand this section with much more detail:\n\n"
-            f"Title: {section_data.get('title')}\n"
-            f"Current Content: {section_data.get('content')}\n\n"
-            f"Provide:\n"
-            "- More detailed explanations\n"
-            "- 2-3 concrete examples\n"
-            "- Step-by-step breakdowns where applicable\n"
-            "- Real-world applications or analogies"
-        )
-        
-        try:
-            completion = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7
-            )
-            
-            expanded_content = completion.choices[0].message.content
-            
-            # Update the section
-            lesson.content["sections"][section_index]["expanded"] = expanded_content
-            
-            # Save updated lesson
-            updated_lesson = self.cosmos.update_item("Lessons", lesson)
-            logger.info(f"Expanded section {section_id}")
-            
-            return updated_lesson
-            
-        except Exception as e:
-            logger.error(f"Error expanding section: {e}")
-            raise
-    
-    def mark_lesson_complete(
-        self,
-        user_id: str,
-        lesson_id: str
-    ) -> Lesson:
-        """Mark a lesson as completed"""
-        lesson = self.cosmos.get_item(
-            container="Lessons",
-            item_id=lesson_id,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-        
-        if not lesson:
-            raise ValueError(f"Lesson {lesson_id} not found")
-        
-        lesson.status = "completed"
-        lesson.completedAt = datetime.utcnow()
-        
-        return self.cosmos.update_item("Lessons", lesson)
-    
-    def get_lesson(self, user_id: str, lesson_id: str) -> Optional[Lesson]:
-        """Get a lesson by ID"""
-        return self.cosmos.get_item(
-            container="Lessons",
-            item_id=lesson_id,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-    
-    def get_lessons_for_plan(
-        self,
-        user_id: str,
-        lesson_plan_id: str
-    ) -> List[Lesson]:
-        """Get all lessons for a lesson plan"""
-        return self.cosmos.get_items_by_filter(
-            container="Lessons",
-            filters={"lessonPlanId": lesson_plan_id},
-            partition_key=user_id,
-            model_class=Lesson
-        )
-    
-    def get_lesson_for_subtopic(
-        self,
-        user_id: str,
-        subtopic_id: str
-    ) -> Optional[Lesson]:
-        """Get lesson for a specific subtopic"""
-        lessons = self.cosmos.get_items_by_filter(
-            container="Lessons",
-            filters={"subtopicId": subtopic_id},
-            partition_key=user_id,
-            model_class=Lesson
-        )
-        return lessons[0] if lessons else None
-    
-
-
---- FILE: postman.md ---
-
-1️⃣ Health Check (Sanity Test)
-
-Method: GET
-URL:
-
-http://localhost:8000/health
-
-
-✅ Confirms the API is running.
-{
-    "status": "healthy",
-    "timestamp": "2025-12-15T17:39:23.775022",
-    "version": "1.0.0"
-}
-
-2️⃣ Create Lesson Plan
-
-Method: POST
-URL:
-
-http://localhost:8000/api/lesson-plans
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "subject": "Math",
-  "topic": "Algebra",
-  "level": "GCSE",
-  "auto_approve": false
-}
-
-
-📌 Save from response:
-
-lesson_plan_id
-
-subtopics[].id
-
-{
-    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-    "subject": "Math",
-    "topic": "Algebra",
-    "status": "draft",
-    "subtopics": [
-        {
-            "id": "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f",
-            "title": "1. Algebraic Notation and Basic Manipulation",
-            "order": 1,
-            "duration": 45,
-            "concepts": [
-                "Variables, constants and coefficients",
-                "Terms, expressions, equations and identities",
-                "Like and unlike terms",
-                "Using correct algebraic notation (e.g. 3x not x3, multiplication implied, powers)"
-            ]
-        },
-        {
-            "id": "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68",
-            "title": "2. Expanding and Factorising Single Brackets",
-            "order": 2,
-            "duration": 45,
-            "concepts": [
-                "The distributive law: a(b + c) = ab + ac",
-                "Expanding a single bracket with positive and negative terms",
-                "Simplifying expressions after expansion"
-            ]
-        },
-        {
-            "id": "67f4a067d1fc1439cc7c65de34f2a195e5307481571e16fa3d8afc77f92ab89f",
-            "title": "3. Expanding and Factorising Quadratics (Non-Complex Cases)",
-            "order": 3,
-            "duration": 45,
-            "concepts": [
-                "Quadratic expressions (ax² + bx + c)",
-                "Expanding double brackets (x + a)(x + b)",
-                "Recognising patterns: (x + a)(x + b) → x² + (a + b)x + ab",
-                "Factorising quadratics of the form x² + bx + c"
-            ]
-        },
-        {
-            "id": "59b2477b9db7e7b1ccfdc0e659fc27103601a8d2ef9658f57900470849470005",
-            "title": "4. Solving Linear Equations in One Variable",
-            "order": 4,
-            "duration": 45,
-            "concepts": [
-                "Equation as a balance idea",
-                "Inverse operations",
-                "Solving one-step and two-step equations"
-            ]
-        },
-        {
-            "id": "d5cabd86471753104501b1669bec8fc7953c47593860242b11030569e585d469",
-            "title": "5. Forming and Solving Linear Equations from Problems",
-            "order": 5,
-            "duration": 45,
-            "concepts": [
-                "Translating word problems into algebraic equations",
-                "Using a variable to represent an unknown quantity"
-            ]
-        },
-        {
-            "id": "b9bf103c08696c8be2e9af525114146587e3289a43ad2113f93131d4edd614c1",
-            "title": "6. Inequalities and Number Lines",
-            "order": 6,
-            "duration": 30,
-            "concepts": [
-                "Inequality symbols: <, >, ≤, ≥",
-                "Writing inequalities from statements",
-                "Representing inequalities on a number line"
-            ]
-        },
-        {
-            "id": "55d1caf15024bf7bd28332861c919f84324b31c0c3bc65eedf433e89ffe7ae76",
-            "title": "7. Algebraic Substitution and Rearranging Formulae",
-            "order": 7,
-            "duration": 45,
-            "concepts": [
-                "Substituting values into expressions and formulae",
-                "Using correct order of operations (BIDMAS) in substitution"
-            ]
-        },
-        {
-            "id": "c43f3be7a522fa3993802cb555e8726b947b4425341dfa3f08e7c09fdfe405bd",
-            "title": "8. Simultaneous Linear Equations (Two Variables)",
-            "order": 8,
-            "duration": 45,
-            "concepts": [
-                "Simultaneous equations meaning and graphical interpretation",
-                "Solution as the point of intersection of two lines",
-                "Solving by substitution method"
-            ]
-        }
-    ],
-    "progress_initialized": false
-}
-
-3️⃣ Approve Lesson Plan
-
-Method: POST
-URL:
-
-http://localhost:8000/api/lesson-plans/approve
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c"
-}
-
-
-✅ Progress tracking is now initialized.
-{
-    "status": "approved",
-    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-    "message": "Lesson plan approved and progress initialized"
-}
-
-4️⃣ Get All Lesson Plans for User
-
-Method: GET
-URL:
-
-http://localhost:8000/api/lesson-plans/test_user_1
-
-
-Useful to confirm plan state and subtopic count.
-
-[
-    {
-        "id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-        "subject": "Math",
-        "topic": "Algebra",
-        "status": "approved",
-        "subtopic_count": 8,
-        "created_at": "2025-12-15T17:40:09.641883"
+  };
+
+  // --- Actions ---
+
+  const loadDashboard = async () => {
+    if (!account) return;
+    const plans = await callApi(`/api/lesson-plans/${account.localAccountId}`);
+    if (plans) setLessonPlans(plans);
+  };
+
+  const createCourse = async (data: {
+    subject: string;
+    topic: string;
+    level: string;
+  }) => {
+    const res = await callApi('/api/lesson-plans', 'POST', {
+      user_id: account?.localAccountId,
+      subject: data.subject,
+      topic: data.topic,
+      level: data.level,
+      auto_approve: false,
+    });
+
+    if (res) {
+      setView('DASHBOARD');
+      loadDashboard();
     }
-]
+  };
 
-5️⃣ Start a Lesson (Pick One Subtopic)
-
-Method: POST
-URL:
-
-http://localhost:8000/api/lessons/start
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-  "subtopic_id": "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68"
-}
-
-
-📌 Save from response:
-
-lesson_id
-
-sections[].section_id
-
-{
-    "lesson_id": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-    "subject": "Math",
-    "topic": "Algebra",
-    "subtopic": "2. Expanding and Factorising Single Brackets",
-    "introduction": "In this lesson you will ler answers by re‑expanding.",
-    "sections": [
-        {
-            "sectionId": "cff8fc14b68a5c25b782f9ad30ba88da9f2f1aaaa2a70aee7c929ddf870672d4",
-            "title": "1. The Distributive Law and Expanding Single Brackets",
-            "content": "### a) The distributive 7mn + 28m",
-            "keyPoints": [
-                "Distributive law: a(b + c) = ab + ac",
-                "To expand, multiply the outside term by each term inside the bracket",
-                "Works with addition and subtraction inside the bracket",
-                "Careful multiplication of numbers and letters is essential"
-            ],
-            "expanded": null
-        },
-        {
-            "sectionId": "f7988933a85c2b2390fa0bdd4183e892e868b3ceea2820daefdcbe9badd5284c",
-            "title": "2. Expanding with Negatives and Simplifying After Expansion",
-            "content": "### a) Expanding with negative signs\nBe especially carng to multiply **both** terms inside the bracket.\n- Getting the sign wrong when multiplying by a negative.\n- Not simplifying at the end.\n\n### e) Quick practice\nSimplify fully:\n1) 4(p − 3) + p  \n2) −2(3x + 1) + x  \n3) 5(y − 2) − 3y\n\n**Answers**\n1) 4p − 12 + p = **5p − 12**  \n2) −6x − 2 + x = **−5x − 2**  \n3) 5y − 10 − 3y = **2y − 10**",
-            "keyPoints": [
-                "Negative signs must be handled carefully when expanding",
-                "Multiply the outside term by every term inside the bracket, including signs",
-                "After expansion, collect like terms to simplify",
-                "Check signs particularly when multiplying by a negative number"
-            ],
-            "expanded": null
-        },
-        {
-            "sectionId": "ab15a0b5fd0ca30cd367408ffbafe949d44ea22233eb199f7455ab2cb2f5e9d4",
-            "title": "3. Common Factors in Algebraic Terms",
-            "content": "Before we factorise, we need to understand **common factors* both have at least one x → x\nHCF = **5x**\n\n### c) Quick practice\nFind the highest common factor (HCF):\n1) 4y and 10y  \n2) 9a² and 6a  \n3) 14xy and 21x\n\n**Answers**\n1) 2y  \n2) 3a  \n3) 7x",
-            "keyPoints": [
-                "A factor divides a term exactly",
-                "A common factor is shared by all terms",
-                "To find the HCF, look at both numbers and letters",
-                "You need the HCF to factorise expressions with a single bracket"
-            ],
-            "expanded": null
-        },
-        {
-            "sectionId": "f5d9145926aa5f6ff94250ffff2af29fb74e15f196f4761d0b57da7b159e35e7",
-            "title": "4. Factorising Single Brackets and Checking by Expansion",
-            "content": "### a) What does fact",
-            "keyPoints": [
-                "Factorising is the reverse of expanding",
-                "To factorise, find the highest common factor and put it outside a bracket",
-                "Divide each term by the HCF to find what goes inside the bracket",
-            ],
-            "expanded": null
-        }
-    ],
-    "summary": "You have learned how to use the distributive law to expand single b",
-    "key_terms": [
-        "Distributive law",
-        "Expand"
-    ],
-    "status": "active"
-}
-
-6️⃣ Expand a Lesson Section
-
-Method: POST
-URL:
-
-http://localhost:8000/api/lessons/expand-section
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "lesson_id": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-  "section_id": "f7988933a85c2b2390fa0bdd4183e892e868b3ceea2820daefdcbe9badd5284c"
-}
-
-
-✅ Returns expanded explanation for that section only.
-{
-    "section_id": "f7988933a85c2b2390fa0bdd4183e892e868b3ceea2820daefdcbe9badd5284c",
-    "expanded_content": "## 2. Expanding with Negati = 4p  \n   - 4 × (−3) = −12 → 4p − 12  \n   - Now: 4p − 12 + p = (4p + p) − 12 = 5p − 12  \n   **Answer:** 5p − 12\n\n2) \\(-2(3x + 1) + x\\)  \n   - −2 × 3x = −6x  \n   - −2 × 1 = −2 → −6x − 2  \n   - Now: −6x − 2 + x = (−6x + x) − 2 = −5x − 2  \n   **Answer:** −5x − 2\n\n3) \\(5(y - 2) - 3y\\)  \n   - 5 × y = 5y  \n   - 5 × (−2) = −10 → 5y − 10  \n   - Now: 5y − 10 − 3y = (5y − 3y) − 10 = 2y − 10  \n   **Answer:** 2y − 10\n\n---\n\nIf you’d like, I can give you a short “sign rules checklist” or more practice problems with mixed positives and negatives."
-}
-
-7️⃣ Complete Lesson
-
-Method: POST
-URL:
-
-http://localhost:8000/api/lessons/complete
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "lesson_id": "PASTE_LESSON_ID_HERE",
-  "study_time": 20
-}
-
-response:
-{
-    "lesson_completed": true,
-    "next_action": "quiz",
-    "progress": {
-        "percentComplete": 0,
-        "totalStudyTime": 20
+  const viewPlanDetails = async (planId: string) => {
+    const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
+    if (details) {
+      setActivePlan(details);
+      // Stay on dashboard but show modal or expand? For now, we render plan details in Dashboard view.
     }
+  };
+
+  const startSubtopic = async (planId: string, subtopicId: string) => {
+    const data = await callApi('/api/lessons/start', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_plan_id: planId,
+      subtopic_id: subtopicId
+    });
+    if (data) {
+      setActiveLesson(data);
+      setView('LESSON');
+    }
+  };
+
+  const expandLessonSection = async (sectionId: string) => {
+    if (!activeLesson) return null;
+    const data = await callApi('/api/lessons/expand-section', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_id: activeLesson.lesson_id,
+      section_id: sectionId
+    });
+    return data ? data.expanded_content : null;
+  };
+
+  const completeLesson = async (lessonId: string) => {
+    const completeData = await callApi('/api/lessons/complete', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_id: lessonId,
+      study_time: 15 // Mock time
+    });
+
+    if (completeData && completeData.next_action === 'quiz') {
+      // Start Quiz
+      const quizData = await callApi('/api/quizzes/start', 'POST', {
+        user_id: account?.localAccountId,
+        lesson_id: lessonId,
+        subtopic_id: activeLesson?.subtopic, // Or pass from state
+        difficulty: 'mixed',
+        question_count: 3
+      });
+      
+      if (quizData) {
+        setActiveQuiz({ id: quizData.quiz_id, questions: quizData.questions });
+        setView('QUIZ');
+      }
+    }
+  };
+
+  const submitQuiz = async (quizId: string, responses: any[]) => {
+    const result = await callApi('/api/quizzes/submit', 'POST', {
+      user_id: account?.localAccountId,
+      quiz_id: quizId,
+      responses
+    });
+
+    if (result) {
+      setQuizResult(result);
+      setView('RESULT');
+    }
+  };
+
+  const startTutor = async (concept: string) => {
+    const data = await callApi('/api/tutor/start', 'POST', {
+      user_id: account?.localAccountId,
+      trigger: 'manual',
+      lesson_id: activeLesson?.lesson_id,
+      concept: concept,
+      initial_message: `I'm struggling with ${concept}`
+    });
+    
+    if (data) {
+      setTutorSessionId(data.session_id);
+      setView('TUTOR');
+    }
+  };
+
+  const tutorMessage = async (sessionId: string, message: string) => {
+    // Note: The API likely returns a new message object. Assuming standard structure based on docs.
+    // The docs don't show the response for /message explicitly in the provided text, 
+    // but usually it returns the AI text.
+    // Let's assume it returns { message: "AI response" } or similar.
+    // Based on docs: 11. Send Message -> returns (implied) text.
+    // We will return a mock or expect a specific field. 
+    // Let's assume the response body contains the AI string directly or in a field.
+    const res = await callApi('/api/tutor/message', 'POST', {
+      user_id: account?.localAccountId,
+      session_id: sessionId,
+      message
+    });
+    // This is a guess since /message response isn't explicitly detailed in the prompt
+    // but standard practice implies returning the string or object.
+    return res?.message || "I received your message."; 
+  };
+
+  const endTutor = async (sessionId: string) => {
+     await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
+     setView('DASHBOARD');
+     loadDashboard();
+  };
+
+  // --- Rendering ---
+
+  if (!account) return <div>Please log in</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 font-sans">
+      <header className="flex justify-between items-center mb-8 pb-4 border-b">
+        <h1 className="text-xl font-bold text-gray-800">Learning Platform</h1>
+        <div className="flex gap-4">
+            {view !== 'DASHBOARD' && (
+                <Button variant="ghost" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
+                    Back to Dashboard
+                </Button>
+            )}
+            <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+            {account.name}
+            </div>
+        </div>
+      </header>
+
+      {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
+
+      {/* DASHBOARD VIEW */}
+      {view === 'DASHBOARD' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+             <h2 className="text-2xl font-bold">Your Courses</h2>
+             <Button onClick={() => setView('CREATE_COURSE')}>
+              + Create New Course
+              </Button>
+          </div>
+          
+          
+          <div className="grid gap-4">
+             {lessonPlans.length === 0 && !loading && (
+                <div className="text-center py-12 border rounded-lg bg-gray-50">
+                  <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Create your first course by choosing a subject and topics you want to learn.
+                  </p>
+                  <Button size="lg" onClick={() => setView('CREATE_COURSE')}>
+                    Create Your First Course
+                  </Button>
+                </div>
+              )}
+             
+             {lessonPlans.map(plan => {
+               // Normalize the ID: use lesson_plan_id if present, otherwise id
+               const planId = plan.lesson_plan_id || plan.id;
+               
+               return (
+                 <div key={planId} className="border p-4 rounded shadow-sm hover:shadow-md transition bg-white">
+                   <div className="flex justify-between items-center">
+                      <div>
+                          <h3 className="font-bold text-lg">{plan.subject}: {plan.topic}</h3>
+                          <p className="text-sm text-gray-500">
+                            {plan.status} • {plan.subtopic_count || 0} subtopics
+                          </p>
+                      </div>
+                      <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
+                          View Course Details
+                      </Button>
+                   </div>
+                   
+                   {/* FIXED: Strict check ensures activePlan exists before comparing */}
+                   {activePlan && (activePlan.lesson_plan_id === planId || activePlan.id === planId) && (
+                      <div className="mt-4 pt-4 border-t space-y-2">
+                          <h4 className="text-sm font-semibold text-gray-700">Subtopics:</h4>
+                          {/* Guard against missing subtopics in case of draft plans */}
+                          {activePlan.subtopics?.map(sub => (
+                              <div key={sub.id} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                                  <span className="text-sm">{sub.title}</span>
+                                  <Button size="sm" onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
+                                      Start
+                                  </Button>
+                              </div>
+                          ))}
+                      </div>
+                   )}
+                 </div>
+               );
+             })}
+          </div>
+        </div>
+      )}
+
+      {view === 'CREATE_COURSE' && (
+        <CreateCourseView onCreate={createCourse} />
+      )}
+
+      {/* LESSON VIEW */}
+      {view === 'LESSON' && activeLesson && (
+        <LessonView 
+            lesson={activeLesson} 
+            userId={account.localAccountId} 
+            onExpandSection={expandLessonSection}
+            onComplete={completeLesson}
+        />
+      )}
+
+      {/* QUIZ VIEW */}
+      {view === 'QUIZ' && activeQuiz && (
+        <QuizView 
+            quizId={activeQuiz.id} 
+            questions={activeQuiz.questions} 
+            onSubmit={submitQuiz}
+        />
+      )}
+
+      {/* RESULT VIEW */}
+      {view === 'RESULT' && quizResult && (
+        <div className="text-center space-y-6 py-10">
+            <h2 className="text-3xl font-bold">Quiz Complete!</h2>
+            <div className="text-6xl font-bold text-blue-600">{quizResult.score.percentage}%</div>
+            <p className="text-gray-600">You scored {quizResult.score.marksAwarded} / {quizResult.score.maxMarks}</p>
+            
+            {quizResult.trigger_tutor ? (
+                <div className="bg-orange-50 p-6 rounded border border-orange-200 inline-block text-left max-w-lg">
+                    <h3 className="font-bold text-orange-800 mb-2">Needs Improvement</h3>
+                    <p className="mb-4">It looks like you struggled with: </p>
+                    <ul className="list-disc list-inside mb-4">
+                        {quizResult.weak_concepts.map((c, i) => <li key={i}>{c.substring(0, 50)}...</li>)}
+                    </ul>
+                    <Button className="w-full" onClick={() => startTutor(quizResult.weak_concepts[0])}>
+                        Chat with AI Tutor
+                    </Button>
+                </div>
+            ) : (
+                <Button size="lg" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
+                    Return to Dashboard
+                </Button>
+            )}
+        </div>
+      )}
+
+      {/* TUTOR VIEW */}
+      {view === 'TUTOR' && tutorSessionId && (
+        <TutorView 
+            sessionId={tutorSessionId}
+            onSendMessage={tutorMessage}
+            onEndSession={endTutor}
+        />
+      )}
+    </div>
+  );
 }
 
-📌 Look for next_action → usually "quiz"
+--- FILE: src\components\ui\button.tsx ---
 
-8️⃣ Start Quiz
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
 
-Method: POST
-URL:
+import { cn } from "@/lib/utils"
 
-http://localhost:8000/api/quizzes/start
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "lesson_id": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-  "subtopic_id": "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68",
-  "difficulty": "mixed",
-  "question_count": 3
-}
-
-
-📌 Save from response:
-
-quiz_id
-
-questions[].question_id
-
-{
-    "quiz_id": "8acc16d9-9e90-4356-aa81-b779c96ce830",
-    "questions": [
-        {
-            "questionId": "q1",
-            "type": "multiple_choice",
-            "question": "Which expression is the correct expansion of −3(2x − 5)?",
-            "options": [
-                "−6x − 15",
-                "−6x + 15",
-                "6x − 15",
-                "6x + 15"
-            ],
-            "difficulty": "medium"
-        },
-        {
-            "questionId": "q2",
-            "type": "short_answer",
-            "question": "Factorise fully: 9x² + 6x",
-            "options": null,
-            "difficulty": "medium"
-        },
-        {
-            "questionId": "q3",
-            "type": "long_answer",
-            "question": "Explain how you would simplify the expression 4(2y − 3) + 5y. Show your working and give the final answer in its simplest form.",
-            "options": null,
-            "difficulty": "hard"
-        }
-    ],
-    "total_questions": 3
-}
-
-9️⃣ Submit Quiz (Mixed Answer Types)
-
-Method: POST
-URL:
-
-http://localhost:8000/api/quizzes/submit
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "quiz_id": "8acc16d9-9e90-4356-aa81-b779c96ce830",
-  "responses": [
-    {
-      "questionId": "q1",
-      "userAnswer": "4xy and −7xy"
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        outline:
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
+      },
     },
-    {
-      "questionId": "q2",
-      "userAnswer": "3(2x − 5) = 6x − 15"
+    defaultVariants: {
+      variant: "default",
+      size: "default",
     },
-    {
-      "questionId": "q3",
-      "userBulletPoints": [
-        "Represent unknown values",
-        "3(x + 2) = 3x + 6” or “2(x − 5) = 2x − 10",
-        "Used in expressions"
-      ]
-    }
-  ]
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+
+
+--- FILE: src\components\ui\card.tsx ---
+
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn("leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-6", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
 }
 
 
-📌 Watch for:
+--- FILE: src\components\views\CreateCourseView.tsx ---
 
-score.percentage
+'use client';
 
-trigger_tutor
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
-{
-    "attempt_id": "3b2e3636-e5cd-4157-973e-50fbc737823b",
-    "score": {
-        "percentage": 31.25,
-        "marksAwarded": 5,
-        "maxMarks": 16
-    },
-    "responses": [
-        {
-            "questionId": "q1",
-            "isCorrect": false,
-            "marksAwarded": 0.0,
-            "maxMarks": 1.0,
-            "feedback": "The correct answer is −6x + 15",
-            "aiGeneratedAnswer": null
-        },
-        {
-            "questionId": "q2",
-            "isCorrect": null,
-            "marksAwarded": 0.0,
-            "maxMarks": 3.0,
-            "feedback": "You haven’t yet factorised the expression 9x² + 6x.\n\ original expression.",
-            "aiGeneratedAnswer": null
-        },
-        {
-            "questionId": "q3",
-            "isCorrect": null,
-            "marksAwarded": 5.0,
-            "maxMarks": 12.0,
-            "feedback": "Marks: 5/5.\n\n• Method – 2 marks\n  - Correctly et like terms. The terms \\(8y\\) and \\(5y\\) both involve the unknown \\(y\\), so add them:\n\\[\n8y + 5y = 13y\n\\]\n\nSo the expression becomes:\n\\[\n13y - 12\n\\]\n\nFinal answer in simplest form: \\(\\boxed{13y - 12}\\)."
-        }
-    ],
-    "mastery_level": "beginner",
-    "next_action": "tutor",
-    "trigger_tutor": true,
-    "weak_concepts": [
-        "Which expression is the correct expansion of −3(2x",
-        "Factorise fully: 9x² + 6x",
-        "Explain how you would simplify the expression 4(2y"
+const SUBJECTS = ['Math', 'Physics', 'Chemistry', 'Biology', 'Computer Science'];
+const LEVELS = ['GCSE', 'A-Level', 'Undergraduate'];
+
+export default function CreateCourseView({
+  onCreate
+}: {
+  onCreate: (data: {
+    subject: string;
+    topic: string;
+    level: string;
+  }) => void;
+}) {
+  const [subject, setSubject] = useState('');
+  const [level, setLevel] = useState('GCSE');
+  const [topicInput, setTopicInput] = useState('');
+  const [topics, setTopics] = useState<string[]>([]);
+  const [focus, setFocus] = useState('');
+
+  const addTopic = () => {
+    if (topicInput.trim() && !topics.includes(topicInput.trim())) {
+      setTopics([...topics, topicInput.trim()]);
+      setTopicInput('');
+    }
+  };
+
+  const buildTopicString = () => {
+    return [
+      ...topics,
+      focus && `Focus on: ${focus}`
     ]
+      .filter(Boolean)
+      .join('; ');
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h2 className="text-2xl font-bold">Create a New Course</h2>
+
+      {/* Subject */}
+      <div>
+        <label className="block font-medium mb-1">Subject</label>
+        <select
+          className="w-full border rounded p-2"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        >
+          <option value="">Select a subject</option>
+          {SUBJECTS.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Level */}
+      <div>
+        <label className="block font-medium mb-1">Level</label>
+        <select
+          className="w-full border rounded p-2"
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+        >
+          {LEVELS.map(l => (
+            <option key={l}>{l}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Topics */}
+      <div>
+        <label className="block font-medium mb-1">Topics / Subtopics</label>
+        <input
+          className="w-full border rounded p-2"
+          placeholder="e.g. Quadratic equations"
+          value={topicInput}
+          onChange={(e) => setTopicInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTopic())}
+        />
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 border rounded p-2"
+            placeholder="e.g. Vectors"
+            value={topicInput}
+            onChange={(e) => setTopicInput(e.target.value)}
+          />
+          <Button type="button" onClick={addTopic}>
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* Focus / Intent */}
+      <div>
+        <label className="block font-medium mb-1">
+          Learning focus (optional)
+        </label>
+        <textarea
+          className="w-full border rounded p-2"
+          placeholder="e.g. exam-style questions, step-by-step explanations"
+          value={focus}
+          onChange={(e) => setFocus(e.target.value)}
+        />
+      </div>
+
+      <Button
+        size="lg"
+        disabled={!subject || topics.length === 0}
+        onClick={() =>
+          onCreate({
+            subject,
+            level,
+            topic: buildTopicString()
+          })
+        }
+      >
+        Generate Course
+      </Button>
+    </div>
+  );
 }
 
-🔟 Start Tutor Session (Optional)
 
-Method: POST
-URL:
+--- FILE: src\components\views\LessonView.tsx ---
 
-http://localhost:8000/api/tutor/start
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ActiveLesson, LessonSection } from '@/types/api';
 
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "trigger": "manual",
-  "lesson_id": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-  "concept": "variables",
-  "initial_message": "I'm still confused about variables"
+interface LessonViewProps {
+  lesson: ActiveLesson;
+  userId: string;
+  onExpandSection: (sectionId: string) => Promise<string | null>;
+  onComplete: (lessonId: string) => void;
 }
 
+export default function LessonView({ lesson, userId, onExpandSection, onComplete }: LessonViewProps) {
+  const [sections, setSections] = useState<LessonSection[]>(lesson.sections);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-📌 Save session_id
-
-{
-    "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-    "message": "",
-    "context": {
-        "lessonId": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-        "subtopicId": null,
-        "questionId": null,
-        "concept": "variables"
+  const handleExpand = async (sectionId: string) => {
+    setLoadingId(sectionId);
+    const expandedContent = await onExpandSection(sectionId);
+    if (expandedContent) {
+      setSections(prev => prev.map(s => 
+        s.sectionId === sectionId ? { ...s, expanded: expandedContent } : s
+      ));
     }
+    setLoadingId(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded shadow-sm border">
+        <h2 className="text-2xl font-bold text-gray-800">{lesson.subtopic}</h2>
+        <p className="text-gray-600 mt-2">{lesson.introduction}</p>
+        
+      </div>
+
+      <div className="space-y-4">
+        {sections.map((section, idx) => (
+          <div key={section.sectionId} className="bg-gray-50 p-4 rounded border">
+            <h3 className="font-semibold text-lg">{section.title}</h3>
+            
+            {/* Standard Content */}
+            <div className="mt-2 text-gray-700 whitespace-pre-wrap">{section.content}</div>
+
+            {/* Key Points */}
+            <ul className="mt-4 list-disc list-inside bg-blue-50 p-3 rounded">
+              {section.keyPoints.map((kp, i) => <li key={i} className="text-sm text-blue-800">{kp}</li>)}
+            </ul>
+
+            {/* Expanded Content (AI Generated) */}
+            {section.expanded && (
+              <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+                <h4 className="font-bold text-yellow-800 text-sm mb-2">Detailed Explanation:</h4>
+                <div className="text-gray-800 whitespace-pre-wrap">{section.expanded}</div>
+              </div>
+            )}
+
+            {!section.expanded && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => handleExpand(section.sectionId)}
+                disabled={!!loadingId}
+              >
+                {loadingId === section.sectionId ? 'Expanding...' : 'Explain this more (AI)'}
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Button onClick={() => onComplete(lesson.lesson_id)} className="w-full" size="lg">
+        Complete Lesson & Start Quiz
+      </Button>
+    </div>
+  );
 }
 
-1️⃣1️⃣ Send Message to Tutor
+--- FILE: src\components\views\QuizView.tsx ---
 
-Method: POST
-URL:
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { QuizQuestion, QuizResult } from '@/types/api';
 
-http://localhost:8000/api/tutor/message
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-  "message": "Can you give me a simple example?"
+interface QuizViewProps {
+  quizId: string;
+  questions: QuizQuestion[];
+  onSubmit: (quizId: string, responses: any[]) => void;
 }
 
-1️⃣2️⃣ End Tutor Session
+export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-Method: POST
-URL:
+  const handleInputChange = (qId: string, val: string) => {
+    setAnswers(prev => ({ ...prev, [qId]: val }));
+  };
 
-http://localhost:8000/api/tutor/end/test_user_1/e601f0c6-07b5-47c7-ae64-748cf7056563
-
-{
-    "status": "resolved",
-    "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-    "message": "Tutor session ended successfully"
-}
-
-1️⃣3️⃣ View Dashboard
-
-Method: GET
-URL:
-
-http://localhost:8000/api/dashboard/test_user_1
-
-
-Shows:
-
-Overall progress
-
-Lesson plans
-
-Recommendations
-
-{
-    "user": {
-        "totalStudyTime": 20,
-        "overallProgress": 0.0,
-        "averageScore": 31.25
-    },
-    "lesson_plans": [
-        {
-            "id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-            "subject": "Math",
-            "topic": "Algebra",
-            "status": "approved",
-            "subtopicCount": 8,
-            "progress": {
-                "lessonPlanId": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-                "subject": "Math",
-                "topic": "Algebra",
-                "percentComplete": 0,
-                "averageScore": 31.25,
-                "totalSubtopics": 8,
-                "completedSubtopics": 0
-            }
-        }
-    ],
-    "active_tutor_sessions": 4,
-    "recommendations": [
-        "Continue Math - Algebra (0% complete)",
-        "Review Math - Algebra (average score: 31%)"
-    ]
-}
-
-1️⃣4️⃣ View Lesson Plan Progress
-
-Method: GET
-URL:
-
-http://localhost:8000/api/progress/test_user_1/e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c
-
-{
-    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-    "subtopic_progress": {
-        "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68": {
-            "status": "in_progress",
-            "lessonCompleted": true,
-            "quizAttempts": 1,
-            "bestScore": 31.25,
-            "averageScore": 31.25,
-            "masteryLevel": "beginner",
-            "weakConcepts": [
-                "Which expression is the correct expansion of −3(2x",
-                "Factorise fully: 9x² + 6x",
-                "Explain how you would simplify the expression 4(2y"
-            ],
-            "lastAttemptAt": "2025-12-15T17:50:42.293696"
-        },
-        "67f4a067d1fc1439cc7c65de34f2a195e5307481571e16fa3d8afc77f92ab89f": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "59b2477b9db7e7b1ccfdc0e659fc27103601a8d2ef9658f57900470849470005": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "d5cabd86471753104501b1669bec8fc7953c47593860242b11030569e585d469": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "b9bf103c08696c8be2e9af525114146587e3289a43ad2113f93131d4edd614c1": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "55d1caf15024bf7bd28332861c919f84324b31c0c3bc65eedf433e89ffe7ae76": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "c43f3be7a522fa3993802cb555e8726b947b4425341dfa3f08e7c09fdfe405bd": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        }
-    },
-    "overall_progress": {
-        "totalSubtopics": 8,
-        "completedSubtopics": 0,
-        "percentComplete": 0,
-        "totalStudyTime": 20,
-        "averageScore": 31.25
-    },
-    "updated_at": "2025-12-15T17:50:42.750264"
-}
-
---- FILE: progress\progress_service.py ---
-
-"""
-Progress Service
-Tracks and manages student progress across lessons and quizzes
-"""
-from datetime import datetime
-from typing import Optional, Dict, Any, List
-import logging
-
-from shared.models import Progress, LessonPlan, QuizAttempt, Lesson
-from shared.cosmos_client import get_cosmos_service
-
-logger = logging.getLogger(__name__)
-
-
-class ProgressService:
-    """Service for managing student progress"""
-    
-    def __init__(self):
-        self.cosmos = get_cosmos_service()
-    
-    def initialize_progress(
-        self,
-        user_id: str,
-        lesson_plan_id: str
-    ) -> Progress:
-        """Initialize progress tracking for a lesson plan"""
-        logger.info(f"Initializing progress for lesson plan: {lesson_plan_id}")
-        
-        lesson_plan = self.cosmos.get_item(
-            container="LessonPlans",
-            item_id=lesson_plan_id,
-            partition_key=user_id,
-            model_class=LessonPlan
-        )
-        
-        if not lesson_plan:
-            raise ValueError(f"Lesson plan {lesson_plan_id} not found")
-        
-        subtopic_progress = {}
-        for subtopic in lesson_plan.structure:
-            subtopic_progress[subtopic.subtopicId] = {
-                "status": "not_started",
-                "lessonCompleted": False,
-                "quizAttempts": 0,
-                "bestScore": 0.0,
-                "averageScore": 0.0,
-                "masteryLevel": "not_started",
-                "weakConcepts": [],
-                "lastAttemptAt": None
-            }
-        
-        progress = Progress(
-            id=f"progress_{lesson_plan_id}",
-            userId=user_id,
-            lessonPlanId=lesson_plan_id,
-            subtopicProgress=subtopic_progress,
-            overallProgress={
-                "totalSubtopics": len(lesson_plan.structure),
-                "completedSubtopics": 0,
-                "percentComplete": 0.0,
-                "totalStudyTime": 0,
-                "averageScore": 0.0
-            },
-            updatedAt=datetime.utcnow()
-        )
-        
-        created_progress = self.cosmos.upsert_item("Progress", progress)
-        logger.info(f"Initialized progress: {created_progress.id}")
-        
-        return created_progress
-    
-    def update_lesson_completion(
-        self,
-        user_id: str,
-        lesson_id: str,
-        study_time: int = 0
-    ) -> Progress:
-        """Update progress when a lesson is completed"""
-        logger.info(f"Updating lesson completion for: {lesson_id}")
-        
-        lesson = self.cosmos.get_item(
-            container="Lessons",
-            item_id=lesson_id,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-        
-        if not lesson:
-            raise ValueError(f"Lesson {lesson_id} not found")
-        
-        progress = self._get_or_create_progress(user_id, lesson.lessonPlanId)
-        
-        subtopic_id = lesson.subtopicId
-        if subtopic_id in progress.subtopicProgress:
-            progress.subtopicProgress[subtopic_id]["lessonCompleted"] = True
-            progress.subtopicProgress[subtopic_id]["status"] = "in_progress"
-        
-        progress.overallProgress["totalStudyTime"] += study_time
-        progress.updatedAt = datetime.utcnow()
-        
-        self._recalculate_overall_progress(progress)
-        
-        return self.cosmos.update_item("Progress", progress)
-    
-    def update_quiz_completion(
-        self,
-        user_id: str,
-        quiz_attempt_id: str
-    ) -> Progress:
-        """Update progress when a quiz is completed"""
-        logger.info(f"Updating quiz completion for attempt: {quiz_attempt_id}")
-        
-        attempts = self.cosmos.query_items(
-            container="QuizAttempts",
-            query="SELECT * FROM c WHERE c.id = @attemptId",
-            partition_key=user_id,
-            model_class=QuizAttempt,
-            parameters=[{"name": "@attemptId", "value": quiz_attempt_id}]
-        )
-        
-        if not attempts:
-            raise ValueError(f"Quiz attempt {quiz_attempt_id} not found")
-        
-        attempt = attempts[0]
-
-        # The QuizAttempt.lessonId is a Lesson id; progress is tracked per LessonPlan.
-        # Retrieve the Lesson to get its parent lessonPlanId.
-        lesson = self.cosmos.get_item(
-            container="Lessons",
-            item_id=attempt.lessonId,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-
-        if not lesson:
-            raise ValueError(f"Lesson {attempt.lessonId} not found")
-
-        progress = self._get_or_create_progress(user_id, lesson.lessonPlanId)
-        
-        subtopic_id = attempt.subtopicId
-        if subtopic_id in progress.subtopicProgress:
-            subprog = progress.subtopicProgress[subtopic_id]
-            
-            subprog["quizAttempts"] += 1
-            
-            score_pct = attempt.score.get("percentage", 0)
-            subprog["bestScore"] = max(subprog.get("bestScore", 0), score_pct)
-            
-            all_attempts = self.cosmos.get_items_by_filter(
-                container="QuizAttempts",
-                filters={"subtopicId": subtopic_id},
-                partition_key=user_id,
-                model_class=QuizAttempt
-            )
-            
-            if all_attempts:
-                avg = sum(a.score.get("percentage", 0) for a in all_attempts) / len(all_attempts)
-                subprog["averageScore"] = avg
-            
-            subprog["masteryLevel"] = self._calculate_mastery_level(
-                best_score=subprog["bestScore"],
-                avg_score=subprog["averageScore"],
-                attempts=subprog["quizAttempts"]
-            )
-            
-            weak_concepts = attempt.score.get("weakConcepts", [])
-            if weak_concepts:
-                subprog["weakConcepts"] = weak_concepts
-            
-            if subprog["masteryLevel"] == "mastered":
-                subprog["status"] = "completed"
-            elif subprog["quizAttempts"] > 0:
-                subprog["status"] = "in_progress"
-            
-            subprog["lastAttemptAt"] = attempt.completedAt.isoformat() if attempt.completedAt else None
-        
-        progress.updatedAt = datetime.utcnow()
-        
-        self._recalculate_overall_progress(progress)
-        
-        return self.cosmos.update_item("Progress", progress)
-    
-    def get_progress(
-        self,
-        user_id: str,
-        lesson_plan_id: str
-    ) -> Optional[Progress]:
-        """Get progress for a lesson plan"""
-        progress_id = f"progress_{lesson_plan_id}"
-        return self.cosmos.get_item(
-            container="Progress",
-            item_id=progress_id,
-            partition_key=user_id,
-            model_class=Progress
-        )
-    
-    def get_all_progress(self, user_id: str) -> List[Progress]:
-        """Get all progress records for a user"""
-        return self.cosmos.get_items_by_user(
-            container="Progress",
-            user_id=user_id,
-            model_class=Progress,
-            item_type="progress"
-        )
-    
-    def get_progress_summary(self, user_id: str) -> Dict[str, Any]:
-        """Get a summary of all progress for a user"""
-        all_progress = self.get_all_progress(user_id)
-        
-        total_subtopics = 0
-        completed_subtopics = 0
-        total_study_time = 0
-        all_scores = []
-        
-        plans_summary = []
-        
-        for prog in all_progress:
-            total_subtopics += prog.overallProgress.get("totalSubtopics", 0)
-            completed_subtopics += prog.overallProgress.get("completedSubtopics", 0)
-            total_study_time += prog.overallProgress.get("totalStudyTime", 0)
-            
-            avg_score = prog.overallProgress.get("averageScore", 0)
-            if avg_score > 0:
-                all_scores.append(avg_score)
-            
-            lesson_plan = self.cosmos.get_item(
-                container="LessonPlans",
-                item_id=prog.lessonPlanId,
-                partition_key=user_id,
-                model_class=LessonPlan
-            )
-            
-            plans_summary.append({
-                "lessonPlanId": prog.lessonPlanId,
-                "subject": lesson_plan.subject if lesson_plan else "Unknown",
-                "topic": lesson_plan.topic if lesson_plan else "Unknown",
-                "percentComplete": prog.overallProgress.get("percentComplete", 0),
-                "averageScore": avg_score,
-                "totalSubtopics": prog.overallProgress.get("totalSubtopics", 0),
-                "completedSubtopics": prog.overallProgress.get("completedSubtopics", 0)
-            })
-        
+  const handleSubmit = () => {
+    const formattedResponses = questions.map(q => {
+      const val = answers[q.questionId] || "";
+      // Handle Bullet points for Long Answer (splitting by newlines)
+      if (q.type === 'long_answer') {
         return {
-            "totalSubtopics": total_subtopics,
-            "completedSubtopics": completed_subtopics,
-            "overallPercentComplete": (completed_subtopics / total_subtopics * 100) if total_subtopics > 0 else 0,
-            "totalStudyTime": total_study_time,
-            "overallAverageScore": sum(all_scores) / len(all_scores) if all_scores else 0,
-            "lessonPlans": plans_summary
-        }
-    
-    def _get_or_create_progress(
-        self,
-        user_id: str,
-        lesson_plan_id: str
-    ) -> Progress:
-        """Get existing progress or create new one"""
-        progress = self.get_progress(user_id, lesson_plan_id)
-        if not progress:
-            progress = self.initialize_progress(user_id, lesson_plan_id)
-        return progress
-    
-    def _calculate_mastery_level(
-        self,
-        best_score: float,
-        avg_score: float,
-        attempts: int
-    ) -> str:
-        """Calculate mastery level based on scores"""
-        if attempts == 0:
-            return "not_started"
-        elif best_score >= 80 and avg_score >= 70:
-            return "mastered"
-        elif best_score >= 60 or avg_score >= 50:
-            return "intermediate"
-        else:
-            return "beginner"
-    
-    def _recalculate_overall_progress(self, progress: Progress):
-        """Recalculate overall progress statistics"""
-        subtopics = progress.subtopicProgress
-        
-        if not subtopics:
-            return
-        
-        completed = sum(
-            1 for sp in subtopics.values()
-            if sp.get("status") == "completed"
-        )
-        
-        total = len(subtopics)
-        
-        scores = [
-            sp.get("averageScore", 0)
-            for sp in subtopics.values()
-            if sp.get("quizAttempts", 0) > 0
-        ]
-        
-        avg_score = sum(scores) / len(scores) if scores else 0
-        
-        progress.overallProgress["completedSubtopics"] = completed
-        progress.overallProgress["percentComplete"] = (completed / total * 100) if total > 0 else 0
-        progress.overallProgress["averageScore"] = avg_score
+            questionId: q.questionId,
+            userBulletPoints: val.split('\n').filter(line => line.trim() !== '')
+        };
+      }
+      return { questionId: q.questionId, userAnswer: val };
+    });
+    onSubmit(quizId, formattedResponses);
+  };
 
---- FILE: quizzes\quiz_service.py ---
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold">Concept Check</h2>
+      
+      {questions.map((q, index) => (
+        <div key={q.questionId} className="bg-white p-6 rounded shadow-sm border">
+          <div className="flex justify-between items-start mb-4">
+            <span className="bg-gray-200 text-gray-700 px-2 py-1 text-xs rounded uppercase font-bold">{q.type.replace('_', ' ')}</span>
+            <span className="text-xs text-gray-500 capitalize">{q.difficulty}</span>
+          </div>
+          
+          <p className="font-medium text-lg mb-4">{index + 1}. {q.question}</p>
 
-"""
-Quiz Service
-Handles quiz generation, submission, and grading
-"""
-import os
-import uuid
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from openai import OpenAI
-from pydantic import BaseModel
-import logging
+          {q.type === 'multiple_choice' && q.options && (
+            <div className="space-y-2">
+              {q.options.map((opt) => (
+                <label key={opt} className="flex items-center space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name={q.questionId}
+                    value={opt}
+                    onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))}
+            </div>
+          )}
 
-from shared.models import Quiz, Question, QuizAttempt, QuizAttemptResponse, Lesson
-from shared.cosmos_client import get_cosmos_service
+          {q.type === 'short_answer' && (
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              placeholder="Type your answer..."
+              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+            />
+          )}
 
-logger = logging.getLogger(__name__)
+          {q.type === 'long_answer' && (
+            <textarea
+              className="w-full p-2 border rounded h-32"
+              placeholder="Explain your reasoning (each line is a point)..."
+              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
 
+      <Button onClick={handleSubmit} className="w-full">Submit Quiz</Button>
+    </div>
+  );
+}
 
-class QuestionLLM(BaseModel):
-    """LLM response for a question"""
-    type: str  # multiple_choice, short_answer, long_answer
-    question: str
-    options: Optional[List[str]] = None
-    correctAnswer: Optional[str] = None
-    markScheme: Optional[List[str]] = None
-    difficulty: str
+--- FILE: src\components\views\TutorView.tsx ---
 
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
-class QuizLLM(BaseModel):
-    """LLM response for quiz"""
-    questions: List[QuestionLLM]
+interface Message {
+  role: 'user' | 'ai';
+  text: string;
+}
 
+interface TutorViewProps {
+  sessionId: string;
+  initialMessage?: string;
+  onSendMessage: (sessionId: string, message: string) => Promise<string>;
+  onEndSession: (sessionId: string) => void;
+}
 
-class QuizGradingLLM(BaseModel):
-    """LLM response for grading"""
-    marksAwarded: float
-    maxMarks: float
-    feedback: str
-    generatedAnswer: Optional[str] = None
+export default function TutorView({ sessionId, initialMessage, onSendMessage, onEndSession }: TutorViewProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
 
-
-class QuizService:
-    """Service for managing quizzes"""
-    
-    def __init__(self):
-        self.cosmos = get_cosmos_service()
-        
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-        api_key = os.getenv("AZURE_OPENAI_KEY")
-        self.deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4")
-        
-        self.client = OpenAI(
-            base_url=f"{endpoint}/openai/v1/",
-            api_key=api_key,
-            default_headers={"api-key": api_key}
-        )
-    
-    def generate_quiz(
-        self,
-        user_id: str,
-        lesson_id: str,
-        subtopic_id: str,
-        question_types: Optional[List[str]] = None,
-        difficulty: str = "mixed",
-        count: int = 5
-    ) -> Quiz:
-        """Generate a quiz for a lesson"""
-        logger.info(f"Generating quiz for lesson: {lesson_id}")
-        
-        lesson = self.cosmos.get_item(
-            container="Lessons",
-            item_id=lesson_id,
-            partition_key=user_id,
-            model_class=Lesson
-        )
-        
-        if not lesson:
-            raise ValueError(f"Lesson {lesson_id} not found")
-        
-        question_types = question_types or ["multiple_choice", "short_answer", "long_answer"]
-        
-        lesson_summary = lesson.content.get("summary", "")
-        key_terms = lesson.content.get("keyTerms", [])
-        sections = lesson.content.get("sections", [])
-        
-        sections_text = "\n\n".join([
-            f"Section: {s.get('title')}\n{s.get('content')}"
-            for s in sections
-        ])
-        
-        system_prompt = (
-            "You are an expert GCSE assessment designer. "
-            "Create fair, clear questions that test understanding of the lesson content. "
-            "Multiple choice questions should have plausible distractors. "
-            "Short answer questions should be answerable in 1-2 sentences. "
-            "Long answer questions should require 3-5 sentences and deeper understanding."
-        )
-        
-        user_prompt = (
-            f"Create {count} questions based on this lesson:\n\n"
-            f"Subject: {lesson.subject}\n"
-            f"Topic: {lesson.topic}\n"
-            f"Subtopic: {lesson.subtopic}\n\n"
-            f"Lesson Content:\n{sections_text}\n\n"
-            f"Summary: {lesson_summary}\n\n"
-            f"Key Terms: {', '.join(key_terms)}\n\n"
-            f"Question Types to Include: {', '.join(question_types)}\n"
-            f"Difficulty: {difficulty}\n\n"
-            "Distribute questions across the content. "
-            "For multiple choice, provide 4 options. "
-            "For short/long answers, provide detailed mark schemes."
-        )
-        
-        try:
-            completion = self.client.beta.chat.completions.parse(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                response_format=QuizLLM,
-            )
-            
-            llm_quiz = completion.choices[0].message.parsed
-            quiz_id = str(uuid.uuid4())
-            
-            quiz = Quiz(
-                id=quiz_id,
-                userId=user_id,
-                lessonId=lesson_id,
-                subtopicId=subtopic_id,
-                questions=[
-                    Question(
-                        questionId=f"q{i+1}",
-                        type=q.type,
-                        question=q.question,
-                        options=q.options,
-                        correctAnswer=q.correctAnswer,
-                        markScheme=q.markScheme,
-                        difficulty=q.difficulty
-                    )
-                    for i, q in enumerate(llm_quiz.questions)
-                ],
-                createdAt=datetime.utcnow()
-            )
-            
-            created_quiz = self.cosmos.create_item("Quizzes", quiz)
-            logger.info(f"Created quiz: {created_quiz.id}")
-            
-            return created_quiz
-            
-        except Exception as e:
-            logger.error(f"Error generating quiz: {e}")
-            raise
-    
-    def submit_quiz(
-        self,
-        user_id: str,
-        quiz_id: str,
-        responses: List[Dict[str, Any]]
-    ) -> QuizAttempt:
-        """Submit and grade a quiz attempt"""
-        logger.info(f"Submitting quiz: {quiz_id}")
-        
-        quiz = self.cosmos.query_items(
-            container="Quizzes",
-            query="SELECT * FROM c WHERE c.id = @quizId",
-            partition_key=user_id,
-            model_class=Quiz,
-            parameters=[{"name": "@quizId", "value": quiz_id}]
-        )
-        
-        if not quiz:
-            raise ValueError(f"Quiz {quiz_id} not found")
-        
-        quiz = quiz[0]
-        
-        graded_responses = []
-        total_correct = 0
-        total_marks = 0
-        max_marks = 0
-        
-        for resp in responses:
-            question_id = resp.get("questionId")
-            user_answer = resp.get("userAnswer")
-            user_bullets = resp.get("userBulletPoints", [])
-            
-            question = next(
-                (q for q in quiz.questions if q.questionId == question_id),
-                None
-            )
-            
-            if not question:
-                continue
-            
-            if question.type == "multiple_choice":
-                is_correct = user_answer == question.correctAnswer
-                graded_responses.append(QuizAttemptResponse(
-                    questionId=question_id,
-                    userAnswer=user_answer,
-                    isCorrect=is_correct,
-                    marksAwarded=1.0 if is_correct else 0.0,
-                    maxMarks=1.0,
-                    feedback="Correct!" if is_correct else f"The correct answer is {question.correctAnswer}"
-                ))
-                if is_correct:
-                    total_correct += 1
-                total_marks += 1.0 if is_correct else 0.0
-                max_marks += 1.0
-            
-            else:
-                grading = self._grade_written_answer(
-                    question=question.question,
-                    mark_scheme=question.markScheme or [],
-                    user_answer=user_answer or "",
-                    user_bullets=user_bullets,
-                    question_type=question.type
-                )
-                
-                graded_responses.append(QuizAttemptResponse(
-                    questionId=question_id,
-                    userAnswer=user_answer,
-                    userBulletPoints=user_bullets if user_bullets else None,
-                    aiGeneratedAnswer=grading.generatedAnswer,
-                    marksAwarded=grading.marksAwarded,
-                    maxMarks=grading.maxMarks,
-                    feedback=grading.feedback
-                ))
-                
-                total_marks += grading.marksAwarded
-                max_marks += grading.maxMarks
-        
-        percentage = (total_marks / max_marks * 100) if max_marks > 0 else 0
-        trigger_tutor = percentage < 40 or self._has_repeated_mistakes(graded_responses)
-        weak_concepts = self._identify_weak_concepts(graded_responses, quiz.questions)
-        
-        attempt = QuizAttempt(
-            id=str(uuid.uuid4()),
-            userId=user_id,
-            quizId=quiz_id,
-            lessonId=quiz.lessonId,
-            subtopicId=quiz.subtopicId,
-            state="completed",
-            responses=graded_responses,
-            score={
-                "correct": total_correct,
-                "total": len(responses),
-                "percentage": percentage,
-                "marksAwarded": total_marks,
-                "maxMarks": max_marks,
-                "triggerTutor": trigger_tutor,
-                "weakConcepts": weak_concepts
-            },
-            completedAt=datetime.utcnow()
-        )
-        
-        created_attempt = self.cosmos.create_item("QuizAttempts", attempt)
-        logger.info(f"Created quiz attempt: {created_attempt.id}")
-        
-        return created_attempt
-    
-    def _grade_written_answer(
-        self,
-        question: str,
-        mark_scheme: List[str],
-        user_answer: str,
-        user_bullets: List[str],
-        question_type: str
-    ) -> QuizGradingLLM:
-        """Grade a written answer using AI"""
-        
-        max_marks = len(mark_scheme) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
-        
-        generated_answer = None
-        if user_bullets:
-            gen_prompt = (
-                f"Convert these bullet points into a coherent answer:\n"
-                f"Question: {question}\n\n"
-                f"Bullet Points:\n" + "\n".join(f"- {b}" for b in user_bullets)
-            )
-            
-            gen_response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": "Convert bullet points into a clear, cohesive answer."},
-                    {"role": "user", "content": gen_prompt}
-                ],
-                temperature=0.7
-            )
-            generated_answer = gen_response.choices[0].message.content
-            user_answer = generated_answer
-        
-        mark_scheme_text = "\n".join(f"{i+1}. {m}" for i, m in enumerate(mark_scheme))
-        
-        grade_prompt = (
-            f"Grade this answer according to the mark scheme:\n\n"
-            f"Question: {question}\n\n"
-            f"Mark Scheme ({max_marks} marks total):\n{mark_scheme_text}\n\n"
-            f"Student Answer: {user_answer}\n\n"
-            "Award partial marks for partially correct points. "
-            "Provide constructive feedback on what was good and what was missing."
-        )
-        
-        try:
-            grade_response = self.client.beta.chat.completions.parse(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": "You are a fair, constructive GCSE examiner."},
-                    {"role": "user", "content": grade_prompt}
-                ],
-                response_format=QuizGradingLLM
-            )
-            
-            grading = grade_response.choices[0].message.parsed
-            grading.generatedAnswer = generated_answer
-            grading.maxMarks = max_marks
-            
-            return grading
-            
-        except Exception as e:
-            logger.error(f"Error grading answer: {e}")
-            return QuizGradingLLM(
-                marksAwarded=0.0,
-                maxMarks=max_marks,
-                feedback="Unable to grade answer automatically.",
-                generatedAnswer=generated_answer
-            )
-    
-    def _has_repeated_mistakes(self, responses: List[QuizAttemptResponse]) -> bool:
-        """Check if student made 3+ similar mistakes"""
-        incorrect = sum(1 for r in responses if r.isCorrect is False or (r.marksAwarded or 0) < (r.maxMarks or 1) * 0.5)
-        return incorrect >= 3
-    
-    def _identify_weak_concepts(
-        self,
-        responses: List[QuizAttemptResponse],
-        questions: List[Question]
-    ) -> List[str]:
-        """Identify concepts the student struggled with"""
-        weak = []
-        for resp in responses:
-            if resp.isCorrect is False or (resp.marksAwarded or 0) < (resp.maxMarks or 1) * 0.5:
-                question = next((q for q in questions if q.questionId == resp.questionId), None)
-                if question:
-                    weak.append(question.question[:50])
-        return weak[:3]
-    
-    def get_quiz(self, user_id: str, quiz_id: str) -> Optional[Quiz]:
-        """Get a quiz by ID"""
-        quizzes = self.cosmos.query_items(
-            container="Quizzes",
-            query="SELECT * FROM c WHERE c.id = @quizId",
-            partition_key=user_id,
-            model_class=Quiz,
-            parameters=[{"name": "@quizId", "value": quiz_id}]
-        )
-        return quizzes[0] if quizzes else None
-    
-    def get_quiz_attempts(
-        self,
-        user_id: str,
-        quiz_id: Optional[str] = None,
-        subtopic_id: Optional[str] = None
-    ) -> List[QuizAttempt]:
-        """Get quiz attempts for a user"""
-        filters = {}
-        if quiz_id:
-            filters["quizId"] = quiz_id
-        if subtopic_id:
-            filters["subtopicId"] = subtopic_id
-        
-        if filters:
-            return self.cosmos.get_items_by_filter(
-                container="QuizAttempts",
-                filters=filters,
-                partition_key=user_id,
-                model_class=QuizAttempt
-            )
-        else:
-            return self.cosmos.get_items_by_user(
-                container="QuizAttempts",
-                user_id=user_id,
-                model_class=QuizAttempt,
-                item_type="quizAttempt"
-            )
-    
-
---- FILE: shared\cosmos-rbac-guide.md ---
-
-# Cosmos DB Data Plane RBAC Setup
-
-## The Problem
-Custom Azure RBAC roles grant **control plane** permissions (managing the Cosmos DB account), but not **data plane** permissions (accessing the actual data). Applications need data plane access to read/write documents.
-
-## Two Permission Layers
-
-### Control Plane (Azure RBAC)
-- Manages the Cosmos DB account as an Azure resource
-- Examples: Create/delete account, regenerate keys, change settings
-- Your custom role: "Azure Cosmos DB Control Plane Owner"
-
-https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-connect-role-based-access-control?pivots=azure-portal
-
-### Data Plane (Cosmos DB RBAC)
-- Access to data inside Cosmos DB
-- Examples: Read/write documents, query data, execute stored procedures
-- **Managed separately from Azure RBAC**
-- **Cannot be configured in Azure Portal** - CLI/PowerShell only
-
-## Solution: Assign Data Plane Role
-
-### Step 1: Switch to Correct Subscription
-```powershell
-az account set --subscription <subscription-id>
-```
-
-### Step 2: Assign Built-in Data Contributor Role
-```powershell
-az cosmosdb sql role assignment create \
-  --account-name <cosmos-account-name> \
-  --resource-group <resource-group> \
-  --role-definition-id 00000000-0000-0000-0000-000000000002 \
-  --principal-id <user-or-service-principal-object-id> \
-  --scope "/"
-```
-
-### Built-in Role IDs
-- `00000000-0000-0000-0000-000000000001` - **Data Reader** (read-only)
-- `00000000-0000-0000-0000-000000000002` - **Data Contributor** (read/write)
-
-## Verification
-Wait 2-3 minutes for propagation, then test:
-
-```python
-from azure.cosmos import CosmosClient
-from azure.identity import DefaultAzureCredential
-
-client = CosmosClient("<endpoint>", DefaultAzureCredential())
-# Should connect without permission errors
-```
-
-## Key Takeaway
-Your custom control plane role enables you to **assign** data plane roles, but you still need to **explicitly grant** data plane access for applications to work with data.
-
---- FILE: shared\cosmos_client.py ---
-
-from azure.identity import DefaultAzureCredential
-from azure.cosmos import CosmosClient, PartitionKey, exceptions
-from azure.cosmos.aio import CosmosClient as AsyncCosmosClient
-import os
-from dotenv import load_dotenv
-from typing import Optional, List, Dict, Any, Type, TypeVar
-from pydantic import BaseModel
-import logging
-
-load_dotenv()
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-T = TypeVar('T', bound=BaseModel)
-
-class CosmosService:
-    """Cosmos DB service with Pydantic model support"""
-    
-    # Container definitions with partition keys
-    CONTAINERS = {
-        'Users': '/userId',
-        'LessonPlans': '/userId',
-        'Lessons': '/userId',
-        'Quizzes': '/userId',
-        'QuizAttempts': '/userId',
-        'TutorSessions': '/userId',
-        'Progress': '/userId'
+  useEffect(() => {
+    if (initialMessage && messages.length === 0) {
+      setMessages([{ role: 'user', text: initialMessage }]);
+      // Ideally trigger an AI response immediately here if the backend supports it, 
+      // otherwise we wait for user input.
     }
-    
-    def __init__(self, use_async: bool = False):
-        """Initialize Cosmos client with auto-create containers"""
-        self.endpoint = os.getenv("COSMOS_DB_ENDPOINT")
-        self.database_name = os.getenv("COSMOS_DB_NAME", "learning-platform-db")
-        
-        if not self.endpoint:
-            raise ValueError("COSMOS_DB_ENDPOINT environment variable not set")
-        
-        # Use DefaultAzureCredential for authentication
-        credential = DefaultAzureCredential()
-        
-        if use_async:
-            self.client = AsyncCosmosClient(self.endpoint, credential)
-        else:
-            self.client = CosmosClient(self.endpoint, credential)
-        
-        self.use_async = use_async
-        self._initialize_database()
-    
-    def _initialize_database(self):
-        """Create database and containers if they don't exist"""
-        try:
-            # Create database if not exists
-            self.database = self.client.create_database_if_not_exists(
-                id=self.database_name
-            )
-            logger.info(f"Database '{self.database_name}' ready")
-            
-            # Create containers if they don't exist
-            for container_name, partition_key_path in self.CONTAINERS.items():
-                try:
-                    self.database.create_container_if_not_exists(
-                        id=container_name,
-                        partition_key=PartitionKey(path=partition_key_path)
-                    )
-                    logger.info(f"Container '{container_name}' ready")
-                except exceptions.CosmosHttpResponseError as e:
-                    logger.error(f"Error creating container {container_name}: {e}")
-                    raise
-        except Exception as e:
-            logger.error(f"Error initializing database: {e}")
-            raise
-    
-    def _get_container(self, container: str):
-        """Get container client"""
-        return self.database.get_container_client(container)
-    
-    def _model_to_dict(self, model: BaseModel) -> Dict[str, Any]:
-        """Convert Pydantic model to dict with datetime serialization"""
-        return model.model_dump(mode='json', exclude_none=False)
-    
-    def _dict_to_model(self, data: Dict[str, Any], model_class: Type[T]) -> T:
-        """Convert dict to Pydantic model"""
-        return model_class.model_validate(data)
-    
-    # CRUD Operations
-    
-    def create_item(self, container: str, item: BaseModel) -> BaseModel:
-        """Create an item from Pydantic model"""
-        try:
-            container_client = self._get_container(container)
-            item_dict = self._model_to_dict(item)
-            result = container_client.create_item(body=item_dict)
-            logger.info(f"Created item in {container}: {result['id']}")
-            return self._dict_to_model(result, type(item))
-        except exceptions.CosmosResourceExistsError:
-            logger.error(f"Item already exists: {item.id}")
-            raise
-        except Exception as e:
-            logger.error(f"Error creating item in {container}: {e}")
-            raise
-    
-    def get_item(
-        self, 
-        container: str, 
-        item_id: str, 
-        partition_key: str,
-        model_class: Type[T]
-    ) -> Optional[T]:
-        """Get an item and return as Pydantic model"""
-        try:
-            container_client = self._get_container(container)
-            result = container_client.read_item(
-                item=item_id,
-                partition_key=partition_key
-            )
-            return self._dict_to_model(result, model_class)
-        except exceptions.CosmosResourceNotFoundError:
-            logger.warning(f"Item not found: {item_id} in {container}")
-            return None
-        except Exception as e:
-            logger.error(f"Error getting item from {container}: {e}")
-            raise
-    
-    def update_item(self, container: str, item: BaseModel) -> BaseModel:
-        """Update an item from Pydantic model"""
-        try:
-            container_client = self._get_container(container)
-            item_dict = self._model_to_dict(item)
-            
-            result = container_client.replace_item(
-                item=item.id,
-                body=item_dict
-            )
-            logger.info(f"Updated item in {container}: {result['id']}")
-            return self._dict_to_model(result, type(item))
-        except exceptions.CosmosResourceNotFoundError:
-            logger.error(f"Item not found for update: {item.id}")
-            raise
-        except Exception as e:
-            logger.error(f"Error updating item in {container}: {e}")
-            raise
-    
-    def upsert_item(self, container: str, item: BaseModel) -> BaseModel:
-        """Create or update an item"""
-        try:
-            container_client = self._get_container(container)
-            item_dict = self._model_to_dict(item)
-            result = container_client.upsert_item(body=item_dict)
-            logger.info(f"Upserted item in {container}: {result['id']}")
-            return self._dict_to_model(result, type(item))
-        except Exception as e:
-            logger.error(f"Error upserting item in {container}: {e}")
-            raise
-    
-    def delete_item(
-        self, 
-        container: str, 
-        item_id: str, 
-        partition_key: str
-    ) -> bool:
-        """Delete an item"""
-        try:
-            container_client = self._get_container(container)
-            container_client.delete_item(
-                item=item_id,
-                partition_key=partition_key
-            )
-            logger.info(f"Deleted item from {container}: {item_id}")
-            return True
-        except exceptions.CosmosResourceNotFoundError:
-            logger.warning(f"Item not found for deletion: {item_id}")
-            return False
-        except Exception as e:
-            logger.error(f"Error deleting item from {container}: {e}")
-            raise
-    
-    def query_items(
-        self,
-        container: str,
-        query: str,
-        partition_key: Optional[str] = None,
-        model_class: Optional[Type[T]] = None,
-        parameters: Optional[List[Dict[str, Any]]] = None
-    ) -> List[T]:
-        """Query items with optional Pydantic model conversion"""
-        try:
-            container_client = self._get_container(container)
-            
-            query_kwargs = {
-                'query': query,
-                'enable_cross_partition_query': partition_key is None
-            }
-            
-            if partition_key:
-                query_kwargs['partition_key'] = partition_key
-            
-            if parameters:
-                query_kwargs['parameters'] = parameters
-            
-            results = list(container_client.query_items(**query_kwargs))
-            
-            if model_class:
-                return [self._dict_to_model(item, model_class) for item in results]
-            return results
-            
-        except Exception as e:
-            logger.error(f"Error querying items from {container}: {e}")
-            raise
-    
-    def get_items_by_user(
-        self,
-        container: str,
-        user_id: str,
-        model_class: Type[T],
-        item_type: Optional[str] = None
-    ) -> List[T]:
-        """Get all items for a user, optionally filtered by type"""
-        query = "SELECT * FROM c WHERE c.userId = @userId"
-        parameters = [{"name": "@userId", "value": user_id}]
-        
-        if item_type:
-            query += " AND c.type = @type"
-            parameters.append({"name": "@type", "value": item_type})
-        
-        return self.query_items(
-            container=container,
-            query=query,
-            partition_key=user_id,
-            model_class=model_class,
-            parameters=parameters
-        )
-    
-    def get_items_by_filter(
-        self,
-        container: str,
-        filters: Dict[str, Any],
-        partition_key: Optional[str] = None,
-        model_class: Optional[Type[T]] = None
-    ) -> List[T]:
-        """Get items with dynamic filters"""
-        conditions = []
-        parameters = []
-        
-        for i, (key, value) in enumerate(filters.items()):
-            param_name = f"@param{i}"
-            conditions.append(f"c.{key} = {param_name}")
-            parameters.append({"name": param_name, "value": value})
-        
-        query = f"SELECT * FROM c WHERE {' AND '.join(conditions)}"
-        
-        return self.query_items(
-            container=container,
-            query=query,
-            partition_key=partition_key,
-            model_class=model_class,
-            parameters=parameters
-        )
-    
-    def close(self):
-        """Close the client connection"""
-        if hasattr(self.client, 'close'):
-            self.client.close()
+  }, [initialMessage]);
 
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const userMsg = input;
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setInput('');
+    setSending(true);
 
-# Create a singleton instance
-_cosmos_service: Optional[CosmosService] = None
+    const response = await onSendMessage(sessionId, userMsg);
+    setMessages(prev => [...prev, { role: 'ai', text: response }]);
+    setSending(false);
+  };
 
-def get_cosmos_service() -> CosmosService:
-    """Get or create the Cosmos service singleton"""
-    global _cosmos_service
-    if _cosmos_service is None:
-        _cosmos_service = CosmosService()
-    return _cosmos_service
+  return (
+    <div className="flex flex-col h-[600px] bg-white border rounded shadow-lg">
+      <div className="p-4 bg-indigo-600 text-white flex justify-between items-center">
+        <h3 className="font-bold">AI Tutor</h3>
+        <Button size="sm" variant="secondary" onClick={() => onEndSession(sessionId)}>End Session</Button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] p-3 rounded-lg ${
+              m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-800'
+            }`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+      </div>
 
---- FILE: shared\models.py ---
+      <div className="p-4 border-t bg-white flex gap-2">
+        <input 
+          className="flex-1 border rounded px-3 py-2"
+          placeholder="Ask a question..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+        />
+        <Button onClick={handleSend} disabled={sending}>Send</Button>
+      </div>
+    </div>
+  );
+}
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict, Any, Literal
-from datetime import datetime
+--- FILE: src\lib\authConfig.ts ---
 
-class User(BaseModel):
-    id: str
-    userId: str
-    email: Optional[str]
-    name: Optional[str]
-    profile: Optional[Dict[str, Any]]
-    createdAt: Optional[datetime]
+import { Configuration, LogLevel } from '@azure/msal-browser';
 
-class LessonPlanItem(BaseModel):
-    subtopicId: str
-    title: str
-    order: int
-    estimatedDuration: Optional[int]
-    concepts: List[str] = []
-
-class LessonPlan(BaseModel):
-    id: str
-    userId: str
-    type: str = "lessonPlan"
-    subject: str
-    topic: str
-    status: Optional[str] = None
-    structure: List[LessonPlanItem] = []
-    aiGeneratedAt: Optional[datetime] = None
-    approvedAt: Optional[datetime] = None
-
-
-class LessonSection(BaseModel):
-    sectionId: str
-    title: str
-    content: str
-    expanded: Optional[str] = None
-    diagrams: List[str] = []
-
-class Lesson(BaseModel):
-    id: str
-    userId: str
-    type: str = "lesson"
-    lessonPlanId: Optional[str] = None
-    subtopicId: Optional[str] = None
-    subject: Optional[str] = None
-    topic: Optional[str] = None
-    subtopic: Optional[str] = None
-    content: Dict[str, Any]
-    mediaAssets: List[Dict[str, Any]] = []
-    status: Optional[str] = None
-    completedAt: Optional[datetime] = None
-
-
-class Question(BaseModel):
-    questionId: str
-    type: str
-    question: str
-    options: Optional[List[str]] = None
-    correctAnswer: Optional[Any] = None
-    markScheme: Optional[List[str]] = None
-    difficulty: Optional[str] = None
-
-class Quiz(BaseModel):
-    id: str
-    userId: str
-    type: str = "quiz"
-    lessonId: Optional[str] = None
-    subtopicId: Optional[str] = None
-    questions: List[Question] = []
-    createdAt: Optional[datetime]
-
-class QuizAttemptResponse(BaseModel):
-    questionId: str
-    userAnswer: Optional[Any] = None
-    aiGeneratedAnswer: Optional[str] = None
-    marksAwarded: Optional[float] = None
-    maxMarks: Optional[float] = None
-    feedback: Optional[str] = None
-    isCorrect: Optional[bool] = None
-    timeSpent: Optional[int] = None
-
-class QuizAttempt(BaseModel):
-    id: str
-    userId: str
-    type: str = "quizAttempt"
-    quizId: str
-    lessonId: Optional[str] = None
-    subtopicId: Optional[str] = None
-    state: Literal["in_progress", "completed", "archived"]
-    responses: List[QuizAttemptResponse] = []
-    score: Optional[Dict[str, Any]] = None
-    completedAt: Optional[datetime]
-
-class TutorSession(BaseModel):
-    id: str
-    userId: str
-    type: str = "tutorSession"
-    trigger: Optional[str] = None
-    context: Optional[Dict[str, Any]]
-    conversation: Optional[List[Dict[str, Any]]] = []
-    resolved: Optional[bool] = False
-    createdAt: Optional[datetime]
-
-class Progress(BaseModel):
-    id: str
-    userId: str
-    type: str = "progress"
-    lessonPlanId: Optional[str] = None
-    subtopicProgress: Optional[Dict[str, Any]] = {}
-    overallProgress: Optional[Dict[str, Any]] = {}
-    updatedAt: Optional[datetime]
-
-    # ==================== REQUEST/RESPONSE MODELS ====================
-
-class CreateLessonPlanRequest(BaseModel):
-    """Request to create a new lesson plan"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "subject": "Math",
-            "topic": "Algebra",
-            "level": "GCSE",
-            "auto_approve": False
+export const msalConfig: Configuration = {
+  auth: {
+    clientId: '7f63ef05-e7d4-40fc-bccd-90da58cc293c',
+    authority: 'https://gpteducation.ciamlogin.com/gpteducation.onmicrosoft.com',
+    redirectUri: 'http://localhost:3000/redirect',
+    knownAuthorities: ['gpteducation.ciamlogin.com'],
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false,
+  },
+  system: {
+    loggerOptions: {
+      loggerCallback: (level, message, containsPii) => {
+        if (containsPii) return;
+        switch (level) {
+          case LogLevel.Error:
+            console.error(message);
+            break;
+          case LogLevel.Warning:
+            console.warn(message);
+            break;
+          case LogLevel.Info:
+            console.info(message);
+            break;
         }
-    })
-    
-    user_id: str = Field(..., description="User identifier")
-    subject: str = Field(..., description="Subject name (e.g., 'Math', 'Biology')")
-    topic: str = Field(..., description="Topic name (e.g., 'Algebra', 'Cell Biology')")
-    level: str = Field(default="GCSE", description="Education level")
-    auto_approve: bool = Field(default=False, description="Automatically approve the plan")
+      },
+    },
+  },
+};
+
+export const loginRequest = {
+  scopes: ['openid', 'profile', 'email', 'api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+};
 
 
-class LessonPlanResponse(BaseModel):
-    """Response containing lesson plan details"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "lesson_plan_id": "abc123",
-            "subject": "Math",
-            "topic": "Algebra",
-            "status": "draft",
-            "subtopics": [
-                {
-                    "id": "sub1",
-                    "title": "Introduction to Variables",
-                    "order": 1,
-                    "duration": 30,
-                    "concepts": ["variables", "constants", "expressions"]
-                }
-            ],
-            "progress_initialized": False
-        }
-    })
-    
-    lesson_plan_id: str
-    subject: str
-    topic: str
-    status: str
-    subtopics: List[Dict[str, Any]]
-    progress_initialized: bool = False
+--- FILE: src\lib\msalInstance.ts ---
+
+import { PublicClientApplication } from '@azure/msal-browser';
+import { msalConfig } from './authConfig';
+
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 
-class ApproveLessonPlanRequest(BaseModel):
-    """Request to approve a lesson plan"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "plan_id": "abc123"
-        }
-    })
-    
-    user_id: str
-    plan_id: str
+--- FILE: src\lib\utils.ts ---
+
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 
-class StartLessonRequest(BaseModel):
-    """Request to start a lesson"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "lesson_plan_id": "abc123",
-            "subtopic_id": "sub1"
-        }
-    })
-    
-    user_id: str
-    lesson_plan_id: str
-    subtopic_id: str
+--- FILE: src\types\api.ts ---
 
+export interface Subtopic {
+  id: string;
+  title: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+}
 
-class LessonResponse(BaseModel):
-    """Response containing lesson content"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "lesson_id": "lesson123",
-            "subject": "Math",
-            "topic": "Algebra",
-            "subtopic": "Introduction to Variables",
-            "introduction": "Variables are fundamental building blocks...",
-            "sections": [
-                {
-                    "section_id": "sec1",
-                    "title": "What is a Variable?",
-                    "content": "A variable is a symbol...",
-                    "key_points": ["Represents unknown values", "Can change"],
-                    "expanded": None
-                }
-            ],
-            "summary": "Variables allow us to represent...",
-            "key_terms": ["variable", "constant", "expression"],
-            "status": "active"
-        }
-    })
-    
-    lesson_id: str
-    subject: str
-    topic: str
-    subtopic: str
-    introduction: str
-    sections: List[Dict[str, Any]]
-    summary: str
-    key_terms: List[str]
-    status: str
+export interface LessonPlan {
+  // The API is inconsistent: 'id' in list view, 'lesson_plan_id' in detail view
+  id?: string;             
+  lesson_plan_id?: string; 
+  subject: string;
+  topic: string;
+  status: string;
+  subtopics: Subtopic[];
+  subtopic_count?: number; 
+}
 
+export interface LessonSection {
+  sectionId: string;
+  title: string;
+  content: string;
+  keyPoints: string[];
+  expanded?: string | null; // Added to store expanded content
+}
 
-class ExpandSectionRequest(BaseModel):
-    """Request to expand a lesson section"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "lesson_id": "lesson123",
-            "section_id": "sec1"
-        }
-    })
-    
-    user_id: str
-    lesson_id: str
-    section_id: str
+export interface ActiveLesson {
+  lesson_id: string;
+  subject: string;
+  topic: string;
+  subtopic: string;
+  introduction: string;
+  sections: LessonSection[];
+}
 
+export interface QuizQuestion {
+  questionId: string;
+  type: 'multiple_choice' | 'short_answer' | 'long_answer';
+  question: string;
+  options?: string[];
+  difficulty: string;
+}
 
-class ExpandedSectionResponse(BaseModel):
-    """Response with expanded section content"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "section_id": "sec1",
-            "expanded_content": "Let's dive deeper into variables..."
-        }
-    })
-    
-    section_id: str
-    expanded_content: str
-
-
-class CompleteLessonRequest(BaseModel):
-    """Request to complete a lesson"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "lesson_id": "lesson123",
-            "study_time": 25
-        }
-    })
-    
-    user_id: str
-    lesson_id: str
-    study_time: int = Field(default=0, description="Time spent in minutes")
-
-
-class CompletionResponse(BaseModel):
-    """Response after lesson completion"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "lesson_completed": True,
-            "next_action": "quiz",
-            "progress": {
-                "percent_complete": 12.5,
-                "total_study_time": 25
-            }
-        }
-    })
-    
-    lesson_completed: bool
-    next_action: str
-    progress: Dict[str, Any]
-
-
-class StartQuizRequest(BaseModel):
-    """Request to start a quiz"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "lesson_id": "lesson123",
-            "subtopic_id": "sub1",
-            "difficulty": "mixed",
-            "question_count": 5
-        }
-    })
-    
-    user_id: str
-    lesson_id: str
-    subtopic_id: str
-    difficulty: str = Field(default="mixed", description="Question difficulty")
-    question_count: int = Field(default=5, description="Number of questions")
-
-
-class QuizResponse(BaseModel):
-    """Response containing quiz questions"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "quiz_id": "quiz123",
-            "questions": [
-                {
-                    "question_id": "q1",
-                    "type": "multiple_choice",
-                    "question": "What is a variable?",
-                    "options": ["A fixed value", "A symbol for unknown", "A number", "An operator"],
-                    "difficulty": "easy"
-                }
-            ],
-            "total_questions": 5
-        }
-    })
-    
-    quiz_id: str
-    questions: List[Dict[str, Any]]
-    total_questions: int
-
-
-class QuizSubmissionRequest(BaseModel):
-    """Request to submit quiz answers"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "quiz_id": "quiz123",
-            "responses": [
-                {
-                    "questionId": "q1",
-                    "userAnswer": "A symbol for unknown"
-                },
-                {
-                    "questionId": "q2",
-                    "userAnswer": "Variables represent values that can change.",
-                    "userBulletPoints": None
-                },
-                {
-                    "questionId": "q3",
-                    "userAnswer": None,
-                    "userBulletPoints": [
-                        "Variables can store different values",
-                        "They are represented by letters",
-                        "Used in equations and expressions"
-                    ]
-                }
-            ]
-        }
-    })
-    
-    user_id: str
-    quiz_id: str
-    responses: List[Dict[str, Any]] = Field(
-        ...,
-        description="List of responses with questionId and userAnswer/userBulletPoints"
-    )
-
-
-class QuizResultResponse(BaseModel):
-    """Response with quiz results"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "attempt_id": "attempt123",
-            "score": {
-                "percentage": 75.0,
-                "marks_awarded": 15.0,
-                "max_marks": 20.0
-            },
-            "responses": [
-                {
-                    "question_id": "q1",
-                    "is_correct": True,
-                    "marks_awarded": 1.0,
-                    "max_marks": 1.0,
-                    "feedback": "Correct!",
-                    "ai_generated_answer": None
-                }
-            ],
-            "mastery_level": "intermediate",
-            "next_action": "continue",
-            "trigger_tutor": False,
-            "weak_concepts": []
-        }
-    })
-    
-    attempt_id: str
-    score: Dict[str, Any]
-    responses: List[Dict[str, Any]]
-    mastery_level: str
-    next_action: str
-    trigger_tutor: bool
-    weak_concepts: List[str]
-
-
-class StartTutorRequest(BaseModel):
-    """Request to start a tutor session"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "trigger": "quiz_struggle",
-            "lesson_id": "lesson123",
-            "subtopic_id": "sub1",
-            "concept": "variables",
-            "initial_message": "I'm confused about how variables work"
-        }
-    })
-    
-    user_id: str
-    trigger: str = Field(..., description="What triggered the session (e.g., 'quiz_struggle', 'manual')")
-    lesson_id: Optional[str] = None
-    subtopic_id: Optional[str] = None
-    question_id: Optional[str] = None
-    concept: Optional[str] = None
-    initial_message: Optional[str] = None
-
-
-class TutorResponse(BaseModel):
-    """Response from tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "session_id": "session123",
-            "message": "I understand you're finding variables confusing. Let's break it down...",
-            "context": {
-                "lesson_id": "lesson123",
-                "concept": "variables"
-            }
-        }
-    })
-    
-    session_id: str
-    message: str
-    context: Dict[str, Any]
-
-
-class SendTutorMessageRequest(BaseModel):
-    """Request to send message to tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "session_id": "session123",
-            "message": "Can you give me an example?"
-        }
-    })
-    
-    user_id: str
-    session_id: str
-    message: str
-
-
-class DashboardResponse(BaseModel):
-    """Response with user dashboard data"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user": {
-                "total_study_time": 150,
-                "overall_progress": 25.5,
-                "average_score": 72.3
-            },
-            "lesson_plans": [
-                {
-                    "id": "abc123",
-                    "subject": "Math",
-                    "topic": "Algebra",
-                    "status": "approved",
-                    "subtopic_count": 8,
-                    "progress": {
-                        "percent_complete": 25.0,
-                        "average_score": 75.0
-                    }
-                }
-            ],
-            "active_tutor_sessions": 1,
-            "recommendations": [
-                "Continue Math - Algebra (25% complete)",
-                "Review Biology - Cells (average score: 55%)"
-            ]
-        }
-    })
-    
-    user: Dict[str, Any]
-    lesson_plans: List[Dict[str, Any]]
-    active_tutor_sessions: int
-    recommendations: List[str]
-
-
---- FILE: shared\openai_client.py ---
-
-import os
-import hashlib
-from datetime import datetime
-from dotenv import load_dotenv
-from openai import OpenAI
-from pprint import pprint
-
-from models import LessonPlan, LessonPlanItem  # your existing Pydantic models
-from pydantic import BaseModel
-from typing import List, Optional
-
-# -----------------------------
-# Deterministic ID function
-# -----------------------------
-def deterministic_id(*parts: str) -> str:
-    raw = "|".join(parts)
-    return hashlib.sha256(raw.encode()).hexdigest()
-
-# -----------------------------
-# Load env + OpenAI client
-# -----------------------------
-load_dotenv()
-endpoint = os.getenv("AZURE_OPENAI_ENDPOINT").rstrip("/")
-deployment = os.getenv("DEPLOYMENT_NAME", "gpt-5.1")
-api_key = os.getenv("AZURE_OPENAI_KEY")
-
-client = OpenAI(
-    base_url=f"{endpoint}/openai/v1/",
-    api_key=api_key,
-    default_headers={"api-key": api_key}
-)
-
-# -----------------------------
-# LLM RESPONSE SCHEMA
-# -----------------------------
-class LessonPlanSubtopicLLM(BaseModel):
-    title: str
-    estimatedDuration: Optional[int]
-    concepts: List[str]
-
-class LessonPlanLLMResponse(BaseModel):
-    subject: str
-    topic: str
-    subtopics: List[LessonPlanSubtopicLLM]
-
-# -----------------------------
-# GENERATE LESSON PLAN
-# -----------------------------
-try:
-    completion = client.beta.chat.completions.parse(
-        model=deployment,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert GCSE curriculum designer. "
-                    "Generate a clear, well-structured lesson plan broken into logical subtopics."
-                )
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Generate a GCSE-level lesson plan for:\n"
-                    "Subject: Math\n"
-                    "Topic: Algebra\n\n"
-                    "Each subtopic should be concise and suitable for a 15–45 minute lesson."
-                )
-            }
-        ],
-        response_format=LessonPlanLLMResponse,
-    )
-
-    llm_plan = completion.choices[0].message.parsed
-
-    # -----------------------------
-    # Map LLM Output → LessonPlan (using LessonPlanItem)
-    # -----------------------------
-    user_id = "user123"  # from auth/session in real system
-    lesson_plan_id = deterministic_id(user_id, llm_plan.subject, llm_plan.topic)
-
-    lesson_plan = LessonPlan(
-        id=lesson_plan_id,
-        userId=user_id,
-        subject=llm_plan.subject,
-        topic=llm_plan.topic,
-        status="draft",
-        aiGeneratedAt=datetime.utcnow(),
-        structure=[
-            LessonPlanItem(
-                subtopicId=deterministic_id(lesson_plan_id, sub.title),
-                title=sub.title,
-                order=i + 1,
-                estimatedDuration=sub.estimatedDuration,
-                concepts=sub.concepts
-            )
-            for i, sub in enumerate(llm_plan.subtopics)
-        ]
-    )
-
-    print("\nGenerated LessonPlan with deterministic IDs:")
-    pprint(lesson_plan.model_dump())
-
-except Exception as e:
-    print(f"Error: {e}")
-
-
---- FILE: tutor\tutor_service.py ---
-
-
-"""
-AI Tutor Service
-Handles one-on-one tutoring sessions with AI
-"""
-import os
-import uuid
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from openai import OpenAI
-import logging
-
-from shared.models import TutorSession, Lesson
-from shared.cosmos_client import get_cosmos_service
-
-logger = logging.getLogger(__name__)
-
-
-class TutorService:
-    """Service for AI tutoring sessions"""
-    
-    def __init__(self):
-        self.cosmos = get_cosmos_service()
-        
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
-        api_key = os.getenv("AZURE_OPENAI_KEY")
-        self.deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4")
-        
-        self.client = OpenAI(
-            base_url=f"{endpoint}/openai/v1/",
-            api_key=api_key,
-            default_headers={"api-key": api_key}
-        )
-    
-    def start_session(
-        self,
-        user_id: str,
-        trigger: str,
-        context: Dict[str, Any],
-        initial_message: Optional[str] = None
-    ) -> TutorSession:
-        """Start a new tutoring session"""
-        logger.info(f"Starting tutor session for user {user_id}, trigger: {trigger}")
-        
-        lesson_id = context.get("lessonId")
-        lesson_content = ""
-        
-        if lesson_id:
-            lesson = self.cosmos.get_item(
-                container="Lessons",
-                item_id=lesson_id,
-                partition_key=user_id,
-                model_class=Lesson
-            )
-            if lesson:
-                lesson_content = self._extract_lesson_context(lesson, context)
-        
-        system_context = self._build_tutor_system_prompt(context, lesson_content)
-        
-        conversation = []
-        
-        if initial_message:
-            conversation.append({
-                "role": "user",
-                "content": initial_message,
-                "timestamp": datetime.utcnow().isoformat()
-            })
-        
-        opening = self._generate_tutor_response(
-            system_context=system_context,
-            conversation_history=conversation,
-            context=context
-        )
-        
-        conversation.append({
-            "role": "assistant",
-            "content": opening,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
-        session = TutorSession(
-            id=str(uuid.uuid4()),
-            userId=user_id,
-            trigger=trigger,
-            context=context,
-            conversation=conversation,
-            resolved=False,
-            createdAt=datetime.utcnow()
-        )
-        
-        created_session = self.cosmos.create_item("TutorSessions", session)
-        logger.info(f"Created tutor session: {created_session.id}")
-        
-        return created_session
-    
-    def send_message(
-        self,
-        user_id: str,
-        session_id: str,
-        message: str
-    ) -> TutorSession:
-        """Send a message in an existing session"""
-        logger.info(f"Sending message in session {session_id}")
-        
-        session = self.cosmos.get_item(
-            container="TutorSessions",
-            item_id=session_id,
-            partition_key=user_id,
-            model_class=TutorSession
-        )
-        
-        if not session:
-            raise ValueError(f"Tutor session {session_id} not found")
-        
-        session.conversation.append({
-            "role": "user",
-            "content": message,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
-        lesson_id = session.context.get("lessonId")
-        lesson_content = ""
-        
-        if lesson_id:
-            lesson = self.cosmos.get_item(
-                container="Lessons",
-                item_id=lesson_id,
-                partition_key=user_id,
-                model_class=Lesson
-            )
-            if lesson:
-                lesson_content = self._extract_lesson_context(lesson, session.context)
-        
-        system_context = self._build_tutor_system_prompt(session.context, lesson_content)
-        response = self._generate_tutor_response(
-            system_context=system_context,
-            conversation_history=session.conversation,
-            context=session.context
-        )
-        
-        session.conversation.append({
-            "role": "assistant",
-            "content": response,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-        
-        updated_session = self.cosmos.update_item("TutorSessions", session)
-        
-        return updated_session
-    
-    def resolve_session(self, user_id: str, session_id: str) -> TutorSession:
-        """Mark a session as resolved"""
-        session = self.cosmos.get_item(
-            container="TutorSessions",
-            item_id=session_id,
-            partition_key=user_id,
-            model_class=TutorSession
-        )
-        
-        if not session:
-            raise ValueError(f"Tutor session {session_id} not found")
-        
-        session.resolved = True
-        return self.cosmos.update_item("TutorSessions", session)
-    
-    def _build_tutor_system_prompt(
-        self,
-        context: Dict[str, Any],
-        lesson_content: str
-    ) -> str:
-        """Build the system prompt for the tutor"""
-        concept = context.get("concept", "this topic")
-        question = context.get("question", "")
-        
-        base_prompt = (
-            "You are a patient, encouraging GCSE tutor. Your goal is to help students "
-            "understand concepts through guided discovery, not just giving answers. "
-            "Use the Socratic method: ask questions, provide hints, and break down complex ideas. "
-            "Be warm and supportive. Celebrate small wins. "
-            "Use analogies and real-world examples when helpful."
-        )
-        
-        context_prompt = f"\n\nYou're helping with: {concept}"
-        
-        if question:
-            context_prompt += f"\n\nRelated question: {question}"
-        
-        if lesson_content:
-            context_prompt += f"\n\nLesson context:\n{lesson_content}"
-        
-        return base_prompt + context_prompt
-    
-    def _generate_tutor_response(
-        self,
-        system_context: str,
-        conversation_history: List[Dict[str, Any]],
-        context: Dict[str, Any]
-    ) -> str:
-        """Generate a tutor response"""
-        
-        messages = [{"role": "system", "content": system_context}]
-        
-        for msg in conversation_history:
-            messages.append({
-                "role": msg["role"],
-                "content": msg["content"]
-            })
-        
-        try:
-            response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=messages,
-                temperature=0.8,
-                max_completion_tokens=500
-            )
-            
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            logger.error(f"Error generating tutor response: {e}")
-            return "I'm having trouble right now. Could you rephrase your question?"
-    
-    def _extract_lesson_context(
-        self,
-        lesson: Lesson,
-        context: Dict[str, Any]
-    ) -> str:
-        """Extract relevant lesson content based on context"""
-        
-        concept = context.get("concept", "").lower()
-        
-        summary = lesson.content.get("summary", "")
-        sections = lesson.content.get("sections", [])
-        
-        relevant_section = None
-        if concept:
-            for section in sections:
-                section_text = (section.get("content", "") + " " + section.get("title", "")).lower()
-                if concept in section_text:
-                    relevant_section = section
-                    break
-        
-        if relevant_section:
-            return (
-                f"Lesson Summary: {summary}\n\n"
-                f"Relevant Section - {relevant_section.get('title')}:\n"
-                f"{relevant_section.get('content')}"
-            )
-        else:
-            sections_brief = "\n".join([
-                f"- {s.get('title')}: {s.get('content', '')[:200]}..."
-                for s in sections[:2]
-            ])
-            return f"Lesson Summary: {summary}\n\nKey Sections:\n{sections_brief}"
-    
-    def get_session(self, user_id: str, session_id: str) -> Optional[TutorSession]:
-        """Get a tutor session by ID"""
-        return self.cosmos.get_item(
-            container="TutorSessions",
-            item_id=session_id,
-            partition_key=user_id,
-            model_class=TutorSession
-        )
-    
-    def get_user_sessions(
-        self,
-        user_id: str,
-        resolved: Optional[bool] = None
-    ) -> List[TutorSession]:
-        """Get all tutor sessions for a user"""
-        if resolved is not None:
-            return self.cosmos.get_items_by_filter(
-                container="TutorSessions",
-                filters={"resolved": resolved},
-                partition_key=user_id,
-                model_class=TutorSession
-            )
-        else:
-            return self.cosmos.get_items_by_user(
-                container="TutorSessions",
-                user_id=user_id,
-                model_class=TutorSession,
-                item_type="tutorSession"
-            )
-        
-
---- FILE: user_creation.py ---
-
-import hashlib
-from datetime import datetime
-from pprint import pprint
-
-from shared.cosmos_client import get_cosmos_service
-from shared.models import User
-# Deterministic ID function
-def deterministic_id(*parts: str) -> str:
-    raw = "|".join(parts)
-    return hashlib.sha256(raw.encode()).hexdigest()
-
-cosmos = get_cosmos_service()
-USER_ID = "user123"
-
-# --- 1. User (ONE per userId) ---
-user = User(
-    id=USER_ID,                 # 🔑 uniqueness enforced
-    userId=USER_ID,
-    email="user@example.com",
-    name="Alice",
-    profile={"role": "student"},
-    createdAt=datetime.utcnow()
-)
-created_user = cosmos.upsert_item("Users", user)
-print("Upserted User:")
-pprint(created_user.model_dump())
-
-cosmos.close()
+export interface QuizResult {
+  score: { percentage: number; marksAwarded: number; maxMarks: number };
+  trigger_tutor: boolean;
+  next_action: string;
+  weak_concepts: string[];
+  feedback?: string; // aggregated or specific
+}

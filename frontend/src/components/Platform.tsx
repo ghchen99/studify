@@ -9,8 +9,9 @@ import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api'
 import LessonView from './views/LessonView';
 import QuizView from './views/QuizView';
 import TutorView from './views/TutorView';
+import CreateCourseView from './views/CreateCourseView';
 
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR';
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -36,6 +37,12 @@ export default function Platform() {
       setAccount(accounts[0]);
     }
   }, [accounts, instance]);
+
+  useEffect(() => {
+    if (account) {
+      loadDashboard();
+    }
+  }, [account]);
 
   // --- API Helper ---
   const callApi = async (endpoint: string, method = 'GET', body?: any) => {
@@ -78,15 +85,23 @@ export default function Platform() {
     if (plans) setLessonPlans(plans);
   };
 
-  const createPlan = async () => {
-    const data = await callApi('/api/lesson-plans', 'POST', {
+  const createCourse = async (data: {
+    subject: string;
+    topic: string;
+    level: string;
+  }) => {
+    const res = await callApi('/api/lesson-plans', 'POST', {
       user_id: account?.localAccountId,
-      subject: 'Math',
-      topic: 'Algebra',
-      level: 'GCSE',
-      auto_approve: true
+      subject: data.subject,
+      topic: data.topic,
+      level: data.level,
+      auto_approve: false,
     });
-    if (data) loadDashboard();
+
+    if (res) {
+      setView('DASHBOARD');
+      loadDashboard();
+    }
   };
 
   const viewPlanDetails = async (planId: string) => {
@@ -221,13 +236,25 @@ export default function Platform() {
       {view === 'DASHBOARD' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-             <h2 className="text-2xl font-bold">Your Plans</h2>
-             <Button onClick={createPlan} disabled={loading}>+ New Algebra Plan</Button>
+             <h2 className="text-2xl font-bold">Your Courses</h2>
+             <Button onClick={() => setView('CREATE_COURSE')}>
+              + Create New Course
+              </Button>
           </div>
           
           
           <div className="grid gap-4">
-             {lessonPlans.length === 0 && <Button onClick={loadDashboard}>Load Plans</Button>}
+             {lessonPlans.length === 0 && !loading && (
+                <div className="text-center py-12 border rounded-lg bg-gray-50">
+                  <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Create your first course by choosing a subject and topics you want to learn.
+                  </p>
+                  <Button size="lg" onClick={() => setView('CREATE_COURSE')}>
+                    Create Your First Course
+                  </Button>
+                </div>
+              )}
              
              {lessonPlans.map(plan => {
                // Normalize the ID: use lesson_plan_id if present, otherwise id
@@ -237,13 +264,13 @@ export default function Platform() {
                  <div key={planId} className="border p-4 rounded shadow-sm hover:shadow-md transition bg-white">
                    <div className="flex justify-between items-center">
                       <div>
-                          <h3 className="font-bold text-lg">{plan.subject} - {plan.topic}</h3>
+                          <h3 className="font-bold text-lg">{plan.subject}: {plan.topic}</h3>
                           <p className="text-sm text-gray-500">
                             {plan.status} • {plan.subtopic_count || 0} subtopics
                           </p>
                       </div>
                       <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
-                          View Details
+                          View Course Details
                       </Button>
                    </div>
                    
@@ -267,6 +294,10 @@ export default function Platform() {
              })}
           </div>
         </div>
+      )}
+
+      {view === 'CREATE_COURSE' && (
+        <CreateCourseView onCreate={createCourse} />
       )}
 
       {/* LESSON VIEW */}
