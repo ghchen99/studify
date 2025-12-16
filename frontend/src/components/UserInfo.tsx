@@ -46,6 +46,12 @@ export default function UserInfo() {
     return tokenResponse.accessToken;
   };
 
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: '/', // back to home after logout
+    });
+  };
+
   const callApi = async (endpoint: string, method = 'GET', body?: any) => {
     setLoading(true);
     setApiError(null);
@@ -117,7 +123,18 @@ export default function UserInfo() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-green-700">✅ Logged in as {account.name || account.username}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-green-700">
+          ✅ Logged in as {account.name || account.username}
+        </h1>
+
+        <Button
+          onClick={handleLogout}
+          variant="destructive"
+        >
+          Sign Out
+        </Button>
+      </div>
 
       {/* Lesson Plan Section */}
       <div className="bg-blue-50 p-4 rounded-lg space-y-2">
