@@ -47,8 +47,6 @@ api_router = APIRouter(
     dependencies=[Depends(verify_access_token)]
 )
 
-app.include_router(api_router)
-
 # Initialize platform
 platform = LearningPlatform()
 
@@ -581,6 +579,7 @@ async def root():
         }
     }
 
+app.include_router(api_router)
 
 if __name__ == "__main__":
     import uvicorn
