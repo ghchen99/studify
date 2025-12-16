@@ -1,14 +1,14 @@
 'use client';
 
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
-import LoginButton from '@/components/LoginButton';
+import LoginPage from '@/components/LoginPage';
 import UserInfo from '@/components/UserInfo';
 
 export default function HomePage() {
   return (
     <div>
       <UnauthenticatedTemplate>
-        <LoginButton />
+        <LoginPage />
       </UnauthenticatedTemplate>
       <AuthenticatedTemplate>
         <UserInfo />
