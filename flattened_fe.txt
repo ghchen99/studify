@@ -1,0 +1,800 @@
+DIRECTORY TREE (SOURCE FILES ONLY)
+=================================
+
+📄 next-env.d.ts
+📄 next.config.ts
+📁 public/
+📄 README.md
+📁 src/
+  📁 app/
+    📄 globals.css
+    📄 layout.tsx
+    📄 page.tsx
+    📁 redirect/
+      📄 page.tsx
+  📁 components/
+    📄 LoginPage.tsx
+    📁 ui/
+      📄 button.tsx
+      📄 card.tsx
+    📄 UserInfo.tsx
+  📁 lib/
+    📄 authConfig.ts
+    📄 msalInstance.ts
+    📄 utils.ts
+
+
+FILE CONTENTS
+=================================
+
+
+--- FILE: next-env.d.ts ---
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+--- FILE: next.config.ts ---
+
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+--- FILE: README.md ---
+
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+--- FILE: src\app\globals.css ---
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes pulse-slow {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+
+
+--- FILE: src\app\layout.tsx ---
+
+'use client';
+
+import './globals.css';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from '@/lib/msalInstance';
+import { ReactNode } from 'react';
+
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <html lang="en">
+      <body className="bg-white text-gray-900 min-h-screen font-sans">
+        {/* MSAL Provider wraps the whole app */}
+        <MsalProvider instance={msalInstance}>
+          <main className="container mx-auto p-4">
+            {children}
+          </main>
+        </MsalProvider>
+      </body>
+    </html>
+  );
+}
+
+
+--- FILE: src\app\page.tsx ---
+
+'use client';
+
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
+import LoginPage from '@/components/LoginPage';
+import UserInfo from '@/components/UserInfo';
+
+export default function HomePage() {
+  return (
+    <div>
+      <UnauthenticatedTemplate>
+        <LoginPage />
+      </UnauthenticatedTemplate>
+      <AuthenticatedTemplate>
+        <UserInfo />
+      </AuthenticatedTemplate>
+    </div>
+  );
+}
+
+
+--- FILE: src\app\redirect\page.tsx ---
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { msalInstance } from '@/lib/msalInstance';
+
+export default function RedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    msalInstance.handleRedirectPromise().then((resp) => {
+      if (resp?.account) msalInstance.setActiveAccount(resp.account);
+      else if (!msalInstance.getActiveAccount()) {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length) msalInstance.setActiveAccount(accounts[0]);
+      }
+      router.push('/');
+    });
+  }, [router]);
+
+  return <p>Loading...</p>;
+}
+
+
+--- FILE: src\components\LoginPage.tsx ---
+
+'use client';
+
+import { useMsal } from '@azure/msal-react';
+import { loginRequest } from '@/lib/authConfig';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'; // Use Framer Motion for animations
+
+export default function LoginPage() {
+  const { instance } = useMsal();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = () => {
+    setLoading(true);
+    instance.loginRedirect(loginRequest);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300 opacity-80 -z-10" />
+
+
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative z-10">
+        
+        {/* Header Section */}
+        <motion.div 
+          className="flex flex-col items-center text-center mb-8"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 1 }}
+        >
+          <div className="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+            <GraduationCap size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-4">
+            Welcome to Learning.AI
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Sign in to access your courses, assignments, and learning resources. Let's get started!
+          </p>
+        </motion.div>
+
+        {/* Login Button */}
+        <motion.div 
+          initial={{ scale: 1 }} 
+          whileHover={{ scale: 1.05 }} 
+          transition={{ duration: 0.2 }}
+        >
+          <Button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium rounded-lg"
+          >
+            {loading ? 'Signing in...' : 'Sign in with Microsoft'}
+          </Button>
+        </motion.div>
+
+        {/* Trust Section */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+          <ShieldCheck size={16} />
+          <span>Secure login powered by Microsoft</span>
+        </div>
+
+        {/* Footer Section */}
+        <div className="mt-8 text-center text-xs text-gray-400">
+          <p>
+            By signing in, you agree to our{' '}
+            <a href="/terms" className="underline hover:text-gray-600">
+              Terms
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" className="underline hover:text-gray-600">
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+--- FILE: src\components\ui\button.tsx ---
+
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        outline:
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+
+
+--- FILE: src\components\ui\card.tsx ---
+
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn("leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-6", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}
+
+
+--- FILE: src\components\UserInfo.tsx ---
+
+'use client';
+
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+
+interface LessonPlanResponse {
+  lesson_plan_id: string;
+  subject: string;
+  topic: string;
+  status: string;
+  subtopics: { id: string; name: string }[];
+}
+
+interface LessonResponse {
+  lesson_id: string;
+  subject: string;
+  topic: string;
+  subtopic: string;
+  introduction: string;
+}
+
+export default function UserInfo() {
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const [account, setAccount] = useState(accounts[0] || null);
+
+  const [lessonPlan, setLessonPlan] = useState<LessonPlanResponse | null>(null);
+  const [lesson, setLesson] = useState<LessonResponse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (accounts.length > 0 && !instance.getActiveAccount()) {
+      instance.setActiveAccount(accounts[0]);
+      setAccount(accounts[0]);
+    }
+  }, [accounts, instance]);
+
+  const acquireToken = async () => {
+    if (!account) return null;
+    const tokenResponse = await instance.acquireTokenSilent({
+      scopes: ['api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+      account,
+    });
+    return tokenResponse.accessToken;
+  };
+
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: '/', // back to home after logout
+    });
+  };
+
+  const callApi = async (endpoint: string, method = 'GET', body?: any) => {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const token = await acquireToken();
+      if (!token) throw new Error('No access token');
+
+      const res = await fetch(`http://localhost:8000${endpoint}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API Error: ${res.status} ${text}`);
+      }
+
+      return await res.json();
+    } catch (err: any) {
+      setApiError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createLessonPlan = async () => {
+    if (!account) return;
+    const body = {
+      user_id: account.localAccountId,
+      subject: 'Mathematics',
+      topic: 'Algebra Basics',
+      level: 'Beginner',
+      auto_approve: true,
+    };
+    const data = await callApi('/api/lesson-plans', 'POST', body);
+    if (data) setLessonPlan(data);
+  };
+
+  const getLessonPlans = async () => {
+    if (!account) return;
+    const data = await callApi(`/api/lesson-plans/${account.localAccountId}`);
+    console.log('User lesson plans:', data);
+  };
+
+  const startLesson = async () => {
+    if (!account || !lessonPlan) return;
+    const subtopic_id = lessonPlan.subtopics?.[0]?.id;
+    if (!subtopic_id) {
+      setApiError('No subtopics found in lesson plan');
+      return;
+    }
+
+    const body = {
+      user_id: account.localAccountId,
+      lesson_plan_id: lessonPlan.lesson_plan_id,
+      subtopic_id,
+    };
+
+    const data = await callApi('/api/lessons/start', 'POST', body);
+    if (data) setLesson(data);
+  };
+
+  if (!account) return <p>Loading account info...</p>;
+
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-green-700">
+          ✅ Logged in as {account.name || account.username}
+        </h1>
+
+        <Button
+          onClick={handleLogout}
+          variant="destructive"
+        >
+          Sign Out
+        </Button>
+      </div>
+
+      {/* Lesson Plan Section */}
+      <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+        <h2 className="text-xl font-semibold">Lesson Plan</h2>
+        <Button onClick={createLessonPlan} disabled={loading}>
+          {loading ? 'Creating...' : 'Create Lesson Plan'}
+        </Button>
+        {lessonPlan && (
+          <div className="mt-2">
+            <p><strong>Lesson Plan ID:</strong> {lessonPlan.lesson_plan_id}</p>
+            <p><strong>Topic:</strong> {lessonPlan.topic}</p>
+            <p><strong>Status:</strong> {lessonPlan.status}</p>
+            <p><strong>Subtopics:</strong> {lessonPlan.subtopics.map(s => s.name).join(', ')}</p>
+          </div>
+        )}
+        <Button onClick={getLessonPlans} variant="outline">
+          Get All Lesson Plans
+        </Button>
+      </div>
+
+      {/* Lesson Section */}
+      {lessonPlan && (
+        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+          <h2 className="text-xl font-semibold">Lesson</h2>
+          <Button onClick={startLesson} disabled={loading}>
+            {loading ? 'Starting...' : 'Start Lesson'}
+          </Button>
+          {lesson && (
+            <div className="mt-2">
+              <p><strong>Lesson ID:</strong> {lesson.lesson_id}</p>
+              <p><strong>Subtopic:</strong> {lesson.subtopic}</p>
+              <p><strong>Introduction:</strong> {lesson.introduction}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* API Error */}
+      {apiError && (
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          ❌ {apiError}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+--- FILE: src\lib\authConfig.ts ---
+
+import { Configuration, LogLevel } from '@azure/msal-browser';
+
+export const msalConfig: Configuration = {
+  auth: {
+    clientId: '7f63ef05-e7d4-40fc-bccd-90da58cc293c',
+    authority: 'https://gpteducation.ciamlogin.com/gpteducation.onmicrosoft.com',
+    redirectUri: 'http://localhost:3000/redirect',
+    knownAuthorities: ['gpteducation.ciamlogin.com'],
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false,
+  },
+  system: {
+    loggerOptions: {
+      loggerCallback: (level, message, containsPii) => {
+        if (containsPii) return;
+        switch (level) {
+          case LogLevel.Error:
+            console.error(message);
+            break;
+          case LogLevel.Warning:
+            console.warn(message);
+            break;
+          case LogLevel.Info:
+            console.info(message);
+            break;
+        }
+      },
+    },
+  },
+};
+
+export const loginRequest = {
+  scopes: ['openid', 'profile', 'email', 'api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+};
+
+
+--- FILE: src\lib\msalInstance.ts ---
+
+import { PublicClientApplication } from '@azure/msal-browser';
+import { msalConfig } from './authConfig';
+
+export const msalInstance = new PublicClientApplication(msalConfig);
+
+
+--- FILE: src\lib\utils.ts ---
+
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}

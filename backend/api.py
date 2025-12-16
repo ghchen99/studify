@@ -44,7 +44,7 @@ app.add_middleware(
 
 api_router = APIRouter(
     prefix="/api",
-    dependencies=[Depends(verify_access_token)]
+    # dependencies=[Depends(verify_access_token)]
 )
 
 # Initialize platform
@@ -155,6 +155,62 @@ async def get_lesson_plans(user_id: str):
             detail=f"Failed to retrieve lesson plans: {str(e)}"
         )
 
+@api_router.get(
+    "/lesson-plans/details/{plan_id}",
+    response_model=LessonPlanResponse,
+    summary="Get detailed lesson plan",
+    description="Retrieve full details of a specific lesson plan including all subtopics"
+)
+async def get_lesson_plan_details(plan_id: str, user_id: str):
+    """
+    Get detailed information about a specific lesson plan.
+    
+    Returns the same detailed response as when creating a lesson plan,
+    including all subtopics with their concepts.
+    
+    Args:
+        plan_id: The lesson plan ID
+        user_id: The user ID (query parameter for authentication)
+    """
+    try:
+        # Get the lesson plan
+        plan = platform.lesson_plans.get_lesson_plan(user_id, plan_id)
+        
+        if not plan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Lesson plan {plan_id} not found"
+            )
+        
+        # Check if progress has been initialized
+        progress = platform.progress.get_progress(user_id, plan_id)
+        progress_initialized = progress is not None
+        
+        return LessonPlanResponse(
+            lesson_plan_id=plan.id,
+            subject=plan.subject,
+            topic=plan.topic,
+            status=plan.status,
+            subtopics=[
+                {
+                    "id": st.subtopicId,
+                    "title": st.title,
+                    "order": st.order,
+                    "duration": st.estimatedDuration,
+                    "concepts": st.concepts
+                }
+                for st in plan.structure
+            ],
+            progress_initialized=progress_initialized
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving lesson plan details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve lesson plan details: {str(e)}"
+        )
 
 # ==================== LESSON ENDPOINTS ====================
 
