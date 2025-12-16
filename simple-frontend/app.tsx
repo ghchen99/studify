@@ -83,19 +83,20 @@ const UserInfo = () => {
 
     try {
       // Get ID token directly from the account
-      const idToken = account?.idToken;
-      
-      if (!idToken) {
-        throw new Error('ID token not found');
-      }
+      const tokenResponse = await instance.acquireTokenSilent({
+        scopes: ['api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+        account: account,
+      });
 
-      console.log('Using ID Token:', idToken.substring(0, 20) + '...');
+      const accessToken = tokenResponse.accessToken;
+
+      console.log('Using Access Token:', accessToken.substring(0, 20) + '...');
 
       // Call API with ID token in Authorization header
       const response = await fetch('http://localhost:8000/api/secure-data', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${idToken}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });

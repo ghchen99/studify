@@ -29,5 +29,5 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest = {
-  scopes: ['openid', 'profile', 'email'],
+  scopes: ['openid', 'profile', 'email', 'api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'], // ✅ Updated scope
 };
