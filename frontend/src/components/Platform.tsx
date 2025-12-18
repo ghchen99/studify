@@ -104,6 +104,13 @@ export default function Platform() {
     }
   };
 
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: '/',
+    });
+  };
+
+
   const viewPlanDetails = async (planId: string) => {
     const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
     if (details) {
@@ -224,8 +231,18 @@ export default function Platform() {
                     Back to Dashboard
                 </Button>
             )}
-            <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
-            {account.name}
+            <div className="flex items-center gap-3">
+              <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                {account.username}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+              >
+                Log out
+              </Button>
             </div>
         </div>
       </header>

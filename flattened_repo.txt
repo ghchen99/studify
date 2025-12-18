@@ -14,10 +14,12 @@ DIRECTORY TREE (SOURCE FILES ONLY)
       📄 page.tsx
   📁 components/
     📄 LoginPage.tsx
+    📄 MarkdownRenderer.tsx
     📄 Platform.tsx
     📁 ui/
       📄 button.tsx
       📄 card.tsx
+      📄 dialog.tsx
     📁 views/
       📄 CreateCourseView.tsx
       📄 LessonView.tsx
@@ -395,6 +397,65 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+--- FILE: src\components\MarkdownRenderer.tsx ---
+
+'use client';
+
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+export default function MarkdownRenderer({ content }: { content: string }) {
+  return (
+    <div className="prose prose-blue max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-bold mt-6 mb-4">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold mt-6 mb-3">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl font-semibold mt-5 mb-2">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="leading-relaxed mb-4">{children}</p>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc pl-6 mb-4">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-6 mb-4">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="mb-1">{children}</li>
+          ),
+          code: ({ children }) => (
+            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4">
+              {children}
+            </pre>
+          ),
+          hr: () => <hr className="my-6 border-gray-300" />,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 my-4">
+              {children}
+            </blockquote>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
@@ -923,6 +984,153 @@ export {
 }
 
 
+--- FILE: src\components\ui\dialog.tsx ---
+
+"use client"
+
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <DialogPortal data-slot="dialog-portal">
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        className={cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+          >
+            <XIcon />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+}
+
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn("text-lg leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+}
+
+
 --- FILE: src\components\views\CreateCourseView.tsx ---
 
 'use client';
@@ -1061,9 +1269,13 @@ export default function CreateCourseView({
 
 --- FILE: src\components\views\LessonView.tsx ---
 
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface LessonViewProps {
   lesson: ActiveLesson;
@@ -1072,68 +1284,150 @@ interface LessonViewProps {
   onComplete: (lessonId: string) => void;
 }
 
-export default function LessonView({ lesson, userId, onExpandSection, onComplete }: LessonViewProps) {
+export default function LessonView({
+  lesson,
+  userId,
+  onExpandSection,
+  onComplete,
+}: LessonViewProps) {
   const [sections, setSections] = useState<LessonSection[]>(lesson.sections);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [expandedDialogOpen, setExpandedDialogOpen] = useState(false);
+
+  const currentSection = sections[currentIndex];
 
   const handleExpand = async (sectionId: string) => {
     setLoadingId(sectionId);
     const expandedContent = await onExpandSection(sectionId);
+
     if (expandedContent) {
-      setSections(prev => prev.map(s => 
-        s.sectionId === sectionId ? { ...s, expanded: expandedContent } : s
-      ));
+      setSections(prev =>
+        prev.map(s =>
+          s.sectionId === sectionId ? { ...s, expanded: expandedContent } : s
+        )
+      );
+      setExpandedDialogOpen(true);
     }
+
     setLoadingId(null);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-3xl mx-auto">
+      {/* Lesson Header */}
       <div className="bg-white p-6 rounded shadow-sm border">
-        <h2 className="text-2xl font-bold text-gray-800">{lesson.subtopic}</h2>
-        <p className="text-gray-600 mt-2">{lesson.introduction}</p>
-        
+        <h2 className="text-2xl font-bold text-gray-800">
+          {lesson.subtopic}
+        </h2>
+        <p className="text-gray-600 mt-2">
+          {lesson.introduction}
+        </p>
       </div>
 
-      <div className="space-y-4">
-        {sections.map((section, idx) => (
-          <div key={section.sectionId} className="bg-gray-50 p-4 rounded border">
-            <h3 className="font-semibold text-lg">{section.title}</h3>
-            
-            {/* Standard Content */}
-            <div className="mt-2 text-gray-700 whitespace-pre-wrap">{section.content}</div>
+      {/* Section Card */}
+      <div className="bg-gray-50 p-6 rounded border space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-xl">
+            {currentSection.title}
+          </h3>
+          <span className="text-sm text-gray-500">
+            Section {currentIndex + 1} of {sections.length}
+          </span>
+        </div>
 
-            {/* Key Points */}
-            <ul className="mt-4 list-disc list-inside bg-blue-50 p-3 rounded">
-              {section.keyPoints.map((kp, i) => <li key={i} className="text-sm text-blue-800">{kp}</li>)}
-            </ul>
+        {/* Section Content */}
+        <MarkdownRenderer content={currentSection.content} />
 
-            {/* Expanded Content (AI Generated) */}
-            {section.expanded && (
-              <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
-                <h4 className="font-bold text-yellow-800 text-sm mb-2">Detailed Explanation:</h4>
-                <div className="text-gray-800 whitespace-pre-wrap">{section.expanded}</div>
-              </div>
-            )}
+        {/* Key Points */}
+        {currentSection.keyPoints?.length > 0 && (
+          <ul className="list-disc list-inside bg-blue-50 p-4 rounded">
+            {currentSection.keyPoints.map((kp, i) => (
+              <li key={i} className="text-sm text-blue-800">
+                {kp}
+              </li>
+            ))}
+          </ul>
+        )}
 
-            {!section.expanded && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-4"
-                onClick={() => handleExpand(section.sectionId)}
-                disabled={!!loadingId}
-              >
-                {loadingId === section.sectionId ? 'Expanding...' : 'Explain this more (AI)'}
-              </Button>
-            )}
+        {/* Expand Button */}
+        <div className="flex gap-2">
+          {currentSection.expanded ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpandedDialogOpen(true)}
+              className="gap-2"
+            >
+              <span className="text-lg">📖</span>
+              View Detailed Explanation
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExpand(currentSection.sectionId)}
+              disabled={loadingId === currentSection.sectionId}
+              className="gap-2"
+            >
+              {loadingId === currentSection.sectionId ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">✨</span>
+                  Get AI Deep Dive
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Content Modal */}
+      <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              Deep Dive: {currentSection.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none mt-4">
+            <MarkdownRenderer content={currentSection.expanded || ''} />
           </div>
-        ))}
+        </DialogContent>
+      </Dialog>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center">
+        <Button
+          variant="outline"
+          disabled={currentIndex === 0}
+          onClick={() => setCurrentIndex(i => i - 1)}
+        >
+          ← Previous
+        </Button>
+
+        <Button
+          disabled={currentIndex === sections.length - 1}
+          onClick={() => setCurrentIndex(i => i + 1)}
+        >
+          Next →
+        </Button>
       </div>
 
-      <Button onClick={() => onComplete(lesson.lesson_id)} className="w-full" size="lg">
-        Complete Lesson & Start Quiz
-      </Button>
+      {/* Complete Lesson */}
+      {currentIndex === sections.length - 1 && (
+        <Button
+          onClick={() => onComplete(lesson.lesson_id)}
+          className="w-full"
+          size="lg"
+        >
+          Complete Lesson & Start Quiz
+        </Button>
+      )}
     </div>
   );
 }
