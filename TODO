@@ -1,6 +1,6 @@
 Frontend Bug Fixes
-- Course view is good but maybe need to click into course view page with lessons and a tracker instead of all on homepage, logos and imgs for subjects
-- home page too minimalist, maybe carousel courses, with images.
-- POlling API response, something to show loading and waiting for generation
+- POlling API response, something to show loading and waiting for generation on create lesson, quiz generation
+- sort out lesson completion, auto approve bug
 - Quiz changed a few seconds after rendering
+- sort out dahsboard tracking
 - Fix tutor function
