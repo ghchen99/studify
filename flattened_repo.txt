@@ -442,6 +442,12 @@ export default function Platform() {
     }
   }, [accounts, instance]);
 
+  useEffect(() => {
+    if (account) {
+      loadDashboard();
+    }
+  }, [account]);
+
   // --- API Helper ---
   const callApi = async (endpoint: string, method = 'GET', body?: any) => {
     setLoading(true);
@@ -994,25 +1000,32 @@ export default function CreateCourseView({
       {/* Topics */}
       <div>
         <label className="block font-medium mb-1">Topics / Subtopics</label>
-        <input
-          className="w-full border rounded p-2"
-          placeholder="e.g. Quadratic equations"
-          value={topicInput}
-          onChange={(e) => setTopicInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTopic())}
-        />
 
         <div className="flex gap-2">
           <input
             className="flex-1 border rounded p-2"
-            placeholder="e.g. Vectors"
+            placeholder="e.g. Quadratic equations"
             value={topicInput}
             onChange={(e) => setTopicInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addTopic();
+              }
+            }}
           />
           <Button type="button" onClick={addTopic}>
             Add
           </Button>
         </div>
+
+        {topics.length > 0 && (
+          <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
+            {topics.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Focus / Intent */}

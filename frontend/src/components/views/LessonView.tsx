@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ActiveLesson, LessonSection } from '@/types/api';
+import MarkdownRenderer from '../MarkdownRenderer';
 
 interface LessonViewProps {
   lesson: ActiveLesson;
@@ -38,8 +39,9 @@ export default function LessonView({ lesson, userId, onExpandSection, onComplete
             <h3 className="font-semibold text-lg">{section.title}</h3>
             
             {/* Standard Content */}
-            <div className="mt-2 text-gray-700 whitespace-pre-wrap">{section.content}</div>
-
+            <div className="mt-2">
+              <MarkdownRenderer content={section.content} />
+            </div>
             {/* Key Points */}
             <ul className="mt-4 list-disc list-inside bg-blue-50 p-3 rounded">
               {section.keyPoints.map((kp, i) => <li key={i} className="text-sm text-blue-800">{kp}</li>)}
@@ -49,7 +51,7 @@ export default function LessonView({ lesson, userId, onExpandSection, onComplete
             {section.expanded && (
               <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
                 <h4 className="font-bold text-yellow-800 text-sm mb-2">Detailed Explanation:</h4>
-                <div className="text-gray-800 whitespace-pre-wrap">{section.expanded}</div>
+                <MarkdownRenderer content={section.expanded} />
               </div>
             )}
 

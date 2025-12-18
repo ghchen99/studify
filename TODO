@@ -1,6 +1,7 @@
 Frontend Bug Fixes
 - POlling API response, something to show loading and waiting for generation
+- Lesson rendering of markdown, especially maths
 - Quiz changed a few seconds after rendering
-- Course view is good but maybe need to click into course view page with lessons and a tracker instead of all on homepage.
-- logout greyed out.
+- Course view is good but maybe need to click into course view page with lessons and a tracker instead of all on homepage, logos and imgs for subjects
+- logout greyed out, login logout, menu bar
 - home page too minimalist, maybe carousel courses, with images.
