@@ -21,7 +21,6 @@ class LessonPlanSubtopicLLM(BaseModel):
     title: str
     estimatedDuration: Optional[int] = 30
     concepts: List[str]
-    description: Optional[str] = None
 
 
 class LessonPlanLLMResponse(BaseModel):
@@ -29,6 +28,7 @@ class LessonPlanLLMResponse(BaseModel):
     subject: str
     topic: str
     overview: str
+    description: str  # AI-generated course overview (2-3 sentences)
     subtopics: List[LessonPlanSubtopicLLM]
 
 
@@ -87,7 +87,9 @@ class LessonPlanService:
             f"You are an expert {level} curriculum designer. "
             "Generate a clear, well-structured lesson plan broken into logical subtopics. "
             f"Each subtopic should be {detail_level} and suitable for a 15–45 minute lesson. "
-            "Include key concepts for each subtopic."
+            "Include key concepts for each subtopic. "
+            "Provide a brief course description (2-3 sentences) that gives an overview of what "
+            "the entire lesson plan covers and what students will achieve by completing it."
         )
         
         user_prompt = (
@@ -95,7 +97,8 @@ class LessonPlanService:
             f"Subject: {subject}\n"
             f"Topic: {topic}\n\n"
             f"Create up to {max_subtopics} subtopics that cover the topic comprehensively. "
-            "Ensure subtopics build on each other logically."
+            "Ensure subtopics build on each other logically. "
+            "Include a description field with 2-3 sentences summarizing the entire course."
         )
         
         try:
@@ -120,6 +123,7 @@ class LessonPlanService:
                 userId=user_id,
                 subject=llm_plan.subject,
                 topic=llm_plan.topic,
+                description=llm_plan.description,  # Add AI-generated description
                 status="draft",
                 aiGeneratedAt=datetime.utcnow(),
                 structure=[

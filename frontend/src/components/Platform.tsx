@@ -11,7 +11,8 @@ import QuizView from './views/QuizView';
 import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
 
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE';
+// 1. Added 'PLAN_DETAILS' to the state type
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -110,12 +111,12 @@ export default function Platform() {
     });
   };
 
-
+  // 2. Modified to set view to 'PLAN_DETAILS'
   const viewPlanDetails = async (planId: string) => {
     const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
     if (details) {
       setActivePlan(details);
-      // Stay on dashboard but show modal or expand? For now, we render plan details in Dashboard view.
+      setView('PLAN_DETAILS');
     }
   };
 
@@ -145,15 +146,14 @@ export default function Platform() {
     const completeData = await callApi('/api/lessons/complete', 'POST', {
       user_id: account?.localAccountId,
       lesson_id: lessonId,
-      study_time: 15 // Mock time
+      study_time: 15
     });
 
     if (completeData && completeData.next_action === 'quiz') {
-      // Start Quiz
       const quizData = await callApi('/api/quizzes/start', 'POST', {
         user_id: account?.localAccountId,
         lesson_id: lessonId,
-        subtopic_id: activeLesson?.subtopic, // Or pass from state
+        subtopic_id: activeLesson?.subtopic,
         difficulty: 'mixed',
         question_count: 3
       });
@@ -194,30 +194,19 @@ export default function Platform() {
   };
 
   const tutorMessage = async (sessionId: string, message: string) => {
-    // Note: The API likely returns a new message object. Assuming standard structure based on docs.
-    // The docs don't show the response for /message explicitly in the provided text, 
-    // but usually it returns the AI text.
-    // Let's assume it returns { message: "AI response" } or similar.
-    // Based on docs: 11. Send Message -> returns (implied) text.
-    // We will return a mock or expect a specific field. 
-    // Let's assume the response body contains the AI string directly or in a field.
     const res = await callApi('/api/tutor/message', 'POST', {
       user_id: account?.localAccountId,
       session_id: sessionId,
       message
     });
-    // This is a guess since /message response isn't explicitly detailed in the prompt
-    // but standard practice implies returning the string or object.
     return res?.message || "I received your message."; 
   };
 
   const endTutor = async (sessionId: string) => {
-     await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
-     setView('DASHBOARD');
-     loadDashboard();
+      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
+      setView('DASHBOARD');
+      loadDashboard();
   };
-
-  // --- Rendering ---
 
   if (!account) return <div>Please log in</div>;
 
@@ -259,7 +248,6 @@ export default function Platform() {
               </Button>
           </div>
           
-          
           <div className="grid gap-4">
              {lessonPlans.length === 0 && !loading && (
                 <div className="text-center py-12 border rounded-lg bg-gray-50">
@@ -274,41 +262,53 @@ export default function Platform() {
               )}
              
              {lessonPlans.map(plan => {
-               // Normalize the ID: use lesson_plan_id if present, otherwise id
                const planId = plan.lesson_plan_id || plan.id;
                
                return (
                  <div key={planId} className="border p-4 rounded shadow-sm hover:shadow-md transition bg-white">
                    <div className="flex justify-between items-center">
-                      <div>
+                     <div>
                           <h3 className="font-bold text-lg">{plan.subject}: {plan.topic}</h3>
                           <p className="text-sm text-gray-500">
                             {plan.status} • {plan.subtopic_count || 0} subtopics
                           </p>
-                      </div>
-                      <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
+                     </div>
+                     <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
                           View Course Details
-                      </Button>
+                     </Button>
                    </div>
-                   
-                   {/* FIXED: Strict check ensures activePlan exists before comparing */}
-                   {activePlan && (activePlan.lesson_plan_id === planId || activePlan.id === planId) && (
-                      <div className="mt-4 pt-4 border-t space-y-2">
-                          <h4 className="text-sm font-semibold text-gray-700">Subtopics:</h4>
-                          {/* Guard against missing subtopics in case of draft plans */}
-                          {activePlan.subtopics?.map(sub => (
-                              <div key={sub.id} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                                  <span className="text-sm">{sub.title}</span>
-                                  <Button size="sm" onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
-                                      Start
-                                  </Button>
-                              </div>
-                          ))}
-                      </div>
-                   )}
                  </div>
                );
              })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. NEW PLAN DETAILS VIEW */}
+      {view === 'PLAN_DETAILS' && activePlan && (
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h2 className="text-3xl font-bold text-gray-900">{activePlan.subject}</h2>
+            <p className="text-xl text-gray-600">{activePlan.topic}</p>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Course Curriculum</h3>
+            <div className="grid gap-3">
+              {activePlan.subtopics?.map((sub, index) => (
+                <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium">{sub.title}</span>
+                  </div>
+                  <Button onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
+                    Start Lesson
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

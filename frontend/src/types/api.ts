@@ -10,6 +10,7 @@ export interface LessonPlan {
   lesson_plan_id?: string; 
   subject: string;
   topic: string;
+  description: string;
   status: string;
   subtopics: Subtopic[];
   subtopic_count?: number; 

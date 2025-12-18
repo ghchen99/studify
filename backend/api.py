@@ -79,6 +79,7 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
             lesson_plan_id=result["lessonPlan"].id,
             subject=result["lessonPlan"].subject,
             topic=result["lessonPlan"].topic,
+            description=result["lessonPlan"].description,  # ADD THIS LINE
             status=result["status"],
             subtopics=result["subtopics"],
             progress_initialized=result.get("progressInitialized", False)
@@ -142,6 +143,7 @@ async def get_lesson_plans(user_id: str):
                 "id": plan.id,
                 "subject": plan.subject,
                 "topic": plan.topic,
+                "description": plan.description, 
                 "status": plan.status,
                 "subtopic_count": len(plan.structure),
                 "created_at": plan.aiGeneratedAt.isoformat() if plan.aiGeneratedAt else None
@@ -190,6 +192,7 @@ async def get_lesson_plan_details(plan_id: str, user_id: str):
             lesson_plan_id=plan.id,
             subject=plan.subject,
             topic=plan.topic,
+            description=plan.description,
             status=plan.status,
             subtopics=[
                 {

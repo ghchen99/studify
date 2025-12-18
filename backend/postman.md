@@ -42,6 +42,7 @@ subtopics[].id
     "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
     "subject": "Math",
     "topic": "Algebra",
+    "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
     "status": "draft",
     "subtopics": [
         {
@@ -174,6 +175,7 @@ Useful to confirm plan state and subtopic count.
         "id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
         "subject": "Math",
         "topic": "Algebra",
+        "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
         "status": "approved",
         "subtopic_count": 8,
         "created_at": "2025-12-15T17:40:09.641883"
@@ -190,6 +192,7 @@ http://localhost:8000/api/lesson-plans/details/e24ed82118ce7c8de5fcd4be4df716907
     "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
     "subject": "Math",
     "topic": "Algebra",
+    "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
     "status": "approved",
     "subtopics": [
         {

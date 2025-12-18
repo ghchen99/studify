@@ -23,6 +23,7 @@ class LessonPlan(BaseModel):
     type: str = "lessonPlan"
     subject: str
     topic: str
+    description: Optional[str] = None  # ADD THIS LINE
     status: Optional[str] = None
     structure: List[LessonPlanItem] = []
     aiGeneratedAt: Optional[datetime] = None
@@ -138,6 +139,7 @@ class LessonPlanResponse(BaseModel):
             "lesson_plan_id": "abc123",
             "subject": "Math",
             "topic": "Algebra",
+            "description": "An introduction to algebraic concepts.",
             "status": "draft",
             "subtopics": [
                 {
@@ -155,6 +157,7 @@ class LessonPlanResponse(BaseModel):
     lesson_plan_id: str
     subject: str
     topic: str
+    description: str
     status: str
     subtopics: List[Dict[str, Any]]
     progress_initialized: bool = False
