@@ -242,15 +242,16 @@ export default function Platform() {
       {view === 'DASHBOARD' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-             <h2 className="text-2xl font-bold">Your Courses</h2>
+             <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
              <Button onClick={() => setView('CREATE_COURSE')}>
               + Create New Course
               </Button>
           </div>
           
-          <div className="grid gap-4">
+          {/* UPDATED: Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
              {lessonPlans.length === 0 && !loading && (
-                <div className="text-center py-12 border rounded-lg bg-gray-50">
+                <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
                   <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
                   <p className="text-gray-600 mb-6">
                     Create your first course by choosing a subject and topics you want to learn.
@@ -265,17 +266,44 @@ export default function Platform() {
                const planId = plan.lesson_plan_id || plan.id;
                
                return (
-                 <div key={planId} className="border p-4 rounded shadow-sm hover:shadow-md transition bg-white">
-                   <div className="flex justify-between items-center">
-                     <div>
-                          <h3 className="font-bold text-lg">{plan.subject}: {plan.topic}</h3>
-                          <p className="text-sm text-gray-500">
-                            {plan.status} • {plan.subtopic_count || 0} subtopics
-                          </p>
-                     </div>
-                     <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
-                          View Course Details
-                     </Button>
+                 <div 
+                   key={planId} 
+                   className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
+                 >
+                   <div className="mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] uppercase font-semibold text-gray-400">
+                          {plan.status}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-lg leading-tight text-gray-900">
+                        {plan.subject}
+                      </h3>
+                      <p className="text-sm font-medium text-gray-500 mb-3">
+                        {plan.topic}
+                      </p>
+                      
+                      {/* ADDED: Description with line-clamping to keep tiles uniform */}
+                      {plan.description && (
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
+                          "{plan.description}"
+                        </p>
+                      )}
+                   </div>
+
+                   {/* Pushes content to bottom so buttons align across the row */}
+                   <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {plan.subtopic_count || 0} Lessons
+                      </span>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => viewPlanDetails(planId!)}
+                        className="hover:bg-blue-600 hover:text-white transition-colors"
+                      >
+                        Open Course
+                      </Button>
                    </div>
                  </div>
                );
