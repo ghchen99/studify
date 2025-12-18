@@ -396,7 +396,7 @@ class QuizResultResponse(BaseModel):
     attempt_id: str
     score: Dict[str, Any]
     responses: List[Dict[str, Any]]
-    mastery_level: str
+    mastery_level: Optional[str] = "unranked"
     next_action: str
     trigger_tutor: bool
     weak_concepts: List[str]
