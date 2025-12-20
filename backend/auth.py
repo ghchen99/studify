@@ -2,9 +2,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 import requests
+from dotenv import load_dotenv
+import os
 
-TENANT_ID = "c7abd11f-7e42-4817-aeb6-69456e02dbb2"
-API_CLIENT_ID = "c36c0096-67af-4aba-9b01-e9a31f550c67"
+load_dotenv()
+
+# Configuration for Microsoft Entra External ID App Registration
+TENANT_ID = os.getenv("TENANT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
 
 ISSUER = f"https://{TENANT_ID}.ciamlogin.com/{TENANT_ID}/v2.0"
 JWKS_URL = f"https://{TENANT_ID}.ciamlogin.com/{TENANT_ID}/discovery/v2.0/keys"
@@ -29,7 +34,7 @@ def verify_access_token(
             token,
             key,
             algorithms=["RS256"],
-            audience=API_CLIENT_ID,
+            audience=CLIENT_ID,
             issuer=ISSUER,
         )
 
