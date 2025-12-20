@@ -2,10 +2,10 @@ import { Configuration, LogLevel } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
-    clientId: '7f63ef05-e7d4-40fc-bccd-90da58cc293c',
-    authority: 'https://gpteducation.ciamlogin.com/gpteducation.onmicrosoft.com',
-    redirectUri: 'http://localhost:3000/redirect',
-    knownAuthorities: ['gpteducation.ciamlogin.com'],
+    clientId: process.env.NEXT_PUBLIC_AZURE_CLIENT_ID!,
+    authority: process.env.NEXT_PUBLIC_AZURE_AUTHORITY!,
+    redirectUri: process.env.NEXT_PUBLIC_AZURE_REDIRECT_URI!,
+    knownAuthorities: [process.env.NEXT_PUBLIC_AZURE_KNOWN_AUTHORITY!],
   },
   cache: {
     cacheLocation: 'sessionStorage',
@@ -32,5 +32,10 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest = {
-  scopes: ['openid', 'profile', 'email', 'api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+  scopes: [
+    'openid',
+    'profile',
+    'email',
+    process.env.NEXT_PUBLIC_API_SCOPE!,
+  ],
 };

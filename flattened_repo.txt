@@ -476,7 +476,8 @@ import QuizView from './views/QuizView';
 import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
 
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE';
+// 1. Added 'PLAN_DETAILS' to the state type
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -575,12 +576,12 @@ export default function Platform() {
     });
   };
 
-
+  // 2. Modified to set view to 'PLAN_DETAILS'
   const viewPlanDetails = async (planId: string) => {
     const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
     if (details) {
       setActivePlan(details);
-      // Stay on dashboard but show modal or expand? For now, we render plan details in Dashboard view.
+      setView('PLAN_DETAILS');
     }
   };
 
@@ -610,15 +611,14 @@ export default function Platform() {
     const completeData = await callApi('/api/lessons/complete', 'POST', {
       user_id: account?.localAccountId,
       lesson_id: lessonId,
-      study_time: 15 // Mock time
+      study_time: 15
     });
 
     if (completeData && completeData.next_action === 'quiz') {
-      // Start Quiz
       const quizData = await callApi('/api/quizzes/start', 'POST', {
         user_id: account?.localAccountId,
         lesson_id: lessonId,
-        subtopic_id: activeLesson?.subtopic, // Or pass from state
+        subtopic_id: activeLesson?.subtopic,
         difficulty: 'mixed',
         question_count: 3
       });
@@ -659,30 +659,19 @@ export default function Platform() {
   };
 
   const tutorMessage = async (sessionId: string, message: string) => {
-    // Note: The API likely returns a new message object. Assuming standard structure based on docs.
-    // The docs don't show the response for /message explicitly in the provided text, 
-    // but usually it returns the AI text.
-    // Let's assume it returns { message: "AI response" } or similar.
-    // Based on docs: 11. Send Message -> returns (implied) text.
-    // We will return a mock or expect a specific field. 
-    // Let's assume the response body contains the AI string directly or in a field.
     const res = await callApi('/api/tutor/message', 'POST', {
       user_id: account?.localAccountId,
       session_id: sessionId,
       message
     });
-    // This is a guess since /message response isn't explicitly detailed in the prompt
-    // but standard practice implies returning the string or object.
     return res?.message || "I received your message."; 
   };
 
   const endTutor = async (sessionId: string) => {
-     await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
-     setView('DASHBOARD');
-     loadDashboard();
+      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
+      setView('DASHBOARD');
+      loadDashboard();
   };
-
-  // --- Rendering ---
 
   if (!account) return <div>Please log in</div>;
 
@@ -718,16 +707,16 @@ export default function Platform() {
       {view === 'DASHBOARD' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-             <h2 className="text-2xl font-bold">Your Courses</h2>
+             <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
              <Button onClick={() => setView('CREATE_COURSE')}>
               + Create New Course
               </Button>
           </div>
           
-          
-          <div className="grid gap-4">
+          {/* UPDATED: Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
              {lessonPlans.length === 0 && !loading && (
-                <div className="text-center py-12 border rounded-lg bg-gray-50">
+                <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
                   <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
                   <p className="text-gray-600 mb-6">
                     Create your first course by choosing a subject and topics you want to learn.
@@ -739,41 +728,80 @@ export default function Platform() {
               )}
              
              {lessonPlans.map(plan => {
-               // Normalize the ID: use lesson_plan_id if present, otherwise id
                const planId = plan.lesson_plan_id || plan.id;
                
                return (
-                 <div key={planId} className="border p-4 rounded shadow-sm hover:shadow-md transition bg-white">
-                   <div className="flex justify-between items-center">
-                      <div>
-                          <h3 className="font-bold text-lg">{plan.subject}: {plan.topic}</h3>
-                          <p className="text-sm text-gray-500">
-                            {plan.status} • {plan.subtopic_count || 0} subtopics
-                          </p>
+                 <div 
+                   key={planId} 
+                   className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
+                 >
+                   <div className="mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] uppercase font-semibold text-gray-400">
+                          {plan.status}
+                        </span>
                       </div>
-                      <Button variant="outline" onClick={() => viewPlanDetails(planId!)}>
-                          View Course Details
+                      <h3 className="font-bold text-lg leading-tight text-gray-900">
+                        {plan.subject}
+                      </h3>
+                      <p className="text-sm font-medium text-gray-500 mb-3">
+                        {plan.topic}
+                      </p>
+                      
+                      {/* ADDED: Description with line-clamping to keep tiles uniform */}
+                      {plan.description && (
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
+                          "{plan.description}"
+                        </p>
+                      )}
+                   </div>
+
+                   {/* Pushes content to bottom so buttons align across the row */}
+                   <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {plan.subtopic_count || 0} Lessons
+                      </span>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => viewPlanDetails(planId!)}
+                        className="hover:bg-blue-600 hover:text-white transition-colors"
+                      >
+                        Open Course
                       </Button>
                    </div>
-                   
-                   {/* FIXED: Strict check ensures activePlan exists before comparing */}
-                   {activePlan && (activePlan.lesson_plan_id === planId || activePlan.id === planId) && (
-                      <div className="mt-4 pt-4 border-t space-y-2">
-                          <h4 className="text-sm font-semibold text-gray-700">Subtopics:</h4>
-                          {/* Guard against missing subtopics in case of draft plans */}
-                          {activePlan.subtopics?.map(sub => (
-                              <div key={sub.id} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                                  <span className="text-sm">{sub.title}</span>
-                                  <Button size="sm" onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
-                                      Start
-                                  </Button>
-                              </div>
-                          ))}
-                      </div>
-                   )}
                  </div>
                );
              })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. NEW PLAN DETAILS VIEW */}
+      {view === 'PLAN_DETAILS' && activePlan && (
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h2 className="text-3xl font-bold text-gray-900">{activePlan.subject}</h2>
+            <p className="text-xl text-gray-600">{activePlan.topic}</p>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Course Curriculum</h3>
+            <div className="grid gap-3">
+              {activePlan.subtopics?.map((sub, index) => (
+                <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium">{sub.title}</span>
+                  </div>
+                  <Button onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
+                    Start Lesson
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -1684,6 +1712,7 @@ export interface LessonPlan {
   lesson_plan_id?: string; 
   subject: string;
   topic: string;
+  description: string;
   status: string;
   subtopics: Subtopic[];
   subtopic_count?: number; 
