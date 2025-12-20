@@ -1,0 +1,1752 @@
+DIRECTORY TREE (SOURCE FILES ONLY)
+=================================
+
+📄 next-env.d.ts
+📄 next.config.ts
+📁 public/
+📄 README.md
+📁 src/
+  📁 app/
+    📄 globals.css
+    📄 layout.tsx
+    📄 page.tsx
+    📁 redirect/
+      📄 page.tsx
+  📁 components/
+    📄 LoginPage.tsx
+    📄 MarkdownRenderer.tsx
+    📄 Platform.tsx
+    📁 ui/
+      📄 button.tsx
+      📄 card.tsx
+      📄 dialog.tsx
+    📁 views/
+      📄 CreateCourseView.tsx
+      📄 LessonView.tsx
+      📄 QuizView.tsx
+      📄 TutorView.tsx
+  📁 lib/
+    📄 authConfig.ts
+    📄 msalInstance.ts
+    📄 utils.ts
+  📁 types/
+    📄 api.ts
+
+
+FILE CONTENTS
+=================================
+
+
+--- FILE: next-env.d.ts ---
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+--- FILE: next.config.ts ---
+
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+--- FILE: README.md ---
+
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+--- FILE: src\app\globals.css ---
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes pulse-slow {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+
+
+--- FILE: src\app\layout.tsx ---
+
+'use client';
+
+import './globals.css';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from '@/lib/msalInstance';
+import { ReactNode } from 'react';
+
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <html lang="en">
+      <body className="bg-white text-gray-900 min-h-screen font-sans">
+        {/* MSAL Provider wraps the whole app */}
+        <MsalProvider instance={msalInstance}>
+          <main className="container mx-auto p-4">
+            {children}
+          </main>
+        </MsalProvider>
+      </body>
+    </html>
+  );
+}
+
+
+--- FILE: src\app\page.tsx ---
+
+'use client';
+
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
+import LoginPage from '@/components/LoginPage';
+import Platform from '@/components/Platform';
+
+export default function HomePage() {
+  return (
+    <div>
+      <UnauthenticatedTemplate>
+        <LoginPage />
+      </UnauthenticatedTemplate>
+      <AuthenticatedTemplate>
+        <Platform />
+      </AuthenticatedTemplate>
+    </div>
+  );
+}
+
+
+--- FILE: src\app\redirect\page.tsx ---
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { msalInstance } from '@/lib/msalInstance';
+
+export default function RedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    msalInstance.handleRedirectPromise().then((resp) => {
+      if (resp?.account) msalInstance.setActiveAccount(resp.account);
+      else if (!msalInstance.getActiveAccount()) {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length) msalInstance.setActiveAccount(accounts[0]);
+      }
+      router.push('/');
+    });
+  }, [router]);
+
+  return <p>Loading...</p>;
+}
+
+
+--- FILE: src\components\LoginPage.tsx ---
+
+'use client';
+
+import { useMsal } from '@azure/msal-react';
+import { loginRequest } from '@/lib/authConfig';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'; // Use Framer Motion for animations
+
+export default function LoginPage() {
+  const { instance } = useMsal();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = () => {
+    setLoading(true);
+    instance.loginRedirect(loginRequest);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300 opacity-80 -z-10" />
+
+
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative z-10">
+        
+        {/* Header Section */}
+        <motion.div 
+          className="flex flex-col items-center text-center mb-8"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 1 }}
+        >
+          <div className="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+            <GraduationCap size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-4">
+            Welcome to Learning.AI
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Sign in to access your courses, assignments, and learning resources. Let's get started!
+          </p>
+        </motion.div>
+
+        {/* Login Button */}
+        <motion.div 
+          initial={{ scale: 1 }} 
+          whileHover={{ scale: 1.05 }} 
+          transition={{ duration: 0.2 }}
+        >
+          <Button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium rounded-lg"
+          >
+            {loading ? 'Signing in...' : 'Sign in with Microsoft'}
+          </Button>
+        </motion.div>
+
+        {/* Trust Section */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+          <ShieldCheck size={16} />
+          <span>Secure login powered by Microsoft</span>
+        </div>
+
+        {/* Footer Section */}
+        <div className="mt-8 text-center text-xs text-gray-400">
+          <p>
+            By signing in, you agree to our{' '}
+            <a href="/terms" className="underline hover:text-gray-600">
+              Terms
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" className="underline hover:text-gray-600">
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+--- FILE: src\components\MarkdownRenderer.tsx ---
+
+'use client';
+
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+export default function MarkdownRenderer({ content }: { content: string }) {
+  return (
+    <div className="prose prose-blue max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-bold mt-6 mb-4">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold mt-6 mb-3">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl font-semibold mt-5 mb-2">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="leading-relaxed mb-4">{children}</p>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc pl-6 mb-4">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-6 mb-4">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="mb-1">{children}</li>
+          ),
+          code: ({ children }) => (
+            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4">
+              {children}
+            </pre>
+          ),
+          hr: () => <hr className="my-6 border-gray-300" />,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 my-4">
+              {children}
+            </blockquote>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
+
+--- FILE: src\components\Platform.tsx ---
+
+'use client';
+
+import { useMsal, useIsAuthenticated } from '@azure/msal-react';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api';
+
+// Import Views
+import LessonView from './views/LessonView';
+import QuizView from './views/QuizView';
+import TutorView from './views/TutorView';
+import CreateCourseView from './views/CreateCourseView';
+
+// 1. Added 'PLAN_DETAILS' to the state type
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
+
+export default function Platform() {
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
+  const [account, setAccount] = useState(accounts[0] || null);
+
+  // Application State
+  const [view, setView] = useState<AppState>('DASHBOARD');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Data State
+  const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
+  const [activePlan, setActivePlan] = useState<LessonPlan | null>(null);
+  const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (accounts.length > 0 && !instance.getActiveAccount()) {
+      instance.setActiveAccount(accounts[0]);
+      setAccount(accounts[0]);
+    }
+  }, [accounts, instance]);
+
+  useEffect(() => {
+    if (account) {
+      loadDashboard();
+    }
+  }, [account]);
+
+  // --- API Helper ---
+  const callApi = async (endpoint: string, method = 'GET', body?: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const tokenRes = await instance.acquireTokenSilent({
+        scopes: ['api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+        account: account!,
+      });
+      
+      const res = await fetch(`http://localhost:8000${endpoint}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${tokenRes.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API Error: ${res.status} ${text}`);
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Actions ---
+
+  const loadDashboard = async () => {
+    if (!account) return;
+    const plans = await callApi(`/api/lesson-plans/${account.localAccountId}`);
+    if (plans) setLessonPlans(plans);
+  };
+
+  const createCourse = async (data: {
+    subject: string;
+    topic: string;
+    level: string;
+  }) => {
+    const res = await callApi('/api/lesson-plans', 'POST', {
+      user_id: account?.localAccountId,
+      subject: data.subject,
+      topic: data.topic,
+      level: data.level,
+      auto_approve: false,
+    });
+
+    if (res) {
+      setView('DASHBOARD');
+      loadDashboard();
+    }
+  };
+
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: '/',
+    });
+  };
+
+  // 2. Modified to set view to 'PLAN_DETAILS'
+  const viewPlanDetails = async (planId: string) => {
+    const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
+    if (details) {
+      setActivePlan(details);
+      setView('PLAN_DETAILS');
+    }
+  };
+
+  const startSubtopic = async (planId: string, subtopicId: string) => {
+    const data = await callApi('/api/lessons/start', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_plan_id: planId,
+      subtopic_id: subtopicId
+    });
+    if (data) {
+      setActiveLesson(data);
+      setView('LESSON');
+    }
+  };
+
+  const expandLessonSection = async (sectionId: string) => {
+    if (!activeLesson) return null;
+    const data = await callApi('/api/lessons/expand-section', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_id: activeLesson.lesson_id,
+      section_id: sectionId
+    });
+    return data ? data.expanded_content : null;
+  };
+
+  const completeLesson = async (lessonId: string) => {
+    const completeData = await callApi('/api/lessons/complete', 'POST', {
+      user_id: account?.localAccountId,
+      lesson_id: lessonId,
+      study_time: 15
+    });
+
+    if (completeData && completeData.next_action === 'quiz') {
+      const quizData = await callApi('/api/quizzes/start', 'POST', {
+        user_id: account?.localAccountId,
+        lesson_id: lessonId,
+        subtopic_id: activeLesson?.subtopic,
+        difficulty: 'mixed',
+        question_count: 3
+      });
+      
+      if (quizData) {
+        setActiveQuiz({ id: quizData.quiz_id, questions: quizData.questions });
+        setView('QUIZ');
+      }
+    }
+  };
+
+  const submitQuiz = async (quizId: string, responses: any[]) => {
+    const result = await callApi('/api/quizzes/submit', 'POST', {
+      user_id: account?.localAccountId,
+      quiz_id: quizId,
+      responses
+    });
+
+    if (result) {
+      setQuizResult(result);
+      setView('RESULT');
+    }
+  };
+
+  const startTutor = async (concept: string) => {
+    const data = await callApi('/api/tutor/start', 'POST', {
+      user_id: account?.localAccountId,
+      trigger: 'manual',
+      lesson_id: activeLesson?.lesson_id,
+      concept: concept,
+      initial_message: `I'm struggling with ${concept}`
+    });
+    
+    if (data) {
+      setTutorSessionId(data.session_id);
+      setView('TUTOR');
+    }
+  };
+
+  const tutorMessage = async (sessionId: string, message: string) => {
+    const res = await callApi('/api/tutor/message', 'POST', {
+      user_id: account?.localAccountId,
+      session_id: sessionId,
+      message
+    });
+    return res?.message || "I received your message."; 
+  };
+
+  const endTutor = async (sessionId: string) => {
+      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
+      setView('DASHBOARD');
+      loadDashboard();
+  };
+
+  if (!account) return <div>Please log in</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 font-sans">
+      <header className="flex justify-between items-center mb-8 pb-4 border-b">
+        <h1 className="text-xl font-bold text-gray-800">Learning Platform</h1>
+        <div className="flex gap-4">
+            {view !== 'DASHBOARD' && (
+                <Button variant="ghost" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
+                    Back to Dashboard
+                </Button>
+            )}
+            <div className="flex items-center gap-3">
+              <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                {account.username}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+              >
+                Log out
+              </Button>
+            </div>
+        </div>
+      </header>
+
+      {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
+
+      {/* DASHBOARD VIEW */}
+      {view === 'DASHBOARD' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+             <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
+             <Button onClick={() => setView('CREATE_COURSE')}>
+              + Create New Course
+              </Button>
+          </div>
+          
+          {/* UPDATED: Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+             {lessonPlans.length === 0 && !loading && (
+                <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
+                  <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Create your first course by choosing a subject and topics you want to learn.
+                  </p>
+                  <Button size="lg" onClick={() => setView('CREATE_COURSE')}>
+                    Create Your First Course
+                  </Button>
+                </div>
+              )}
+             
+             {lessonPlans.map(plan => {
+               const planId = plan.lesson_plan_id || plan.id;
+               
+               return (
+                 <div 
+                   key={planId} 
+                   className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
+                 >
+                   <div className="mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] uppercase font-semibold text-gray-400">
+                          {plan.status}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-lg leading-tight text-gray-900">
+                        {plan.subject}
+                      </h3>
+                      <p className="text-sm font-medium text-gray-500 mb-3">
+                        {plan.topic}
+                      </p>
+                      
+                      {/* ADDED: Description with line-clamping to keep tiles uniform */}
+                      {plan.description && (
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
+                          "{plan.description}"
+                        </p>
+                      )}
+                   </div>
+
+                   {/* Pushes content to bottom so buttons align across the row */}
+                   <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {plan.subtopic_count || 0} Lessons
+                      </span>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => viewPlanDetails(planId!)}
+                        className="hover:bg-blue-600 hover:text-white transition-colors"
+                      >
+                        Open Course
+                      </Button>
+                   </div>
+                 </div>
+               );
+             })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. NEW PLAN DETAILS VIEW */}
+      {view === 'PLAN_DETAILS' && activePlan && (
+        <div className="space-y-6">
+          <div className="border-b pb-4">
+            <h2 className="text-3xl font-bold text-gray-900">{activePlan.subject}</h2>
+            <p className="text-xl text-gray-600">{activePlan.topic}</p>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Course Curriculum</h3>
+            <div className="grid gap-3">
+              {activePlan.subtopics?.map((sub, index) => (
+                <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium">{sub.title}</span>
+                  </div>
+                  <Button onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
+                    Start Lesson
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === 'CREATE_COURSE' && (
+        <CreateCourseView onCreate={createCourse} />
+      )}
+
+      {/* LESSON VIEW */}
+      {view === 'LESSON' && activeLesson && (
+        <LessonView 
+            lesson={activeLesson} 
+            userId={account.localAccountId} 
+            onExpandSection={expandLessonSection}
+            onComplete={completeLesson}
+        />
+      )}
+
+      {/* QUIZ VIEW */}
+      {view === 'QUIZ' && activeQuiz && (
+        <QuizView 
+            quizId={activeQuiz.id} 
+            questions={activeQuiz.questions} 
+            onSubmit={submitQuiz}
+        />
+      )}
+
+      {/* RESULT VIEW */}
+      {view === 'RESULT' && quizResult && (
+        <div className="text-center space-y-6 py-10">
+            <h2 className="text-3xl font-bold">Quiz Complete!</h2>
+            <div className="text-6xl font-bold text-blue-600">{quizResult.score.percentage}%</div>
+            <p className="text-gray-600">You scored {quizResult.score.marksAwarded} / {quizResult.score.maxMarks}</p>
+            
+            {quizResult.trigger_tutor ? (
+                <div className="bg-orange-50 p-6 rounded border border-orange-200 inline-block text-left max-w-lg">
+                    <h3 className="font-bold text-orange-800 mb-2">Needs Improvement</h3>
+                    <p className="mb-4">It looks like you struggled with: </p>
+                    <ul className="list-disc list-inside mb-4">
+                        {quizResult.weak_concepts.map((c, i) => <li key={i}>{c.substring(0, 50)}...</li>)}
+                    </ul>
+                    <Button className="w-full" onClick={() => startTutor(quizResult.weak_concepts[0])}>
+                        Chat with AI Tutor
+                    </Button>
+                </div>
+            ) : (
+                <Button size="lg" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
+                    Return to Dashboard
+                </Button>
+            )}
+        </div>
+      )}
+
+      {/* TUTOR VIEW */}
+      {view === 'TUTOR' && tutorSessionId && (
+        <TutorView 
+            sessionId={tutorSessionId}
+            onSendMessage={tutorMessage}
+            onEndSession={endTutor}
+        />
+      )}
+    </div>
+  );
+}
+
+--- FILE: src\components\ui\button.tsx ---
+
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        outline:
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+
+
+--- FILE: src\components\ui\card.tsx ---
+
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn("leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-6", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center px-6 [.border-t]:pt-6", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}
+
+
+--- FILE: src\components\ui\dialog.tsx ---
+
+"use client"
+
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { XIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <DialogPortal data-slot="dialog-portal">
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        className={cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+          >
+            <XIcon />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+}
+
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn("text-lg leading-none font-semibold", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn("text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+}
+
+
+--- FILE: src\components\views\CreateCourseView.tsx ---
+
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+const SUBJECTS = ['Math', 'Physics', 'Chemistry', 'Biology', 'Computer Science'];
+const LEVELS = ['GCSE', 'A-Level', 'Undergraduate'];
+
+export default function CreateCourseView({
+  onCreate
+}: {
+  onCreate: (data: {
+    subject: string;
+    topic: string;
+    level: string;
+  }) => void;
+}) {
+  const [subject, setSubject] = useState('');
+  const [level, setLevel] = useState('GCSE');
+  const [topicInput, setTopicInput] = useState('');
+  const [topics, setTopics] = useState<string[]>([]);
+  const [focus, setFocus] = useState('');
+
+  const addTopic = () => {
+    if (topicInput.trim() && !topics.includes(topicInput.trim())) {
+      setTopics([...topics, topicInput.trim()]);
+      setTopicInput('');
+    }
+  };
+
+  const buildTopicString = () => {
+    return [
+      ...topics,
+      focus && `Focus on: ${focus}`
+    ]
+      .filter(Boolean)
+      .join('; ');
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h2 className="text-2xl font-bold">Create a New Course</h2>
+
+      {/* Subject */}
+      <div>
+        <label className="block font-medium mb-1">Subject</label>
+        <select
+          className="w-full border rounded p-2"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        >
+          <option value="">Select a subject</option>
+          {SUBJECTS.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Level */}
+      <div>
+        <label className="block font-medium mb-1">Level</label>
+        <select
+          className="w-full border rounded p-2"
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+        >
+          {LEVELS.map(l => (
+            <option key={l}>{l}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Topics */}
+      <div>
+        <label className="block font-medium mb-1">Topics / Subtopics</label>
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 border rounded p-2"
+            placeholder="e.g. Quadratic equations"
+            value={topicInput}
+            onChange={(e) => setTopicInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addTopic();
+              }
+            }}
+          />
+          <Button type="button" onClick={addTopic}>
+            Add
+          </Button>
+        </div>
+
+        {topics.length > 0 && (
+          <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
+            {topics.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Focus / Intent */}
+      <div>
+        <label className="block font-medium mb-1">
+          Learning focus (optional)
+        </label>
+        <textarea
+          className="w-full border rounded p-2"
+          placeholder="e.g. exam-style questions, step-by-step explanations"
+          value={focus}
+          onChange={(e) => setFocus(e.target.value)}
+        />
+      </div>
+
+      <Button
+        size="lg"
+        disabled={!subject || topics.length === 0}
+        onClick={() =>
+          onCreate({
+            subject,
+            level,
+            topic: buildTopicString()
+          })
+        }
+      >
+        Generate Course
+      </Button>
+    </div>
+  );
+}
+
+
+--- FILE: src\components\views\LessonView.tsx ---
+
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ActiveLesson, LessonSection } from '@/types/api';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+
+interface LessonViewProps {
+  lesson: ActiveLesson;
+  userId: string;
+  onExpandSection: (sectionId: string) => Promise<string | null>;
+  onComplete: (lessonId: string) => void;
+}
+
+export default function LessonView({
+  lesson,
+  userId,
+  onExpandSection,
+  onComplete,
+}: LessonViewProps) {
+  const [sections, setSections] = useState<LessonSection[]>(lesson.sections);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [expandedDialogOpen, setExpandedDialogOpen] = useState(false);
+
+  const currentSection = sections[currentIndex];
+
+  const handleExpand = async (sectionId: string) => {
+    setLoadingId(sectionId);
+    const expandedContent = await onExpandSection(sectionId);
+
+    if (expandedContent) {
+      setSections(prev =>
+        prev.map(s =>
+          s.sectionId === sectionId ? { ...s, expanded: expandedContent } : s
+        )
+      );
+      setExpandedDialogOpen(true);
+    }
+
+    setLoadingId(null);
+  };
+
+  return (
+    <div className="space-y-8 max-w-3xl mx-auto">
+      {/* Lesson Header */}
+      <div className="bg-white p-6 rounded shadow-sm border">
+        <h2 className="text-2xl font-bold text-gray-800">
+          {lesson.subtopic}
+        </h2>
+        <p className="text-gray-600 mt-2">
+          {lesson.introduction}
+        </p>
+      </div>
+
+      {/* Section Card */}
+      <div className="bg-gray-50 p-6 rounded border space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-xl">
+            {currentSection.title}
+          </h3>
+          <span className="text-sm text-gray-500">
+            Section {currentIndex + 1} of {sections.length}
+          </span>
+        </div>
+
+        {/* Section Content */}
+        <MarkdownRenderer content={currentSection.content} />
+
+        {/* Key Points */}
+        {currentSection.keyPoints?.length > 0 && (
+          <ul className="list-disc list-inside bg-blue-50 p-4 rounded">
+            {currentSection.keyPoints.map((kp, i) => (
+              <li key={i} className="text-sm text-blue-800">
+                {kp}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Expand Button */}
+        <div className="flex gap-2">
+          {currentSection.expanded ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpandedDialogOpen(true)}
+              className="gap-2"
+            >
+              <span className="text-lg">📖</span>
+              View Detailed Explanation
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExpand(currentSection.sectionId)}
+              disabled={loadingId === currentSection.sectionId}
+              className="gap-2"
+            >
+              {loadingId === currentSection.sectionId ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">✨</span>
+                  Get AI Deep Dive
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Content Modal */}
+      <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              Deep Dive: {currentSection.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none mt-4">
+            <MarkdownRenderer content={currentSection.expanded || ''} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center">
+        <Button
+          variant="outline"
+          disabled={currentIndex === 0}
+          onClick={() => setCurrentIndex(i => i - 1)}
+        >
+          ← Previous
+        </Button>
+
+        <Button
+          disabled={currentIndex === sections.length - 1}
+          onClick={() => setCurrentIndex(i => i + 1)}
+        >
+          Next →
+        </Button>
+      </div>
+
+      {/* Complete Lesson */}
+      {currentIndex === sections.length - 1 && (
+        <Button
+          onClick={() => onComplete(lesson.lesson_id)}
+          className="w-full"
+          size="lg"
+        >
+          Complete Lesson & Start Quiz
+        </Button>
+      )}
+    </div>
+  );
+}
+
+--- FILE: src\components\views\QuizView.tsx ---
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { QuizQuestion, QuizResult } from '@/types/api';
+
+interface QuizViewProps {
+  quizId: string;
+  questions: QuizQuestion[];
+  onSubmit: (quizId: string, responses: any[]) => void;
+}
+
+export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const handleInputChange = (qId: string, val: string) => {
+    setAnswers(prev => ({ ...prev, [qId]: val }));
+  };
+
+  const handleSubmit = () => {
+    const formattedResponses = questions.map(q => {
+      const val = answers[q.questionId] || "";
+      // Handle Bullet points for Long Answer (splitting by newlines)
+      if (q.type === 'long_answer') {
+        return {
+            questionId: q.questionId,
+            userBulletPoints: val.split('\n').filter(line => line.trim() !== '')
+        };
+      }
+      return { questionId: q.questionId, userAnswer: val };
+    });
+    onSubmit(quizId, formattedResponses);
+  };
+
+  return (
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold">Concept Check</h2>
+      
+      {questions.map((q, index) => (
+        <div key={q.questionId} className="bg-white p-6 rounded shadow-sm border">
+          <div className="flex justify-between items-start mb-4">
+            <span className="bg-gray-200 text-gray-700 px-2 py-1 text-xs rounded uppercase font-bold">{q.type.replace('_', ' ')}</span>
+            <span className="text-xs text-gray-500 capitalize">{q.difficulty}</span>
+          </div>
+          
+          <p className="font-medium text-lg mb-4">{index + 1}. {q.question}</p>
+
+          {q.type === 'multiple_choice' && q.options && (
+            <div className="space-y-2">
+              {q.options.map((opt) => (
+                <label key={opt} className="flex items-center space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name={q.questionId}
+                    value={opt}
+                    onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {q.type === 'short_answer' && (
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              placeholder="Type your answer..."
+              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+            />
+          )}
+
+          {q.type === 'long_answer' && (
+            <textarea
+              className="w-full p-2 border rounded h-32"
+              placeholder="Explain your reasoning (each line is a point)..."
+              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
+
+      <Button onClick={handleSubmit} className="w-full">Submit Quiz</Button>
+    </div>
+  );
+}
+
+--- FILE: src\components\views\TutorView.tsx ---
+
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+
+interface Message {
+  role: 'user' | 'ai';
+  text: string;
+}
+
+interface TutorViewProps {
+  sessionId: string;
+  initialMessage?: string;
+  onSendMessage: (sessionId: string, message: string) => Promise<string>;
+  onEndSession: (sessionId: string) => void;
+}
+
+export default function TutorView({ sessionId, initialMessage, onSendMessage, onEndSession }: TutorViewProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (initialMessage && messages.length === 0) {
+      setMessages([{ role: 'user', text: initialMessage }]);
+      // Ideally trigger an AI response immediately here if the backend supports it, 
+      // otherwise we wait for user input.
+    }
+  }, [initialMessage]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const userMsg = input;
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setInput('');
+    setSending(true);
+
+    const response = await onSendMessage(sessionId, userMsg);
+    setMessages(prev => [...prev, { role: 'ai', text: response }]);
+    setSending(false);
+  };
+
+  return (
+    <div className="flex flex-col h-[600px] bg-white border rounded shadow-lg">
+      <div className="p-4 bg-indigo-600 text-white flex justify-between items-center">
+        <h3 className="font-bold">AI Tutor</h3>
+        <Button size="sm" variant="secondary" onClick={() => onEndSession(sessionId)}>End Session</Button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] p-3 rounded-lg ${
+              m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-800'
+            }`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="p-4 border-t bg-white flex gap-2">
+        <input 
+          className="flex-1 border rounded px-3 py-2"
+          placeholder="Ask a question..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+        />
+        <Button onClick={handleSend} disabled={sending}>Send</Button>
+      </div>
+    </div>
+  );
+}
+
+--- FILE: src\lib\authConfig.ts ---
+
+import { Configuration, LogLevel } from '@azure/msal-browser';
+
+export const msalConfig: Configuration = {
+  auth: {
+    clientId: '7f63ef05-e7d4-40fc-bccd-90da58cc293c',
+    authority: 'https://gpteducation.ciamlogin.com/gpteducation.onmicrosoft.com',
+    redirectUri: 'http://localhost:3000/redirect',
+    knownAuthorities: ['gpteducation.ciamlogin.com'],
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false,
+  },
+  system: {
+    loggerOptions: {
+      loggerCallback: (level, message, containsPii) => {
+        if (containsPii) return;
+        switch (level) {
+          case LogLevel.Error:
+            console.error(message);
+            break;
+          case LogLevel.Warning:
+            console.warn(message);
+            break;
+          case LogLevel.Info:
+            console.info(message);
+            break;
+        }
+      },
+    },
+  },
+};
+
+export const loginRequest = {
+  scopes: ['openid', 'profile', 'email', 'api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
+};
+
+
+--- FILE: src\lib\msalInstance.ts ---
+
+import { PublicClientApplication } from '@azure/msal-browser';
+import { msalConfig } from './authConfig';
+
+export const msalInstance = new PublicClientApplication(msalConfig);
+
+
+--- FILE: src\lib\utils.ts ---
+
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+--- FILE: src\types\api.ts ---
+
+export interface Subtopic {
+  id: string;
+  title: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+}
+
+export interface LessonPlan {
+  // The API is inconsistent: 'id' in list view, 'lesson_plan_id' in detail view
+  id?: string;             
+  lesson_plan_id?: string; 
+  subject: string;
+  topic: string;
+  description: string;
+  status: string;
+  subtopics: Subtopic[];
+  subtopic_count?: number; 
+}
+
+export interface LessonSection {
+  sectionId: string;
+  title: string;
+  content: string;
+  keyPoints: string[];
+  expanded?: string | null; // Added to store expanded content
+}
+
+export interface ActiveLesson {
+  lesson_id: string;
+  subject: string;
+  topic: string;
+  subtopic: string;
+  introduction: string;
+  sections: LessonSection[];
+}
+
+export interface QuizQuestion {
+  questionId: string;
+  type: 'multiple_choice' | 'short_answer' | 'long_answer';
+  question: string;
+  options?: string[];
+  difficulty: string;
+}
+
+export interface QuizResult {
+  score: { percentage: number; marksAwarded: number; maxMarks: number };
+  trigger_tutor: boolean;
+  next_action: string;
+  weak_concepts: string[];
+  feedback?: string; // aggregated or specific
+}

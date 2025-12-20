@@ -572,7 +572,7 @@ User → Submit Quiz → AI Grades → Save Attempt → Update Progress
 ## Code Structure
 
 ```
-learning-platform-api/
+backend/
 ├── shared/
 │   ├── cosmos_client.py      # Cosmos DB operations
 │   ├── openai_client.py      # Azure OpenAI wrapper

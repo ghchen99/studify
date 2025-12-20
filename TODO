@@ -1,0 +1,8 @@
+Frontend Bug Fixes
+- add tab title 
+- back button causes great pain and error
+- POlling API response, something to show loading and waiting for generation on create lesson, quiz generation. copy the lesson expand animation that work well
+- sort out lesson completion, auto approve bug
+- Quiz changed a few seconds after rendering, diplay answers corrected json
+- sort out dahsboard tracking
+- Fix tutor function
