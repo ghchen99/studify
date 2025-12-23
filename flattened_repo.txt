@@ -10,6 +10,7 @@ DIRECTORY TREE (SOURCE FILES ONLY)
     📄 globals.css
     📄 layout.tsx
     📄 page.tsx
+    📄 providers.tsx
     📁 redirect/
       📄 page.tsx
   📁 components/
@@ -20,6 +21,7 @@ DIRECTORY TREE (SOURCE FILES ONLY)
       📄 button.tsx
       📄 card.tsx
       📄 dialog.tsx
+      📄 LoadingButtonContent.tsx
     📁 views/
       📄 CreateCourseView.tsx
       📄 LessonView.tsx
@@ -240,12 +242,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 --- FILE: src\app\layout.tsx ---
 
-'use client';
-
 import './globals.css';
-import { MsalProvider } from '@azure/msal-react';
-import { msalInstance } from '@/lib/msalInstance';
+import type { Metadata } from 'next';
 import { ReactNode } from 'react';
+import ClientProviders from './providers';
+
+export const metadata: Metadata = {
+  title: 'gpt-edu',
+  description: 'AI-powered learning platform',
+};
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -255,12 +260,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className="bg-white text-gray-900 min-h-screen font-sans">
-        {/* MSAL Provider wraps the whole app */}
-        <MsalProvider instance={msalInstance}>
+        <ClientProviders>
           <main className="container mx-auto p-4">
             {children}
           </main>
-        </MsalProvider>
+        </ClientProviders>
       </body>
     </html>
   );
@@ -285,6 +289,27 @@ export default function HomePage() {
         <Platform />
       </AuthenticatedTemplate>
     </div>
+  );
+}
+
+
+--- FILE: src\app\providers.tsx ---
+
+'use client';
+
+import { ReactNode } from 'react';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from '@/lib/msalInstance';
+
+export default function ClientProviders({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <MsalProvider instance={msalInstance}>
+      {children}
+    </MsalProvider>
   );
 }
 
@@ -1176,6 +1201,34 @@ export {
 }
 
 
+--- FILE: src\components\ui\LoadingButtonContent.tsx ---
+
+function LoadingButtonContent({
+  loading,
+  loadingText,
+  idleIcon,
+  idleText,
+}: {
+  loading: boolean;
+  loadingText: string;
+  idleIcon: string;
+  idleText: string;
+}) {
+  return loading ? (
+    <>
+      <span className="animate-spin">⏳</span>
+      {loadingText}
+    </>
+  ) : (
+    <>
+      <span className="text-lg">{idleIcon}</span>
+      {idleText}
+    </>
+  );
+}
+
+export { LoadingButtonContent };
+
 --- FILE: src\components\views\CreateCourseView.tsx ---
 
 'use client';
@@ -1183,6 +1236,7 @@ export {
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 const SUBJECT_SUGGESTIONS = [
   'Math',
@@ -1209,6 +1263,7 @@ export default function CreateCourseView({
   const [level, setLevel] = useState('GCSE');
   const [topicInput, setTopicInput] = useState('');
   const [topics, setTopics] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
 
   const addTopic = () => {
     const trimmed = topicInput.trim();
@@ -1301,19 +1356,29 @@ export default function CreateCourseView({
         </select>
       </div>
 
+      {/* Create Button */}
       <Button
         size="lg"
-        disabled={!subject || topics.length === 0}
-        onClick={() =>
-          onCreate({
+        disabled={!subject || topics.length === 0 || creating}
+        onClick={async () => {
+          setCreating(true);
+          await onCreate({
             subject,
             level,
             topic: topics.join('; ')
-          })
-        }
+          });
+          setCreating(false);
+        }}
+        className="gap-2"
       >
-        Generate Course
+        <LoadingButtonContent
+          loading={creating}
+          loadingText="Generating course..."
+          idleIcon=""
+          idleText="Generate Course"
+        />
       </Button>
+
     </div>
   );
 }
@@ -1328,6 +1393,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface LessonViewProps {
   lesson: ActiveLesson;
@@ -1346,6 +1412,7 @@ export default function LessonView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [expandedDialogOpen, setExpandedDialogOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const currentSection = sections[currentIndex];
 
@@ -1473,11 +1540,21 @@ export default function LessonView({
       {/* Complete Lesson */}
       {currentIndex === sections.length - 1 && (
         <Button
-          onClick={() => onComplete(lesson.lesson_id)}
-          className="w-full"
+          onClick={async () => {
+            setCompleting(true);
+            await onComplete(lesson.lesson_id);
+            setCompleting(false);
+          }}
+          className="w-full gap-2"
           size="lg"
+          disabled={completing}
         >
-          Complete Lesson & Start Quiz
+          <LoadingButtonContent
+            loading={completing}
+            loadingText="Preparing quiz..."
+            idleIcon=""
+            idleText="Complete Lesson & Start Quiz"
+          />
         </Button>
       )}
     </div>
@@ -1486,9 +1563,12 @@ export default function LessonView({
 
 --- FILE: src\components\views\QuizView.tsx ---
 
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { QuizQuestion, QuizResult } from '@/types/api';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface QuizViewProps {
   quizId: string;
@@ -1498,25 +1578,29 @@ interface QuizViewProps {
 
 export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleInputChange = (qId: string, val: string) => {
     setAnswers(prev => ({ ...prev, [qId]: val }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const formattedResponses = questions.map(q => {
       const val = answers[q.questionId] || "";
-      // Handle Bullet points for Long Answer (splitting by newlines)
       if (q.type === 'long_answer') {
         return {
-            questionId: q.questionId,
-            userBulletPoints: val.split('\n').filter(line => line.trim() !== '')
+          questionId: q.questionId,
+          userBulletPoints: val
+            .split('\n')
+            .filter(line => line.trim() !== '')
         };
       }
       return { questionId: q.questionId, userAnswer: val };
     });
-    onSubmit(quizId, formattedResponses);
+
+    await onSubmit(quizId, formattedResponses);
   };
+
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -1567,7 +1651,24 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
         </div>
       ))}
 
-      <Button onClick={handleSubmit} className="w-full">Submit Quiz</Button>
+      
+      <Button
+        onClick={async () => {
+          setSubmitting(true);
+          await handleSubmit();
+          setSubmitting(false);
+        }}
+        className="w-full gap-2"
+        disabled={submitting}
+      >
+        <LoadingButtonContent
+          loading={submitting}
+          loadingText="Submitting answers..."
+          idleIcon=""
+          idleText="Submit Quiz"
+        />
+      </Button>
+
     </div>
   );
 }

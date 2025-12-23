@@ -1,6 +1,9 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { QuizQuestion, QuizResult } from '@/types/api';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface QuizViewProps {
   quizId: string;
@@ -10,25 +13,29 @@ interface QuizViewProps {
 
 export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleInputChange = (qId: string, val: string) => {
     setAnswers(prev => ({ ...prev, [qId]: val }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const formattedResponses = questions.map(q => {
       const val = answers[q.questionId] || "";
-      // Handle Bullet points for Long Answer (splitting by newlines)
       if (q.type === 'long_answer') {
         return {
-            questionId: q.questionId,
-            userBulletPoints: val.split('\n').filter(line => line.trim() !== '')
+          questionId: q.questionId,
+          userBulletPoints: val
+            .split('\n')
+            .filter(line => line.trim() !== '')
         };
       }
       return { questionId: q.questionId, userAnswer: val };
     });
-    onSubmit(quizId, formattedResponses);
+
+    await onSubmit(quizId, formattedResponses);
   };
+
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -79,7 +86,24 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
         </div>
       ))}
 
-      <Button onClick={handleSubmit} className="w-full">Submit Quiz</Button>
+      
+      <Button
+        onClick={async () => {
+          setSubmitting(true);
+          await handleSubmit();
+          setSubmitting(false);
+        }}
+        className="w-full gap-2"
+        disabled={submitting}
+      >
+        <LoadingButtonContent
+          loading={submitting}
+          loadingText="Submitting answers..."
+          idleIcon=""
+          idleText="Submit Quiz"
+        />
+      </Button>
+
     </div>
   );
 }

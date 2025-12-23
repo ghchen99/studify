@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 const SUBJECT_SUGGESTIONS = [
   'Math',
@@ -29,6 +30,7 @@ export default function CreateCourseView({
   const [level, setLevel] = useState('GCSE');
   const [topicInput, setTopicInput] = useState('');
   const [topics, setTopics] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
 
   const addTopic = () => {
     const trimmed = topicInput.trim();
@@ -121,19 +123,29 @@ export default function CreateCourseView({
         </select>
       </div>
 
+      {/* Create Button */}
       <Button
         size="lg"
-        disabled={!subject || topics.length === 0}
-        onClick={() =>
-          onCreate({
+        disabled={!subject || topics.length === 0 || creating}
+        onClick={async () => {
+          setCreating(true);
+          await onCreate({
             subject,
             level,
             topic: topics.join('; ')
-          })
-        }
+          });
+          setCreating(false);
+        }}
+        className="gap-2"
       >
-        Generate Course
+        <LoadingButtonContent
+          loading={creating}
+          loadingText="Generating course..."
+          idleIcon=""
+          idleText="Generate Course"
+        />
       </Button>
+
     </div>
   );
 }

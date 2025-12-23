@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface LessonViewProps {
   lesson: ActiveLesson;
@@ -23,6 +24,7 @@ export default function LessonView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [expandedDialogOpen, setExpandedDialogOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const currentSection = sections[currentIndex];
 
@@ -150,11 +152,21 @@ export default function LessonView({
       {/* Complete Lesson */}
       {currentIndex === sections.length - 1 && (
         <Button
-          onClick={() => onComplete(lesson.lesson_id)}
-          className="w-full"
+          onClick={async () => {
+            setCompleting(true);
+            await onComplete(lesson.lesson_id);
+            setCompleting(false);
+          }}
+          className="w-full gap-2"
           size="lg"
+          disabled={completing}
         >
-          Complete Lesson & Start Quiz
+          <LoadingButtonContent
+            loading={completing}
+            loadingText="Preparing quiz..."
+            idleIcon=""
+            idleText="Complete Lesson & Start Quiz"
+          />
         </Button>
       )}
     </div>

@@ -1,5 +1,4 @@
 Frontend Bug Fixes
-- POlling API response, something to show loading and waiting for generation on create lesson, quiz generation. copy the lesson expand animation that work well
 - sort out dahsboard tracking
 - back button causes great pain and error
 
@@ -12,3 +11,4 @@ Frontend Bug Fixes
 - ai from official past paper
 
 - Fix tutor function
+- notifications for post requests e.g., geenrating lesson for... letting users continue with their other generations?
