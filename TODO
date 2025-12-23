@@ -3,8 +3,7 @@ Frontend Bug Fixes
 - sort out lesson completion, auto approve bug
 - back button causes great pain and error
 
-- fix table render
-- more images & tables, diagrams, summary tables
+- more images & tables, diagrams, summary tables to improve lesson page structure
 
 - Quiz diplay answers corrected json
 - render how many marks per quiz question during completion

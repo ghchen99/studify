@@ -4,6 +4,7 @@ import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 // Import Views
 import LessonView from './views/LessonView';
@@ -11,7 +12,6 @@ import QuizView from './views/QuizView';
 import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
 
-// 1. Added 'PLAN_DETAILS' to the state type
 type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
@@ -31,6 +31,10 @@ export default function Platform() {
   const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
+  
+  // Track which lessons have been generated and which is currently generating
+  const [generatedLessons, setGeneratedLessons] = useState<Set<string>>(new Set());
+  const [generatingLessonId, setGeneratingLessonId] = useState<string | null>(null);
 
   useEffect(() => {
     if (accounts.length > 0 && !instance.getActiveAccount()) {
@@ -111,25 +115,44 @@ export default function Platform() {
     });
   };
 
-  // 2. Modified to set view to 'PLAN_DETAILS'
   const viewPlanDetails = async (planId: string) => {
     const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
     if (details) {
       setActivePlan(details);
+      
+      // Mark subtopics with 'completed' or 'in_progress' status as having generated lessons
+      const generated = new Set<string>();
+      details.subtopics?.forEach((sub: any) => {
+        if (sub.status === 'completed' || sub.status === 'in_progress') {
+          generated.add(sub.id);
+        }
+      });
+      setGeneratedLessons(generated);
+      
       setView('PLAN_DETAILS');
     }
   };
 
   const startSubtopic = async (planId: string, subtopicId: string) => {
+    const isGenerated = generatedLessons.has(subtopicId);
+    
+    if (!isGenerated) {
+      setGeneratingLessonId(subtopicId);
+    }
+    
     const data = await callApi('/api/lessons/start', 'POST', {
       user_id: account?.localAccountId,
       lesson_plan_id: planId,
       subtopic_id: subtopicId
     });
+    
     if (data) {
+      setGeneratedLessons(prev => new Set([...prev, subtopicId]));
       setActiveLesson(data);
       setView('LESSON');
     }
+    
+    setGeneratingLessonId(null);
   };
 
   const expandLessonSection = async (sectionId: string) => {
@@ -248,7 +271,6 @@ export default function Platform() {
               </Button>
           </div>
           
-          {/* UPDATED: Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
              {lessonPlans.length === 0 && !loading && (
                 <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
@@ -283,7 +305,6 @@ export default function Platform() {
                         {plan.topic}
                       </p>
                       
-                      {/* ADDED: Description with line-clamping to keep tiles uniform */}
                       {plan.description && (
                         <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
                           "{plan.description}"
@@ -291,7 +312,6 @@ export default function Platform() {
                       )}
                    </div>
 
-                   {/* Pushes content to bottom so buttons align across the row */}
                    <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                       <span className="text-xs text-gray-500 font-medium">
                         {plan.subtopic_count || 0} Lessons
@@ -312,7 +332,7 @@ export default function Platform() {
         </div>
       )}
 
-      {/* 3. NEW PLAN DETAILS VIEW */}
+      {/* PLAN DETAILS VIEW */}
       {view === 'PLAN_DETAILS' && activePlan && (
         <div className="space-y-6">
           <div className="border-b pb-4">
@@ -323,19 +343,40 @@ export default function Platform() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Course Curriculum</h3>
             <div className="grid gap-3">
-              {activePlan.subtopics?.map((sub, index) => (
-                <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
-                      {index + 1}
-                    </span>
-                    <span className="font-medium">{sub.title}</span>
+              {activePlan.subtopics?.map((sub, index) => {
+                const isGenerated = generatedLessons.has(sub.id);
+                const isGenerating = generatingLessonId === sub.id;
+                
+                return (
+                  <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <div className="font-medium">{sub.title}</div>
+                        {isGenerated && !isGenerating && (
+                          <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                            <span>✓</span> Lesson ready
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
+                      disabled={isGenerating}
+                      className="gap-2"
+                    >
+                      <LoadingButtonContent
+                        loading={isGenerating}
+                        loadingText="Generating..."
+                        idleIcon={isGenerated ? "📖" : "✨"}
+                        idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
+                      />
+                    </Button>
                   </div>
-                  <Button onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
-                    Start Lesson
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
