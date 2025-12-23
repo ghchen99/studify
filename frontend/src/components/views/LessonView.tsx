@@ -47,14 +47,16 @@ export default function LessonView({
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
       {/* Lesson Header */}
-      <div className="bg-white p-6 rounded shadow-sm border">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {lesson.subtopic}
-        </h2>
-        <p className="text-gray-600 mt-2">
-          {lesson.introduction}
-        </p>
+      <div className="bg-white p-6 rounded shadow-sm border space-y-2">
+        <div className="text-2xl font-bold text-gray-800">
+          <MarkdownRenderer content={lesson.subtopic} />
+        </div>
+
+        <div className="text-gray-600">
+          <MarkdownRenderer content={lesson.introduction} />
+        </div>
       </div>
+
 
       {/* Section Card */}
       <div className="bg-gray-50 p-6 rounded border space-y-6">
@@ -71,15 +73,13 @@ export default function LessonView({
         <MarkdownRenderer content={currentSection.content} />
 
         {/* Key Points */}
-        {currentSection.keyPoints?.length > 0 && (
-          <ul className="list-disc list-inside bg-blue-50 p-4 rounded">
-            {currentSection.keyPoints.map((kp, i) => (
-              <li key={i} className="text-sm text-blue-800">
-                {kp}
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="list-disc bg-blue-50 p-4 rounded pl-6 space-y-2">
+        {currentSection.keyPoints.map((kp, i) => (
+          <li key={i}>
+            <MarkdownRenderer content={kp} />
+          </li>
+        ))}
+      </ul>
 
         {/* Expand Button */}
         <div className="flex gap-2">
