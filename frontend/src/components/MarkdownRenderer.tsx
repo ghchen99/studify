@@ -2,13 +2,33 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
+import 'katex/dist/katex.min.css';
 
 export default function MarkdownRenderer({ content }: { content: string }) {
   return (
     <div className="prose prose-blue max-w-none">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
+          ul: ({ children }) => (
+            <ul className="list-disc pl-6 mb-4 marker:text-gray-500">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-6 mb-4 marker:text-gray-500">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li className="mb-1 leading-relaxed">
+              {children}
+            </li>
+          ),
           h1: ({ children }) => (
             <h1 className="text-3xl font-bold mt-6 mb-4">{children}</h1>
           ),
@@ -21,14 +41,20 @@ export default function MarkdownRenderer({ content }: { content: string }) {
           p: ({ children }) => (
             <p className="leading-relaxed mb-4">{children}</p>
           ),
-          ul: ({ children }) => (
-            <ul className="list-disc pl-6 mb-4">{children}</ul>
+          table: ({ children }) => (
+            <table className="border-collapse border border-gray-300 my-4">
+              {children}
+            </table>
           ),
-          ol: ({ children }) => (
-            <ol className="list-decimal pl-6 mb-4">{children}</ol>
+          th: ({ children }) => (
+            <th className="border border-gray-300 px-3 py-2 bg-gray-100">
+              {children}
+            </th>
           ),
-          li: ({ children }) => (
-            <li className="mb-1">{children}</li>
+          td: ({ children }) => (
+            <td className="border border-gray-300 px-3 py-2">
+              {children}
+            </td>
           ),
           code: ({ children }) => (
             <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">
@@ -39,12 +65,6 @@ export default function MarkdownRenderer({ content }: { content: string }) {
             <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4">
               {children}
             </pre>
-          ),
-          hr: () => <hr className="my-6 border-gray-300" />,
-          blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 my-4">
-              {children}
-            </blockquote>
           ),
         }}
       >

@@ -100,9 +100,10 @@ class LessonService:
             f"You are an expert {level} teacher. "
             "Generate comprehensive, engaging lesson content that is clear and age-appropriate. "
             "Break down complex concepts into understandable sections. "
-            "Include examples and analogies where helpful."
+            "Include examples and analogies where helpful. "
+            "Output the lesson in **Markdown format**, using proper headings, bullet points, numbered lists, and LaTeX math where appropriate."
         )
-        
+
         concepts_str = ", ".join(subtopic_item.concepts)
         user_prompt = (
             f"Create a detailed {level} lesson for:\n"
@@ -115,7 +116,13 @@ class LessonService:
             "1. A brief introduction\n"
             "2. 2-4 main sections covering the concepts\n"
             "3. A concise summary\n"
-            "4. List of key terms students should know"
+            "4. List of key terms students should know\n\n"
+            "Use Markdown syntax for all formatting, including:\n"
+            "- `#` / `##` for headings\n"
+            "- `-` or `*` for bullet points\n"
+            "- `1.` for numbered lists\n"
+            "- `$...$` for inline math and `$$...$$` for block math\n"
+            "Ensure the output is ready to render in a Markdown/KaTeX environment."
         )
         
         try:
