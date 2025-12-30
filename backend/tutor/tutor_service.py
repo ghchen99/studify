@@ -5,7 +5,7 @@ Handles one-on-one tutoring sessions with AI
 """
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from openai import OpenAI
 import logging
@@ -63,7 +63,7 @@ class TutorService:
             conversation.append({
                 "role": "user",
                 "content": initial_message,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
         
         opening = self._generate_tutor_response(
@@ -75,7 +75,7 @@ class TutorService:
         conversation.append({
             "role": "assistant",
             "content": opening,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         session = TutorSession(
@@ -85,7 +85,7 @@ class TutorService:
             context=context,
             conversation=conversation,
             resolved=False,
-            createdAt=datetime.utcnow()
+            createdAt=datetime.now(timezone.utc)
         )
         
         created_session = self.cosmos.create_item("TutorSessions", session)
@@ -115,7 +115,7 @@ class TutorService:
         session.conversation.append({
             "role": "user",
             "content": message,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         lesson_id = session.context.get("lessonId")
@@ -141,7 +141,7 @@ class TutorService:
         session.conversation.append({
             "role": "assistant",
             "content": response,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
         updated_session = self.cosmos.update_item("TutorSessions", session)

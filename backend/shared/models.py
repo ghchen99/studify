@@ -61,6 +61,7 @@ class Question(BaseModel):
     options: Optional[List[str]] = None
     correctAnswer: Optional[Any] = None
     markScheme: Optional[List[str]] = None
+    maxMarks: Optional[float] = None
     difficulty: Optional[str] = None
 
 class Quiz(BaseModel):

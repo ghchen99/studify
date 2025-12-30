@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, Body
 from auth import verify_access_token
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from learning_platform import LearningPlatform
@@ -203,7 +203,7 @@ async def mark_subtopic_generated(plan_id: str, subtopic_id: str, payload: Dict[
         for item in plan.structure:
             if item.subtopicId == subtopic_id:
                 item.lessonId = lesson_id
-                item.generatedAt = datetime.utcnow()
+                item.generatedAt = datetime.now(timezone.utc)
                 found_item = item
                 break
 
@@ -362,9 +362,22 @@ async def start_quiz(request: StartQuizRequest):
             question_count=request.question_count
         )
         
+        # Ensure `maxMarks` is present on each question for the frontend
+        questions_with_marks = [
+            {
+                "questionId": q.get("questionId") or q.get("question_id"),
+                "type": q.get("type"),
+                "question": q.get("question"),
+                "options": q.get("options") if q.get("type") == "multiple_choice" else None,
+                "difficulty": q.get("difficulty"),
+                "maxMarks": q.get("maxMarks") if q.get("maxMarks") is not None else q.get("max_marks") if q.get("max_marks") is not None else q.get("max") if q.get("max") is not None else None
+            }
+            for q in (result.get("questions") or [])
+        ]
+
         return QuizResponse(
             quiz_id=result["quizId"],
-            questions=result["questions"],
+            questions=questions_with_marks,
             total_questions=result["totalQuestions"]
         )
     except ValueError as e:
@@ -547,7 +560,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "1.0.0"
     }
 

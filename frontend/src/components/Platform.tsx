@@ -190,7 +190,15 @@ export default function Platform() {
       });
       
       if (quizData) {
-        setActiveQuiz({ id: quizData.quiz_id, questions: quizData.questions });
+            const normalized = (quizData.questions || []).map((q: any) => ({
+              questionId: q.questionId || q.question_id,
+              type: q.type,
+              question: q.question,
+              options: q.options,
+              difficulty: q.difficulty,
+              maxMarks: q.maxMarks ?? q.max_marks ?? (q.max ? q.max : undefined)
+            }));
+            setActiveQuiz({ id: quizData.quiz_id, questions: normalized });
         setView('QUIZ');
       }
     }

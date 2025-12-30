@@ -4,7 +4,7 @@ Handles lesson plan generation, approval, and management
 """
 import os
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from openai import OpenAI
 from pydantic import BaseModel
@@ -124,7 +124,7 @@ class LessonPlanService:
                 subject=llm_plan.subject,
                 topic=llm_plan.topic,
                 description=llm_plan.description,  # Add AI-generated description
-                aiGeneratedAt=datetime.utcnow(),
+                aiGeneratedAt=datetime.now(timezone.utc),
                 structure=[
                     LessonPlanItem(
                         subtopicId=self._deterministic_id(lesson_plan_id, sub.title),

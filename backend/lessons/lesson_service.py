@@ -5,7 +5,7 @@ Handles lesson content generation, expansion, and management
 """
 import os
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from pydantic import BaseModel
@@ -288,7 +288,7 @@ class LessonService:
             raise ValueError(f"Lesson {lesson_id} not found")
         
         lesson.status = "completed"
-        lesson.completedAt = datetime.utcnow()
+        lesson.completedAt = datetime.now(timezone.utc)
         
         return self.cosmos.update_item("Lessons", lesson)
     

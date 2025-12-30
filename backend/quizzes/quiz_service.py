@@ -4,7 +4,7 @@ Handles quiz generation, submission, and grading
 """
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from openai import OpenAI
 from pydantic import BaseModel
@@ -23,6 +23,7 @@ class QuestionLLM(BaseModel):
     options: Optional[List[str]] = None
     correctAnswer: Optional[str] = None
     markScheme: Optional[List[str]] = None
+    maxMarks: Optional[float] = None
     difficulty: str
 
 
@@ -108,7 +109,9 @@ class QuizService:
             f"Difficulty: {difficulty}\n\n"
             "Distribute questions across the content. "
             "For multiple choice, provide 4 options. "
-            "For short/long answers, provide detailed mark schemes."
+            "For short/long answers, provide detailed mark schemes. "
+            "For every question include a numeric `maxMarks` field indicating the total marks available. "
+            "For multiple choice questions, use 1 mark unless there is a reason to use more. "
         )
         
         try:
@@ -130,6 +133,8 @@ class QuizService:
                 lessonId=lesson_id,
                 subtopicId=subtopic_id,
                 questions=[
+                    # Determine per-question marks: prefer explicit mark scheme length,
+                    # otherwise fall back to sensible defaults by type.
                     Question(
                         questionId=f"q{i+1}",
                         type=q.type,
@@ -137,11 +142,12 @@ class QuizService:
                         options=q.options,
                         correctAnswer=q.correctAnswer,
                         markScheme=q.markScheme,
+                        maxMarks=float(q.maxMarks),
                         difficulty=q.difficulty
                     )
                     for i, q in enumerate(llm_quiz.questions)
                 ],
-                createdAt=datetime.utcnow()
+                createdAt=datetime.now(timezone.utc)
             )
             
             created_quiz = self.cosmos.create_item("Quizzes", quiz)
@@ -194,25 +200,28 @@ class QuizService:
             
             if question.type == "multiple_choice":
                 is_correct = user_answer == question.correctAnswer
+                q_max = float(question.maxMarks) if getattr(question, 'maxMarks', None) is not None else 1.0
+                awarded = q_max if is_correct else 0.0
                 graded_responses.append(QuizAttemptResponse(
                     questionId=question_id,
                     userAnswer=user_answer,
                     isCorrect=is_correct,
-                    marksAwarded=1.0 if is_correct else 0.0,
-                    maxMarks=1.0,
+                    marksAwarded=awarded,
+                    maxMarks=q_max,
                     feedback="Correct!" if is_correct else f"The correct answer is {question.correctAnswer}"
                 ))
                 if is_correct:
                     total_correct += 1
-                total_marks += 1.0 if is_correct else 0.0
-                max_marks += 1.0
+                total_marks += awarded
+                max_marks += q_max
             
             else:
                 grading = self._grade_written_answer(
                     question=question.question,
                     mark_scheme=question.markScheme or [],
                     user_answer=user_answer or "",
-                    question_type=question.type
+                    question_type=question.type,
+                    question_max_marks=getattr(question, 'maxMarks', None)
                 )
                 
                 graded_responses.append(QuizAttemptResponse(
@@ -248,7 +257,7 @@ class QuizService:
                 "triggerTutor": trigger_tutor,
                 "weakConcepts": weak_concepts
             },
-            completedAt=datetime.utcnow()
+            completedAt=datetime.now(timezone.utc)
         )
         
         created_attempt = self.cosmos.create_item("QuizAttempts", attempt)
@@ -262,10 +271,16 @@ class QuizService:
         mark_scheme: List[str],
         user_answer: str,
         question_type: str
+        ,
+        question_max_marks: Optional[float] = None
     ) -> QuizGradingLLM:
         """Grade a written answer using AI"""
         
-        max_marks = len(mark_scheme) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
+        # Prefer the explicit per-question max provided when the quiz was generated.
+        if question_max_marks is not None:
+            max_marks = float(question_max_marks)
+        else:
+            max_marks = float(len(mark_scheme)) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
         
         generated_answer = None
         # Grade based only on the student's submitted answer. Bullet-point

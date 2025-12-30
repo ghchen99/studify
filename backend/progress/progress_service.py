@@ -2,7 +2,7 @@
 Progress Service
 Tracks and manages student progress across lessons and quizzes
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 import logging
 
@@ -61,7 +61,7 @@ class ProgressService:
                 "totalStudyTime": 0,
                 "averageScore": 0.0
             },
-            updatedAt=datetime.utcnow()
+            updatedAt=datetime.now(timezone.utc)
         )
         
         created_progress = self.cosmos.upsert_item("Progress", progress)
@@ -96,7 +96,7 @@ class ProgressService:
             progress.subtopicProgress[subtopic_id]["status"] = "in_progress"
         
         progress.overallProgress["totalStudyTime"] += study_time
-        progress.updatedAt = datetime.utcnow()
+        progress.updatedAt = datetime.now(timezone.utc)
         
         self._recalculate_overall_progress(progress)
         
@@ -174,7 +174,7 @@ class ProgressService:
             
             subprog["lastAttemptAt"] = attempt.completedAt.isoformat() if attempt.completedAt else None
         
-        progress.updatedAt = datetime.utcnow()
+        progress.updatedAt = datetime.now(timezone.utc)
         
         self._recalculate_overall_progress(progress)
         

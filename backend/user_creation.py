@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from pprint import pprint
 
 from shared.cosmos_client import get_cosmos_service
@@ -19,7 +19,7 @@ user = User(
     email="user@example.com",
     name="Alice",
     profile={"role": "student"},
-    createdAt=datetime.utcnow()
+    createdAt=datetime.now(timezone.utc)
 )
 created_user = cosmos.upsert_item("Users", user)
 print("Upserted User:")

@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
@@ -27,6 +32,7 @@ export default function LessonView({
   const [completing, setCompleting] = useState(false);
 
   const currentSection = sections[currentIndex];
+  const progress = ((currentIndex + 1) / sections.length) * 100;
 
   const handleExpand = async (sectionId: string) => {
     setLoadingId(sectionId);
@@ -45,44 +51,70 @@ export default function LessonView({
   };
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 pb-24 space-y-10">
       {/* Lesson Header */}
-      <div className="bg-white p-6 rounded shadow-sm border space-y-2">
-        <div className="text-2xl font-bold text-gray-800">
+      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4">
+        <div className="text-3xl font-bold tracking-tight">
           <MarkdownRenderer content={lesson.subtopic} />
         </div>
 
-        <div className="text-gray-600">
+        <div className="text-gray-600 leading-relaxed">
           <MarkdownRenderer content={lesson.introduction} />
+        </div>
+
+        {/* Progress */}
+        <div className="pt-4">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Section {currentIndex + 1} of {sections.length}
+          </p>
         </div>
       </div>
 
-
       {/* Section Card */}
-      <div className="bg-gray-50 p-6 rounded border space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-xl">
-            {currentSection.title}
-          </h3>
+      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+              {currentIndex + 1}
+            </span>
+            <h3 className="text-xl font-semibold">
+              {currentSection.title}
+            </h3>
+          </div>
+
           <span className="text-sm text-gray-500">
-            Section {currentIndex + 1} of {sections.length}
+            {currentIndex + 1} / {sections.length}
           </span>
         </div>
 
         {/* Section Content */}
-        <MarkdownRenderer content={currentSection.content} />
+        <div className="prose max-w-none">
+          <MarkdownRenderer content={currentSection.content} />
+        </div>
 
         {/* Key Points */}
-        <ul className="list-disc bg-blue-50 p-4 rounded pl-6 space-y-2">
-        {currentSection.keyPoints.map((kp, i) => (
-          <li key={i}>
-            <MarkdownRenderer content={kp} />
-          </li>
-        ))}
-      </ul>
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
+          <p className="text-sm font-semibold text-blue-800 mb-2">
+            Key Takeaways
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            {currentSection.keyPoints.map((kp, i) => (
+              <li key={i}>
+                <MarkdownRenderer content={kp} />
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        {/* Expand Button */}
-        <div className="flex gap-2">
+        {/* AI Deep Dive */}
+        <div className="flex">
           {currentSection.expanded ? (
             <Button
               variant="outline"
@@ -90,8 +122,7 @@ export default function LessonView({
               onClick={() => setExpandedDialogOpen(true)}
               className="gap-2"
             >
-              <span className="text-lg">📖</span>
-              View Detailed Explanation
+              📖 View Detailed Explanation
             </Button>
           ) : (
             <Button
@@ -104,12 +135,11 @@ export default function LessonView({
               {loadingId === currentSection.sectionId ? (
                 <>
                   <span className="animate-spin">⏳</span>
-                  Generating...
+                  Generating…
                 </>
               ) : (
                 <>
-                  <span className="text-lg">✨</span>
-                  Get AI Deep Dive
+                  ✨ Get AI Deep Dive
                 </>
               )}
             </Button>
@@ -119,19 +149,20 @@ export default function LessonView({
 
       {/* Expanded Content Modal */}
       <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="text-2xl">
               Deep Dive: {currentSection.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none mt-4">
+
+          <div className="prose max-w-none mt-6">
             <MarkdownRenderer content={currentSection.expanded || ''} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Pagination Controls */}
+      {/* Navigation */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
@@ -152,14 +183,14 @@ export default function LessonView({
       {/* Complete Lesson */}
       {currentIndex === sections.length - 1 && (
         <Button
+          size="lg"
+          className="w-full h-12"
+          disabled={completing}
           onClick={async () => {
             setCompleting(true);
             await onComplete(lesson.lesson_id);
             setCompleting(false);
           }}
-          className="w-full gap-2"
-          size="lg"
-          disabled={completing}
         >
           <LoadingButtonContent
             loading={completing}

@@ -238,7 +238,8 @@ class LearningPlatform:
                     "type": q.type,
                     "question": q.question,
                     "options": q.options if q.type == "multiple_choice" else None,
-                    "difficulty": q.difficulty
+                    "difficulty": q.difficulty,
+                    "maxMarks": q.maxMarks if getattr(q, 'maxMarks', None) is not None else None
                 }
                 for q in quiz.questions
             ],

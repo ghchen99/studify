@@ -44,6 +44,7 @@ export interface QuizQuestion {
   question: string;
   options?: string[];
   difficulty: string;
+  maxMarks?: number;
 }
 
 export interface QuizMarkedResponse {

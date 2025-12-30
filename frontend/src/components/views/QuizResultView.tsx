@@ -16,40 +16,57 @@ export default function QuizResultView({
   onStartTutor,
 }: QuizResultViewProps) {
   return (
-    <div className="space-y-8 py-10 max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
       {/* Summary */}
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold">Quiz Complete</h2>
-        <div className="text-6xl font-bold text-blue-600">
-          {result.score.percentage}%
+        <h2 className="text-4xl font-bold tracking-tight">Quiz Complete 🎉</h2>
+
+        <div className="flex justify-center">
+          <div className="h-32 w-32 rounded-full bg-blue-50 border-4 border-blue-600 flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold text-blue-600">
+              {result.score.percentage.toFixed(1)}%
+            </span>
+            <span className="text-xs text-blue-600 font-medium">Score</span>
+          </div>
         </div>
+
         <p className="text-gray-600">
           {result.score.marksAwarded} / {result.score.maxMarks} marks
         </p>
 
         {result.mastery_level && (
           <p className="text-sm text-gray-500">
-            Mastery level: <strong>{result.mastery_level}</strong>
+            Mastery level:{' '}
+            <span className="font-semibold text-gray-700">
+              {result.mastery_level}
+            </span>
           </p>
         )}
       </div>
 
-      {/* Per-question feedback */}
+      {/* Question Feedback */}
       {result.responses && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Question Feedback</h3>
+        <div className="space-y-6">
+          <h3 className="text-2xl font-semibold">Question Breakdown</h3>
 
           {result.responses.map((r, i) => (
             <div
               key={r.questionId}
-              className="border rounded-lg p-5 bg-white space-y-4"
+              className="bg-white rounded-xl border shadow-sm p-6 space-y-5"
             >
               {/* Header */}
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Question {i + 1}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="h-8 w-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Question {i + 1}
+                  </span>
+                </div>
 
                 <span
-                  className={`text-sm font-semibold px-2 py-1 rounded ${
+                  className={`text-xs font-semibold px-3 py-1 rounded-full ${
                     r.isCorrect === true
                       ? 'bg-green-100 text-green-700'
                       : r.isCorrect === false
@@ -61,20 +78,30 @@ export default function QuizResultView({
                     ? 'Correct'
                     : r.isCorrect === false
                     ? 'Incorrect'
-                    : 'Partially marked'}
+                    : 'Partially correct'}
                 </span>
               </div>
 
               {/* Question */}
               <div>
-                <p className="font-semibold text-sm mb-1">Question</p>
-                <MarkdownRenderer content={r.originalQuestion || r.questionText || ''} />
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Question
+                </p>
+                <div className="prose prose-sm max-w-none">
+                  <MarkdownRenderer
+                    content={
+                      r.originalQuestion || r.questionText || ''
+                    }
+                  />
+                </div>
               </div>
 
               {/* Student Answer */}
               <div>
-                <p className="font-semibold text-sm mb-1">Your answer</p>
-                <div className="bg-gray-50 border rounded p-3">
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Your Answer
+                </p>
+                <div className="bg-gray-50 border rounded-lg p-4 prose prose-sm max-w-none">
                   <MarkdownRenderer
                     content={r.userAnswer || '_No answer provided_'}
                   />
@@ -83,51 +110,70 @@ export default function QuizResultView({
 
               {/* Marks */}
               <div className="text-sm text-gray-600">
-                Marks: {r.marksAwarded} / {r.maxMarks}
+                Marks awarded:{' '}
+                <span className="font-medium">
+                  {r.marksAwarded} / {r.maxMarks}
+                </span>
               </div>
 
               {/* Feedback */}
               {r.feedback && (
                 <div>
-                  <p className="font-semibold text-sm mb-1">Feedback</p>
-                  <MarkdownRenderer content={r.feedback} />
+                  <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                    Feedback
+                  </p>
+                  <div className="prose prose-sm max-w-none">
+                    <MarkdownRenderer content={r.feedback} />
+                  </div>
                 </div>
               )}
 
               {/* Model Answer */}
               {r.aiGeneratedAnswer && (
-                <div className="bg-gray-50 border rounded p-3 text-sm">
-                  <strong>Model answer:</strong>
-                  <MarkdownRenderer content={r.aiGeneratedAnswer} />
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-blue-700 mb-1">
+                    Model Answer
+                  </p>
+                  <div className="prose prose-sm max-w-none">
+                    <MarkdownRenderer content={r.aiGeneratedAnswer} />
+                  </div>
                 </div>
               )}
             </div>
-
           ))}
         </div>
       )}
 
-      {/* Tutor / Next Action */}
+      {/* Tutor Recommendation / Next Steps */}
       {result.trigger_tutor ? (
-        <div className="bg-orange-50 p-6 rounded border border-orange-200">
-          <h3 className="font-bold text-orange-800 mb-2">
-            Recommended: AI Tutor
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-bold text-orange-800">
+            Recommended Next Step
           </h3>
 
-          <ul className="list-disc list-inside mb-4 text-sm">
+          <p className="text-sm text-orange-700">
+            You may benefit from revisiting these concepts:
+          </p>
+
+          <ul className="list-disc list-inside text-sm text-orange-800">
             {result.weak_concepts.map((c, i) => (
               <li key={i}>{c}</li>
             ))}
           </ul>
 
-          <Button onClick={() => onStartTutor(result.weak_concepts[0])}>
+          <Button
+            className="mt-2"
+            onClick={() => onStartTutor(result.weak_concepts[0])}
+          >
             Chat with AI Tutor
           </Button>
         </div>
       ) : (
-        <Button size="lg" onClick={onReturnDashboard}>
-          Return to Dashboard
-        </Button>
+        <div className="flex justify-center">
+          <Button size="lg" onClick={onReturnDashboard}>
+            Return to Dashboard
+          </Button>
+        </div>
       )}
     </div>
   );
