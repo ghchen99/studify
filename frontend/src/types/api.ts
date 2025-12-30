@@ -1,7 +1,12 @@
 export interface Subtopic {
   id: string;
   title: string;
-  status: 'not_started' | 'in_progress' | 'completed';
+  status?: 'not_started' | 'in_progress' | 'completed';
+  order?: number;
+  duration?: number | null;
+  concepts?: string[];
+  lessonId?: string | null;
+  generatedAt?: string | null;
 }
 
 export interface LessonPlan {

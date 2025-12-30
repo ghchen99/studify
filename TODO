@@ -1,6 +1,6 @@
 Frontend Bug Fixes
 - sort out dahsboard tracking for lessons, viewing all quizzes for certain lesson plan, organise quizzes
-- sort out lesson completion, auto approve bug, if lessons have been generated, display it as 'view lesson' instead of 'generate'
+- if lessons have been generated, display it as 'view lesson' instead of 'generate'
 - back button causes great pain and error
 
 - incorrect grading on crap long answer response

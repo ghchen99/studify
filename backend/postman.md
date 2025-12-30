@@ -185,6 +185,10 @@ http://localhost:8000/api/lesson-plans/details/e24ed82118ce7c8de5fcd4be4df716907
                 "Terms, expressions, equations and identities",
                 "Like and unlike terms",
             ]
+            /* Note: each subtopic may include optional fields `lessonId` and `generatedAt` when a lesson has been generated for that subtopic. Example:
+               "lessonId": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
+               "generatedAt": "2025-12-15T17:55:12.123456"
+            */
         },
         {
             "id": "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68",
@@ -352,6 +356,32 @@ sections[].section_id
     ],
     "status": "active"
 }
+
+5.1️⃣ Mark Subtopic As Generated (new)
+
+Method: POST
+URL:
+
+http://localhost:8000/api/lesson-plans/{plan_id}/subtopics/{subtopic_id}/mark-generated
+
+Body (JSON):
+
+{
+    "user_id": "test_user_1",
+    "lessonId": "PASTE_LESSON_ID_HERE"
+}
+
+Response (JSON):
+
+{
+    "ok": true,
+    "lessonId": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
+    "generatedAt": "2025-12-15T17:55:12.123456"
+}
+
+Notes:
+- Call this endpoint after successfully generating a lesson (POST /api/lessons/start). It will attach `lessonId` and `generatedAt` to the lesson-plan subtopic so the frontend can display "View Lesson" instead of "Generate Lesson".
+- Requires the `user_id` in the body for partitioning and authorization.
 
 6️⃣ Expand a Lesson Section
 
@@ -603,156 +633,4 @@ http://localhost:8000/api/tutor/end/test_user_1/e601f0c6-07b5-47c7-ae64-748cf705
     "status": "resolved",
     "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
     "message": "Tutor session ended successfully"
-}
-
-1️⃣3️⃣ View Dashboard
-
-Method: GET
-URL:
-
-http://localhost:8000/api/dashboard/test_user_1
-
-
-Shows:
-
-Overall progress
-
-Lesson plans
-
-Recommendations
-
-{
-    "user": {
-        "totalStudyTime": 20,
-        "overallProgress": 0.0,
-        "averageScore": 31.25
-    },
-    "lesson_plans": [
-        {
-            "id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-            "subject": "Math",
-            "topic": "Algebra",
-    
-            "subtopicCount": 8,
-            "progress": {
-                "lessonPlanId": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-                "subject": "Math",
-                "topic": "Algebra",
-                "percentComplete": 0,
-                "averageScore": 31.25,
-                "totalSubtopics": 8,
-                "completedSubtopics": 0
-            }
-        }
-    ],
-    "active_tutor_sessions": 4,
-    "recommendations": [
-        "Continue Math - Algebra (0% complete)",
-        "Review Math - Algebra (average score: 31%)"
-    ]
-}
-
-1️⃣4️⃣ View Lesson Plan Progress
-
-Method: GET
-URL:
-
-http://localhost:8000/api/progress/test_user_1/e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c
-
-{
-    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-    "subtopic_progress": {
-        "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "248f483557a5a966adc65b963e3d9f6be43802479f88b8f6e5cafbaff19ade68": {
-            "status": "in_progress",
-            "lessonCompleted": true,
-            "quizAttempts": 1,
-            "bestScore": 31.25,
-            "averageScore": 31.25,
-            "masteryLevel": "beginner",
-            "weakConcepts": [
-                "Which expression is the correct expansion of −3(2x",
-                "Factorise fully: 9x² + 6x",
-                "Explain how you would simplify the expression 4(2y"
-            ],
-            "lastAttemptAt": "2025-12-15T17:50:42.293696"
-        },
-        "67f4a067d1fc1439cc7c65de34f2a195e5307481571e16fa3d8afc77f92ab89f": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "59b2477b9db7e7b1ccfdc0e659fc27103601a8d2ef9658f57900470849470005": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "d5cabd86471753104501b1669bec8fc7953c47593860242b11030569e585d469": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "b9bf103c08696c8be2e9af525114146587e3289a43ad2113f93131d4edd614c1": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "55d1caf15024bf7bd28332861c919f84324b31c0c3bc65eedf433e89ffe7ae76": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        },
-        "c43f3be7a522fa3993802cb555e8726b947b4425341dfa3f08e7c09fdfe405bd": {
-            "status": "not_started",
-            "lessonCompleted": false,
-            "quizAttempts": 0,
-            "bestScore": 0,
-            "averageScore": 0,
-            "masteryLevel": "not_started",
-            "weakConcepts": [],
-            "lastAttemptAt": null
-        }
-    },
-    "overall_progress": {
-        "totalSubtopics": 8,
-        "completedSubtopics": 0,
-        "percentComplete": 0,
-        "totalStudyTime": 20,
-        "averageScore": 31.25
-    },
-    "updated_at": "2025-12-15T17:50:42.750264"
 }

@@ -16,6 +16,9 @@ class LessonPlanItem(BaseModel):
     order: int
     estimatedDuration: Optional[int]
     concepts: List[str] = []
+    status: str = "not_started"
+    lessonId: Optional[str] = None
+    generatedAt: Optional[datetime] = None
 
 class LessonPlan(BaseModel):
     id: str
@@ -47,7 +50,7 @@ class Lesson(BaseModel):
     subtopic: Optional[str] = None
     content: Dict[str, Any]
     mediaAssets: List[Dict[str, Any]] = []
-    status: Optional[str] = None
+    status: str = "not_started"
     completedAt: Optional[datetime] = None
 
 

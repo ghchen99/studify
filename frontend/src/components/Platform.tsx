@@ -121,12 +121,10 @@ export default function Platform() {
     if (details) {
       setActivePlan(details);
       
-      // Mark subtopics with 'completed' or 'in_progress' status as having generated lessons
+      // Mark subtopics that already have an associated lessonId as generated
       const generated = new Set<string>();
       details.subtopics?.forEach((sub: any) => {
-        if (sub.status === 'completed' || sub.status === 'in_progress') {
-          generated.add(sub.id);
-        }
+        if (sub.lessonId) generated.add(sub.id);
       });
       setGeneratedLessons(generated);
       
@@ -149,6 +147,15 @@ export default function Platform() {
     
     if (data) {
       setGeneratedLessons(prev => new Set([...prev, subtopicId]));
+      // Persist lessonId back to lesson plan so frontend and backend agree
+      try {
+        await callApi(`/api/lesson-plans/${planId}/subtopics/${subtopicId}/mark-generated`, 'POST', {
+          user_id: account?.localAccountId,
+          lessonId: data.lesson_id || data.lessonId || null
+        });
+      } catch (err) {
+        console.warn('Failed to mark subtopic as generated on server', err);
+      }
       setActiveLesson(data);
       setView('LESSON');
     }
@@ -352,22 +359,21 @@ export default function Platform() {
                       </span>
                       <div>
                         <div className="font-medium">{sub.title}</div>
-                        {isGenerated && !isGenerating && (
-                          <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                            <span>✓</span> Lesson ready
-                          </div>
-                        )}
                       </div>
                     </div>
                     <Button 
                       onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
                       disabled={isGenerating}
-                      className="gap-2"
+                      className={`gap-2 ${
+                        isGenerated
+                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      }`}
                     >
                       <LoadingButtonContent
                         loading={isGenerating}
                         loadingText="Generating..."
-                        idleIcon={isGenerated ? "📖" : "✨"}
+                        idleIcon={isGenerated ? "" : "✨"}
                         idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
                       />
                     </Button>
