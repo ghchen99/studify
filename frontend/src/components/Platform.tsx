@@ -11,6 +11,7 @@ import LessonView from './views/LessonView';
 import QuizView from './views/QuizView';
 import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
+import QuizResultView from './views/QuizResultView';
 
 type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
@@ -407,28 +408,14 @@ export default function Platform() {
 
       {/* RESULT VIEW */}
       {view === 'RESULT' && quizResult && (
-        <div className="text-center space-y-6 py-10">
-            <h2 className="text-3xl font-bold">Quiz Complete!</h2>
-            <div className="text-6xl font-bold text-blue-600">{quizResult.score.percentage}%</div>
-            <p className="text-gray-600">You scored {quizResult.score.marksAwarded} / {quizResult.score.maxMarks}</p>
-            
-            {quizResult.trigger_tutor ? (
-                <div className="bg-orange-50 p-6 rounded border border-orange-200 inline-block text-left max-w-lg">
-                    <h3 className="font-bold text-orange-800 mb-2">Needs Improvement</h3>
-                    <p className="mb-4">It looks like you struggled with: </p>
-                    <ul className="list-disc list-inside mb-4">
-                        {quizResult.weak_concepts.map((c, i) => <li key={i}>{c.substring(0, 50)}...</li>)}
-                    </ul>
-                    <Button className="w-full" onClick={() => startTutor(quizResult.weak_concepts[0])}>
-                        Chat with AI Tutor
-                    </Button>
-                </div>
-            ) : (
-                <Button size="lg" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
-                    Return to Dashboard
-                </Button>
-            )}
-        </div>
+        <QuizResultView
+          result={quizResult}
+          onReturnDashboard={() => {
+            setView('DASHBOARD');
+            loadDashboard();
+          }}
+          onStartTutor={(concept) => startTutor(concept)}
+        />
       )}
 
       {/* TUTOR VIEW */}

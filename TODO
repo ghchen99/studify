@@ -3,11 +3,11 @@ Frontend Bug Fixes
 - sort out lesson completion, auto approve bug, if lessons have been generated, display it as 'view lesson' instead of 'generate'
 - back button causes great pain and error
 
-- more images & tables, diagrams, summary tables to improve lesson page structure
-
 - Quiz diplay answers corrected json
 - render how many marks per quiz question during completion
 - ai from official past paper
+
+- more images & tables, diagrams, summary tables to improve lesson page structure
 
 - Fix tutor function
 - notifications for post requests e.g., geenrating lesson for... letting users continue with their other generations?

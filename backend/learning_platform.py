@@ -316,7 +316,11 @@ class LearningPlatform:
         score_data = attempt.score
         trigger_tutor = score_data.get("triggerTutor", False)
         weak_concepts = score_data.get("weakConcepts", [])
-        
+
+        # Fetch the original quiz so we can echo the original question and correct answer
+        quiz = self.quizzes.get_quiz(user_id=user_id, quiz_id=quiz_id)
+        question_map = {q.questionId: q for q in (quiz.questions if quiz else [])}
+
         result = {
             "attemptId": attempt.id,
             "score": {
@@ -327,6 +331,10 @@ class LearningPlatform:
             "responses": [
                 {
                     "questionId": r.questionId,
+                    "originalQuestion": question_map.get(r.questionId).question if question_map.get(r.questionId) else None,
+                    "originalCorrectAnswer": question_map.get(r.questionId).correctAnswer if question_map.get(r.questionId) else None,
+                    "userAnswer": getattr(r, "userAnswer", None),
+                    "userBulletPoints": getattr(r, "userBulletPoints", None),
                     "isCorrect": r.isCorrect,
                     "marksAwarded": r.marksAwarded,
                     "maxMarks": r.maxMarks,
