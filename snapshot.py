@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-ROOT_DIR = Path("./backend").resolve()
+ROOT_DIR = Path("./frontend").resolve()
 OUTPUT_FILE = "flattened_repo.txt"
 
 # 🔥 Hard ignore directories (path-based, not name-based)

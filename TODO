@@ -1,13 +1,12 @@
 Frontend Bug Fixes
-- sort out dahsboard tracking
+- sort out dahsboard tracking for lessons, viewing all quizzes for certain lesson plan, organise quizzes
 - sort out lesson completion, auto approve bug, if lessons have been generated, display it as 'view lesson' instead of 'generate'
 - back button causes great pain and error
 
-- Quiz diplay answers corrected json
-- render how many marks per quiz question during completion
-- ai from official past paper
+- incorrect grading on crap long answer response
+- questions in quiz dont render well for maths
 
 - more images & tables, diagrams, summary tables to improve lesson page structure
 
-- Fix tutor function
-- notifications for post requests e.g., geenrating lesson for... letting users continue with their other generations?
+- develop tutor function
+- notifications for post requests e.g., geenrating lesson for... top right panel notification
