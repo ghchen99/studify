@@ -12,7 +12,7 @@ import logging
 from learning_platform import LearningPlatform
 from shared.models import (
     CreateLessonPlanRequest, LessonPlanResponse,
-    ApproveLessonPlanRequest, LessonResponse,
+    LessonResponse,
     StartLessonRequest, ExpandSectionRequest, ExpandedSectionResponse,
     CompleteLessonRequest, CompletionResponse, QuizResponse,
     StartQuizRequest, QuizSubmissionRequest, QuizResultResponse, TutorResponse,
@@ -79,10 +79,8 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
             lesson_plan_id=result["lessonPlan"].id,
             subject=result["lessonPlan"].subject,
             topic=result["lessonPlan"].topic,
-            description=result["lessonPlan"].description,  # ADD THIS LINE
-            status=result["status"],
+            description=result["lessonPlan"].description,
             subtopics=result["subtopics"],
-            progress_initialized=result.get("progressInitialized", False)
         )
     except Exception as e:
         logger.error(f"Error creating lesson plan: {e}")
@@ -92,40 +90,7 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
         )
 
 
-@api_router.post(
-    "/lesson-plans/approve",
-    response_model=Dict[str, str],
-    summary="Approve a lesson plan",
-    description="Approve a lesson plan and initialize progress tracking"
-)
-async def approve_lesson_plan(request: ApproveLessonPlanRequest):
-    """
-    Approve a lesson plan and initialize progress tracking.
-    
-    Once approved, the student can start working through the lessons.
-    """
-    try:
-        approved_plan = platform.approve_lesson_plan(
-            user_id=request.user_id,
-            plan_id=request.plan_id
-        )
-        
-        return {
-            "status": "approved",
-            "lesson_plan_id": approved_plan.id,
-            "message": "Lesson plan approved and progress initialized"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error approving lesson plan: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to approve lesson plan: {str(e)}"
-        )
+# Note: approve endpoint removed; lesson-plan approval/status handled differently now
 
 
 @api_router.get(
@@ -144,7 +109,7 @@ async def get_lesson_plans(user_id: str):
                 "subject": plan.subject,
                 "topic": plan.topic,
                 "description": plan.description, 
-                "status": plan.status,
+                
                 "subtopic_count": len(plan.structure),
                 "created_at": plan.aiGeneratedAt.isoformat() if plan.aiGeneratedAt else None
             }
@@ -184,16 +149,11 @@ async def get_lesson_plan_details(plan_id: str, user_id: str):
                 detail=f"Lesson plan {plan_id} not found"
             )
         
-        # Check if progress has been initialized
-        progress = platform.progress.get_progress(user_id, plan_id)
-        progress_initialized = progress is not None
-        
         return LessonPlanResponse(
             lesson_plan_id=plan.id,
             subject=plan.subject,
             topic=plan.topic,
             description=plan.description,
-            status=plan.status,
             subtopics=[
                 {
                     "id": st.subtopicId,
@@ -204,8 +164,8 @@ async def get_lesson_plan_details(plan_id: str, user_id: str):
                 }
                 for st in plan.structure
             ],
-            progress_initialized=progress_initialized
         )
+        
     except HTTPException:
         raise
     except Exception as e:

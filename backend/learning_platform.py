@@ -68,7 +68,6 @@ class LearningPlatform:
         
         result = {
             "lessonPlan": lesson_plan,
-            "status": lesson_plan.status,
             "subtopics": [
                 {
                     "id": st.subtopicId,
@@ -81,43 +80,9 @@ class LearningPlatform:
             ]
         }
         
-        # Auto-approve if requested
-        if auto_approve:
-            approved_plan = self.approve_lesson_plan(user_id, lesson_plan.id)
-            result["lessonPlan"] = approved_plan
-            result["status"] = "approved"
-            result["progressInitialized"] = True
-        
         return result
     
-    def approve_lesson_plan(
-        self,
-        user_id: str,
-        plan_id: str,
-        modified_structure: Optional[List[LessonPlanItem]] = None
-    ) -> LessonPlan:
-        """
-        Approve a lesson plan and initialize progress tracking
-        
-        Args:
-            user_id: User identifier
-            plan_id: Lesson plan ID
-            modified_structure: Optional modified structure
-        
-        Returns:
-            Approved lesson plan
-        """
-        # Approve the plan
-        approved_plan = self.lesson_plans.approve_lesson_plan(
-            user_id=user_id,
-            plan_id=plan_id,
-            modified_structure=modified_structure
-        )
-        
-        # Initialize progress tracking
-        self.progress.initialize_progress(user_id, plan_id)
-        
-        return approved_plan
+    # Note: lesson-plan approval/status flow removed — plans are created without draft/approved states
     
     # ==================== LESSON WORKFLOWS ====================
     
@@ -461,7 +426,6 @@ class LearningPlatform:
                     "id": plan.id,
                     "subject": plan.subject,
                     "topic": plan.topic,
-                    "status": plan.status,
                     "subtopicCount": len(plan.structure),
                     "progress": next(
                             (p for p in progress_summary.get("lessonPlans", [])

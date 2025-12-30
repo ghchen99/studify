@@ -294,11 +294,7 @@ export default function Platform() {
                    className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
                  >
                    <div className="mb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] uppercase font-semibold text-gray-400">
-                          {plan.status}
-                        </span>
-                      </div>
+                      
                       <h3 className="font-bold text-lg leading-tight text-gray-900">
                         {plan.subject}
                       </h3>

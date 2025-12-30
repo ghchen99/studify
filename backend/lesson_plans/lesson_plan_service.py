@@ -124,7 +124,6 @@ class LessonPlanService:
                 subject=llm_plan.subject,
                 topic=llm_plan.topic,
                 description=llm_plan.description,  # Add AI-generated description
-                status="draft",
                 aiGeneratedAt=datetime.utcnow(),
                 structure=[
                     LessonPlanItem(
@@ -166,40 +165,7 @@ class LessonPlanService:
             item_type="lessonPlan"
         )
     
-    def approve_lesson_plan(
-        self,
-        user_id: str,
-        plan_id: str,
-        modified_structure: Optional[List[LessonPlanItem]] = None
-    ) -> LessonPlan:
-        """
-        Approve a lesson plan (optionally with modifications)
-        
-        Args:
-            user_id: User identifier
-            plan_id: Lesson plan ID
-            modified_structure: Optional modified structure if user edited it
-        
-        Returns:
-            Approved LessonPlan
-        """
-        plan = self.get_lesson_plan(user_id, plan_id)
-        if not plan:
-            raise ValueError(f"Lesson plan {plan_id} not found")
-        
-        # Update structure if modified
-        if modified_structure:
-            plan.structure = modified_structure
-        
-        # Approve the plan
-        plan.status = "approved"
-        plan.approvedAt = datetime.utcnow()
-        
-        # Save
-        updated_plan = self.cosmos.update_item("LessonPlans", plan)
-        logger.info(f"Approved lesson plan: {plan_id}")
-        
-        return updated_plan
+    # Note: approve_lesson_plan removed — plan lifecycle no longer includes draft/approved states
     
     def update_lesson_plan_structure(
         self,

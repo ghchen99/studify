@@ -43,7 +43,6 @@ subtopics[].id
     "subject": "Math",
     "topic": "Algebra",
     "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
-    "status": "draft",
     "subtopics": [
         {
             "id": "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f",
@@ -134,31 +133,12 @@ subtopics[].id
             ]
         }
     ],
-    "progress_initialized": false
+    
 }
 
-3️⃣ Approve Lesson Plan
+3️⃣ (Approval removed)
 
-Method: POST
-URL:
-
-http://localhost:8000/api/lesson-plans/approve
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c"
-}
-
-
-✅ Progress tracking is now initialized.
-{
-    "status": "approved",
-    "lesson_plan_id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
-    "message": "Lesson plan approved and progress initialized"
-}
+Note: The explicit "approve" step and draft/approved status were removed. Lesson plans are created directly without a draft/approved lifecycle.
 
 4️⃣ Get All Lesson Plans for User
 
@@ -176,7 +156,7 @@ Useful to confirm plan state and subtopic count.
         "subject": "Math",
         "topic": "Algebra",
         "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
-        "status": "approved",
+        
         "subtopic_count": 8,
         "created_at": "2025-12-15T17:40:09.641883"
     }
@@ -193,7 +173,7 @@ http://localhost:8000/api/lesson-plans/details/e24ed82118ce7c8de5fcd4be4df716907
     "subject": "Math",
     "topic": "Algebra",
     "description": "This course develops students’ confidence and fluency with core GCSE algebra skills, starting from basic notation and manipulation and building up to equations, inequalities, and graphs",
-    "status": "approved",
+    
     "subtopics": [
         {
             "id": "958d4516429e99ddc2d98eb642861a28405da0f5048bd85cacc645ce5fc0276f",
@@ -284,7 +264,7 @@ http://localhost:8000/api/lesson-plans/details/e24ed82118ce7c8de5fcd4be4df716907
             ]
         }
     ],
-    "progress_initialized": true
+    
 }
 
 5️⃣ Start a Lesson (Pick One Subtopic)
@@ -652,7 +632,7 @@ Recommendations
             "id": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",
             "subject": "Math",
             "topic": "Algebra",
-            "status": "approved",
+    
             "subtopicCount": 8,
             "progress": {
                 "lessonPlanId": "e24ed82118ce7c8de5fcd4be4df716907febc67b1027bcdbfcdf9faef815120c",

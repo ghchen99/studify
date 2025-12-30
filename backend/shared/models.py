@@ -24,7 +24,6 @@ class LessonPlan(BaseModel):
     subject: str
     topic: str
     description: Optional[str] = None  # ADD THIS LINE
-    status: Optional[str] = None
     structure: List[LessonPlanItem] = []
     aiGeneratedAt: Optional[datetime] = None
     approvedAt: Optional[datetime] = None
@@ -140,7 +139,6 @@ class LessonPlanResponse(BaseModel):
             "subject": "Math",
             "topic": "Algebra",
             "description": "An introduction to algebraic concepts.",
-            "status": "draft",
             "subtopics": [
                 {
                     "id": "sub1",
@@ -150,7 +148,6 @@ class LessonPlanResponse(BaseModel):
                     "concepts": ["variables", "constants", "expressions"]
                 }
             ],
-            "progress_initialized": False
         }
     })
     
@@ -158,22 +155,10 @@ class LessonPlanResponse(BaseModel):
     subject: str
     topic: str
     description: str
-    status: str
     subtopics: List[Dict[str, Any]]
-    progress_initialized: bool = False
 
 
-class ApproveLessonPlanRequest(BaseModel):
-    """Request to approve a lesson plan"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "plan_id": "abc123"
-        }
-    })
-    
-    user_id: str
-    plan_id: str
+# Note: ApproveLessonPlanRequest removed; lesson plan status/progress flag removed
 
 
 class StartLessonRequest(BaseModel):
