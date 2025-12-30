@@ -54,7 +54,7 @@ export interface QuizMarkedResponse {
   originalCorrectAnswer?: string | null;
 
   userAnswer?: string | null;
-  userBulletPoints?: string[] | null;
+  
 
   isCorrect: boolean | null;
   marksAwarded: number;

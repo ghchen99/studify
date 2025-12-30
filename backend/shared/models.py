@@ -330,17 +330,11 @@ class QuizSubmissionRequest(BaseModel):
                 },
                 {
                     "questionId": "q2",
-                    "userAnswer": "Variables represent values that can change.",
-                    "userBulletPoints": None
+                    "userAnswer": "Variables represent values that can change."
                 },
                 {
                     "questionId": "q3",
-                    "userAnswer": None,
-                    "userBulletPoints": [
-                        "Variables can store different values",
-                        "They are represented by letters",
-                        "Used in equations and expressions"
-                    ]
+                    "userAnswer": "Variables can store different values. They are represented by letters and used in equations."
                 }
             ]
         }
@@ -350,7 +344,7 @@ class QuizSubmissionRequest(BaseModel):
     quiz_id: str
     responses: List[Dict[str, Any]] = Field(
         ...,
-        description="List of responses with questionId and userAnswer/userBulletPoints"
+        description="List of responses with questionId and userAnswer"
     )
 
 

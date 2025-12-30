@@ -22,14 +22,7 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
   const handleSubmit = async () => {
     const formattedResponses = questions.map(q => {
       const val = answers[q.questionId] || "";
-      if (q.type === 'long_answer') {
-        return {
-          questionId: q.questionId,
-          userBulletPoints: val
-            .split('\n')
-            .filter(line => line.trim() !== '')
-        };
-      }
+      // Always submit a single string `userAnswer` for every question type.
       return { questionId: q.questionId, userAnswer: val };
     });
 

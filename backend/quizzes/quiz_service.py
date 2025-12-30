@@ -183,7 +183,6 @@ class QuizService:
         for resp in responses:
             question_id = resp.get("questionId")
             user_answer = resp.get("userAnswer")
-            user_bullets = resp.get("userBulletPoints", [])
             
             question = next(
                 (q for q in quiz.questions if q.questionId == question_id),
@@ -213,14 +212,12 @@ class QuizService:
                     question=question.question,
                     mark_scheme=question.markScheme or [],
                     user_answer=user_answer or "",
-                    user_bullets=user_bullets,
                     question_type=question.type
                 )
                 
                 graded_responses.append(QuizAttemptResponse(
                     questionId=question_id,
                     userAnswer=user_answer,
-                    userBulletPoints=user_bullets if user_bullets else None,
                     aiGeneratedAnswer=grading.generatedAnswer,
                     marksAwarded=grading.marksAwarded,
                     maxMarks=grading.maxMarks,
@@ -264,7 +261,6 @@ class QuizService:
         question: str,
         mark_scheme: List[str],
         user_answer: str,
-        user_bullets: List[str],
         question_type: str
     ) -> QuizGradingLLM:
         """Grade a written answer using AI"""
@@ -272,32 +268,18 @@ class QuizService:
         max_marks = len(mark_scheme) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
         
         generated_answer = None
-        if user_bullets:
-            gen_prompt = (
-                f"Convert these bullet points into a coherent answer:\n"
-                f"Question: {question}\n\n"
-                f"Bullet Points:\n" + "\n".join(f"- {b}" for b in user_bullets)
-            )
-            
-            gen_response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": "Convert bullet points into a clear, cohesive answer."},
-                    {"role": "user", "content": gen_prompt}
-                ],
-                temperature=0.7
-            )
-            generated_answer = gen_response.choices[0].message.content
-            user_answer = generated_answer
-        
+        # Grade based only on the student's submitted answer. Bullet-point
+        # entry was removed from the backend — do not rely on any notes.
+        original_student_answer = user_answer or ""
+
         mark_scheme_text = "\n".join(f"{i+1}. {m}" for i, m in enumerate(mark_scheme))
-        
+
         grade_prompt = (
             f"Grade this answer according to the mark scheme:\n\n"
             f"Question: {question}\n\n"
             f"Mark Scheme ({max_marks} marks total):\n{mark_scheme_text}\n\n"
-            f"Student Answer: {user_answer}\n\n"
-            "Award partial marks for partially correct points. "
+            f"Student Answer: {original_student_answer}\n\n"
+            "Award partial marks for partially correct points based on the student's answer. "
             "Provide constructive feedback on what was good and what was missing."
         )
         

@@ -76,12 +76,7 @@ export default function QuizResultView({
                 <p className="font-semibold text-sm mb-1">Your answer</p>
                 <div className="bg-gray-50 border rounded p-3">
                   <MarkdownRenderer
-                    content={
-                      r.userAnswer ||
-                      (r.userBulletPoints && r.userBulletPoints.length
-                        ? r.userBulletPoints.map((b) => `- ${b}`).join('\n')
-                        : '_No answer provided_')
-                    }
+                    content={r.userAnswer || '_No answer provided_'}
                   />
                 </div>
               </div>

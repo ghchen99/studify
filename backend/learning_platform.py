@@ -299,7 +299,6 @@ class LearningPlatform:
                     "originalQuestion": question_map.get(r.questionId).question if question_map.get(r.questionId) else None,
                     "originalCorrectAnswer": question_map.get(r.questionId).correctAnswer if question_map.get(r.questionId) else None,
                     "userAnswer": getattr(r, "userAnswer", None),
-                    "userBulletPoints": getattr(r, "userBulletPoints", None),
                     "isCorrect": r.isCorrect,
                     "marksAwarded": r.marksAwarded,
                     "maxMarks": r.maxMarks,

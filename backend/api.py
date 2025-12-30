@@ -393,7 +393,6 @@ async def submit_quiz(request: QuizSubmissionRequest):
     The system will:
     - Grade multiple choice questions automatically
     - Use AI to grade written answers based on mark schemes
-    - Convert bullet points to coherent answers
     - Provide detailed feedback on each response
     - Calculate mastery level
     - Determine if tutoring is needed
