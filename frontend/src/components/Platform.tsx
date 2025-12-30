@@ -372,19 +372,21 @@ export default function Platform() {
                     <Button 
                       onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
                       disabled={isGenerating}
-                      className={`gap-2 ${
-                        isGenerated
-                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                      }`}
+                      className={`
+                        gap-2 transition-all
+                        ${isGenerated
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-400'
+                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300'}
+                      `}
                     >
                       <LoadingButtonContent
                         loading={isGenerating}
                         loadingText="Generating..."
-                        idleIcon={isGenerated ? "" : "✨"}
+                        idleIcon={isGenerated ? "▶" : "✨"}
                         idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
                       />
                     </Button>
+
                   </div>
                 );
               })}
