@@ -439,9 +439,6 @@ async def submit_quiz(request: QuizSubmissionRequest):
         )
 
 
-# Tutor functionality removed
-
-
 # ==================== HEALTH CHECK ====================
 
 @app.get(
