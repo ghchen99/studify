@@ -1,7 +1,5 @@
 Frontend Bug Fixes
 
-- rendering code and sometimes maths blocks as black text within a black box, cant see it
-
 - notifications for post requests e.g., geenrating lesson for... top right panel notification
 
 - allow image upload to tutor
@@ -10,4 +8,5 @@ Frontend Bug Fixes
 - code support in tutor
 - add clear conversion
 
+- submit quiz button doesnt dynamic flex with chat
 - back button causes great pain and error??
