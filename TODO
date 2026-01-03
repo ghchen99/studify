@@ -1,8 +1,11 @@
 Frontend Bug Fixes
+
+- rendering code and sometimes maths blocks as black text within a black box, cant see it
+
 - notifications for post requests e.g., geenrating lesson for... top right panel notification
 
 - back button causes great pain and error
 
-- questions in quiz dont render well for maths
+- questions in quiz dont render well for maths, same for tutor
 
-- develop tutor function
+- allow image upload to tutor
