@@ -153,7 +153,7 @@ class ProgressService:
         progress.updatedAt = datetime.now(timezone.utc)
 
         return self.cosmos.update_item("Progress", progress)
-
+    
     def get_progress(self, user_id: str, lesson_plan_id: str) -> Optional[Progress]:
         """Retrieve a single progress record."""
         progress_id = f"progress_{lesson_plan_id}"
@@ -164,51 +164,8 @@ class ProgressService:
             model_class=Progress,
         )
 
-    def get_all_progress(self, user_id: str) -> List[Progress]:
-        """Return all progress records for a user (thin wrapper)."""
-        return self.cosmos.get_items_by_user(
-            container="Progress",
-            user_id=user_id,
-            model_class=Progress,
-            item_type="progress",
-        )
-
-    def get_progress_summary(self, user_id: str) -> Dict[str, Any]:
-        """Lightweight aggregation used by the dashboard.
-
-        This returns totals derived from stored progress records — it avoids
-        deep per-subtopic analytics to keep the implementation small.
-        """
-        all_progress = self.get_all_progress(user_id)
-
-        total_subtopics = 0
-        completed_subtopics = 0
-        total_study_time = 0
-        lesson_plans = []
-
-        for prog in all_progress:
-            overall = prog.overallProgress or {}
-            total_subtopics += overall.get("totalSubtopics", 0)
-            completed_subtopics += overall.get("completedSubtopics", 0)
-            total_study_time += overall.get("totalStudyTime", 0)
-
-            lesson_plans.append({
-                "lessonPlanId": prog.lessonPlanId,
-                "percentComplete": overall.get("percentComplete", 0),
-                "totalSubtopics": overall.get("totalSubtopics", 0),
-                "completedSubtopics": overall.get("completedSubtopics", 0),
-            })
-
-        return {
-            "totalSubtopics": total_subtopics,
-            "completedSubtopics": completed_subtopics,
-            "overallPercentComplete": (completed_subtopics / total_subtopics * 100) if total_subtopics > 0 else 0,
-            "totalStudyTime": total_study_time,
-            "lessonPlans": lesson_plans,
-        }
-
     def _get_or_create_progress(self, user_id: str, lesson_plan_id: str) -> Progress:
-        progress = self.get_progress(user_id, lesson_plan_id)
-        if not progress:
-            progress = self.initialize_progress(user_id, lesson_plan_id)
-        return progress
+            progress = self.get_progress(user_id, lesson_plan_id)
+            if not progress:
+                progress = self.initialize_progress(user_id, lesson_plan_id)
+            return progress
