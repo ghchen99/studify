@@ -150,7 +150,9 @@ export default function QuizResultView({
 
         <ul className="list-disc list-inside text-sm text-orange-800">
           {result.weak_concepts.map((c, i) => (
-            <li key={i}>{c}</li>
+            <li key={i} className="prose-sm max-w-none">
+              <MarkdownRenderer content={c} />
+            </li>
           ))}
         </ul>
 

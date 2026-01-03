@@ -4,8 +4,10 @@ Frontend Bug Fixes
 
 - notifications for post requests e.g., geenrating lesson for... top right panel notification
 
-- back button causes great pain and error
-
-- questions in quiz dont render well for maths, same for tutor
-
 - allow image upload to tutor
+- improve system prompt
+- allow math different markdown support in tutor
+- code support in tutor
+- add clear conversion
+
+- back button causes great pain and error??

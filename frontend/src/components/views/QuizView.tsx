@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { QuizQuestion } from '@/types/api';
 import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface QuizViewProps {
   quizId: string;
@@ -84,9 +85,9 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
           </div>
 
           {/* Question */}
-          <p className="text-lg font-medium leading-relaxed">
-            {q.question}
-          </p>
+          <div className="prose max-w-none">
+            <MarkdownRenderer content={q.question} />
+          </div>
 
           {/* Multiple Choice */}
           {q.type === 'multiple_choice' && q.options && (
@@ -112,7 +113,9 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
                       }
                       className="h-4 w-4 text-blue-600"
                     />
-                    <span className="text-sm">{opt}</span>
+                    <div className="text-sm max-w-none">
+                      <MarkdownRenderer content={opt} />
+                    </div>
                   </label>
                 );
               })}

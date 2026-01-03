@@ -112,6 +112,13 @@ class QuizService:
             "For short/long answers, provide detailed mark schemes. "
             "For every question include a numeric `maxMarks` field indicating the total marks available. "
             "For multiple choice questions, use 1 mark unless there is a reason to use more. "
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment."
         )
         
         try:
