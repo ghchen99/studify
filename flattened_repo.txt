@@ -27,7 +27,6 @@ DIRECTORY TREE (SOURCE FILES ONLY)
       📄 LessonView.tsx
       📄 QuizResultView.tsx
       📄 QuizView.tsx
-      📄 TutorView.tsx
   📁 lib/
     📄 authConfig.ts
     📄 msalInstance.ts
@@ -520,11 +519,10 @@ import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 // Import Views
 import LessonView from './views/LessonView';
 import QuizView from './views/QuizView';
-import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
 import QuizResultView from './views/QuizResultView';
 
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -542,7 +540,7 @@ export default function Platform() {
   const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
+  
   
   // Track which lessons have been generated and which is currently generating
   const [generatedLessons, setGeneratedLessons] = useState<Set<string>>(new Set());
@@ -632,12 +630,10 @@ export default function Platform() {
     if (details) {
       setActivePlan(details);
       
-      // Mark subtopics with 'completed' or 'in_progress' status as having generated lessons
+      // Mark subtopics that already have an associated lessonId as generated
       const generated = new Set<string>();
       details.subtopics?.forEach((sub: any) => {
-        if (sub.status === 'completed' || sub.status === 'in_progress') {
-          generated.add(sub.id);
-        }
+        if (sub.lessonId) generated.add(sub.id);
       });
       setGeneratedLessons(generated);
       
@@ -660,6 +656,15 @@ export default function Platform() {
     
     if (data) {
       setGeneratedLessons(prev => new Set([...prev, subtopicId]));
+      // Persist lessonId back to lesson plan so frontend and backend agree
+      try {
+        await callApi(`/api/lesson-plans/${planId}/subtopics/${subtopicId}/mark-generated`, 'POST', {
+          user_id: account?.localAccountId,
+          lessonId: data.lesson_id || data.lessonId || null
+        });
+      } catch (err) {
+        console.warn('Failed to mark subtopic as generated on server', err);
+      }
       setActiveLesson(data);
       setView('LESSON');
     }
@@ -694,7 +699,15 @@ export default function Platform() {
       });
       
       if (quizData) {
-        setActiveQuiz({ id: quizData.quiz_id, questions: quizData.questions });
+            const normalized = (quizData.questions || []).map((q: any) => ({
+              questionId: q.questionId || q.question_id,
+              type: q.type,
+              question: q.question,
+              options: q.options,
+              difficulty: q.difficulty,
+              maxMarks: q.maxMarks ?? q.max_marks ?? (q.max ? q.max : undefined)
+            }));
+            setActiveQuiz({ id: quizData.quiz_id, questions: normalized });
         setView('QUIZ');
       }
     }
@@ -713,35 +726,7 @@ export default function Platform() {
     }
   };
 
-  const startTutor = async (concept: string) => {
-    const data = await callApi('/api/tutor/start', 'POST', {
-      user_id: account?.localAccountId,
-      trigger: 'manual',
-      lesson_id: activeLesson?.lesson_id,
-      concept: concept,
-      initial_message: `I'm struggling with ${concept}`
-    });
-    
-    if (data) {
-      setTutorSessionId(data.session_id);
-      setView('TUTOR');
-    }
-  };
-
-  const tutorMessage = async (sessionId: string, message: string) => {
-    const res = await callApi('/api/tutor/message', 'POST', {
-      user_id: account?.localAccountId,
-      session_id: sessionId,
-      message
-    });
-    return res?.message || "I received your message."; 
-  };
-
-  const endTutor = async (sessionId: string) => {
-      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
-      setView('DASHBOARD');
-      loadDashboard();
-  };
+  
 
   if (!account) return <div>Please log in</div>;
 
@@ -805,11 +790,7 @@ export default function Platform() {
                    className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
                  >
                    <div className="mb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] uppercase font-semibold text-gray-400">
-                          {plan.status}
-                        </span>
-                      </div>
+                      
                       <h3 className="font-bold text-lg leading-tight text-gray-900">
                         {plan.subject}
                       </h3>
@@ -867,25 +848,26 @@ export default function Platform() {
                       </span>
                       <div>
                         <div className="font-medium">{sub.title}</div>
-                        {isGenerated && !isGenerating && (
-                          <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                            <span>✓</span> Lesson ready
-                          </div>
-                        )}
                       </div>
                     </div>
                     <Button 
                       onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
                       disabled={isGenerating}
-                      className="gap-2"
+                      className={`
+                        gap-2 transition-all
+                        ${isGenerated
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-400'
+                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300'}
+                      `}
                     >
                       <LoadingButtonContent
                         loading={isGenerating}
                         loadingText="Generating..."
-                        idleIcon={isGenerated ? "📖" : "✨"}
+                        idleIcon={isGenerated ? "▶" : "✨"}
                         idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
                       />
                     </Button>
+
                   </div>
                 );
               })}
@@ -925,18 +907,10 @@ export default function Platform() {
             setView('DASHBOARD');
             loadDashboard();
           }}
-          onStartTutor={(concept) => startTutor(concept)}
         />
       )}
 
-      {/* TUTOR VIEW */}
-      {view === 'TUTOR' && tutorSessionId && (
-        <TutorView 
-            sessionId={tutorSessionId}
-            onSendMessage={tutorMessage}
-            onEndSession={endTutor}
-        />
-      )}
+      {/* Tutor feature removed */}
     </div>
   );
 }
@@ -1439,7 +1413,12 @@ export default function CreateCourseView({
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
@@ -1464,6 +1443,7 @@ export default function LessonView({
   const [completing, setCompleting] = useState(false);
 
   const currentSection = sections[currentIndex];
+  const progress = ((currentIndex + 1) / sections.length) * 100;
 
   const handleExpand = async (sectionId: string) => {
     setLoadingId(sectionId);
@@ -1482,44 +1462,70 @@ export default function LessonView({
   };
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 pb-24 space-y-10">
       {/* Lesson Header */}
-      <div className="bg-white p-6 rounded shadow-sm border space-y-2">
-        <div className="text-2xl font-bold text-gray-800">
+      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4">
+        <div className="text-3xl font-bold tracking-tight">
           <MarkdownRenderer content={lesson.subtopic} />
         </div>
 
-        <div className="text-gray-600">
+        <div className="text-gray-600 leading-relaxed">
           <MarkdownRenderer content={lesson.introduction} />
+        </div>
+
+        {/* Progress */}
+        <div className="pt-4">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Section {currentIndex + 1} of {sections.length}
+          </p>
         </div>
       </div>
 
-
       {/* Section Card */}
-      <div className="bg-gray-50 p-6 rounded border space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-xl">
-            {currentSection.title}
-          </h3>
+      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+              {currentIndex + 1}
+            </span>
+            <h3 className="text-xl font-semibold">
+              {currentSection.title}
+            </h3>
+          </div>
+
           <span className="text-sm text-gray-500">
-            Section {currentIndex + 1} of {sections.length}
+            {currentIndex + 1} / {sections.length}
           </span>
         </div>
 
         {/* Section Content */}
-        <MarkdownRenderer content={currentSection.content} />
+        <div className="prose max-w-none">
+          <MarkdownRenderer content={currentSection.content} />
+        </div>
 
         {/* Key Points */}
-        <ul className="list-disc bg-blue-50 p-4 rounded pl-6 space-y-2">
-        {currentSection.keyPoints.map((kp, i) => (
-          <li key={i}>
-            <MarkdownRenderer content={kp} />
-          </li>
-        ))}
-      </ul>
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
+          <p className="text-sm font-semibold text-blue-800 mb-2">
+            Key Takeaways
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            {currentSection.keyPoints.map((kp, i) => (
+              <li key={i}>
+                <MarkdownRenderer content={kp} />
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        {/* Expand Button */}
-        <div className="flex gap-2">
+        {/* AI Deep Dive */}
+        <div className="flex">
           {currentSection.expanded ? (
             <Button
               variant="outline"
@@ -1527,8 +1533,7 @@ export default function LessonView({
               onClick={() => setExpandedDialogOpen(true)}
               className="gap-2"
             >
-              <span className="text-lg">📖</span>
-              View Detailed Explanation
+              📖 View Detailed Explanation
             </Button>
           ) : (
             <Button
@@ -1541,12 +1546,11 @@ export default function LessonView({
               {loadingId === currentSection.sectionId ? (
                 <>
                   <span className="animate-spin">⏳</span>
-                  Generating...
+                  Generating…
                 </>
               ) : (
                 <>
-                  <span className="text-lg">✨</span>
-                  Get AI Deep Dive
+                  ✨ Get AI Deep Dive
                 </>
               )}
             </Button>
@@ -1556,19 +1560,20 @@ export default function LessonView({
 
       {/* Expanded Content Modal */}
       <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="text-2xl">
               Deep Dive: {currentSection.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none mt-4">
+
+          <div className="prose max-w-none mt-6">
             <MarkdownRenderer content={currentSection.expanded || ''} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Pagination Controls */}
+      {/* Navigation */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
@@ -1589,14 +1594,14 @@ export default function LessonView({
       {/* Complete Lesson */}
       {currentIndex === sections.length - 1 && (
         <Button
+          size="lg"
+          className="w-full h-12"
+          disabled={completing}
           onClick={async () => {
             setCompleting(true);
             await onComplete(lesson.lesson_id);
             setCompleting(false);
           }}
-          className="w-full gap-2"
-          size="lg"
-          disabled={completing}
         >
           <LoadingButtonContent
             loading={completing}
@@ -1610,6 +1615,7 @@ export default function LessonView({
   );
 }
 
+
 --- FILE: src\components\views\QuizResultView.tsx ---
 
 'use client';
@@ -1621,49 +1627,64 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 interface QuizResultViewProps {
   result: QuizResult;
   onReturnDashboard: () => void;
-  onStartTutor: (concept: string) => void;
 }
 
 export default function QuizResultView({
   result,
   onReturnDashboard,
-  onStartTutor,
 }: QuizResultViewProps) {
   return (
-    <div className="space-y-8 py-10 max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
       {/* Summary */}
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-bold">Quiz Complete</h2>
-        <div className="text-6xl font-bold text-blue-600">
-          {result.score.percentage}%
+        <h2 className="text-4xl font-bold tracking-tight">Quiz Complete 🎉</h2>
+
+        <div className="flex justify-center">
+          <div className="h-32 w-32 rounded-full bg-blue-50 border-4 border-blue-600 flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold text-blue-600">
+              {result.score.percentage.toFixed(1)}%
+            </span>
+            <span className="text-xs text-blue-600 font-medium">Score</span>
+          </div>
         </div>
+
         <p className="text-gray-600">
           {result.score.marksAwarded} / {result.score.maxMarks} marks
         </p>
 
         {result.mastery_level && (
           <p className="text-sm text-gray-500">
-            Mastery level: <strong>{result.mastery_level}</strong>
+            Mastery level:{' '}
+            <span className="font-semibold text-gray-700">
+              {result.mastery_level}
+            </span>
           </p>
         )}
       </div>
 
-      {/* Per-question feedback */}
+      {/* Question Feedback */}
       {result.responses && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Question Feedback</h3>
+        <div className="space-y-6">
+          <h3 className="text-2xl font-semibold">Question Breakdown</h3>
 
           {result.responses.map((r, i) => (
             <div
               key={r.questionId}
-              className="border rounded-lg p-5 bg-white space-y-4"
+              className="bg-white rounded-xl border shadow-sm p-6 space-y-5"
             >
               {/* Header */}
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Question {i + 1}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="h-8 w-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Question {i + 1}
+                  </span>
+                </div>
 
                 <span
-                  className={`text-sm font-semibold px-2 py-1 rounded ${
+                  className={`text-xs font-semibold px-3 py-1 rounded-full ${
                     r.isCorrect === true
                       ? 'bg-green-100 text-green-700'
                       : r.isCorrect === false
@@ -1675,79 +1696,90 @@ export default function QuizResultView({
                     ? 'Correct'
                     : r.isCorrect === false
                     ? 'Incorrect'
-                    : 'Partially marked'}
+                    : 'Partially correct'}
                 </span>
               </div>
 
               {/* Question */}
               <div>
-                <p className="font-semibold text-sm mb-1">Question</p>
-                <MarkdownRenderer content={r.originalQuestion || r.questionText || ''} />
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Question
+                </p>
+                <div className="prose prose-sm max-w-none">
+                  <MarkdownRenderer
+                    content={
+                      r.originalQuestion || r.questionText || ''
+                    }
+                  />
+                </div>
               </div>
 
               {/* Student Answer */}
               <div>
-                <p className="font-semibold text-sm mb-1">Your answer</p>
-                <div className="bg-gray-50 border rounded p-3">
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Your Answer
+                </p>
+                <div className="bg-gray-50 border rounded-lg p-4 prose prose-sm max-w-none">
                   <MarkdownRenderer
-                    content={
-                      r.userAnswer ||
-                      (r.userBulletPoints && r.userBulletPoints.length
-                        ? r.userBulletPoints.map((b) => `- ${b}`).join('\n')
-                        : '_No answer provided_')
-                    }
+                    content={r.userAnswer || '_No answer provided_'}
                   />
                 </div>
               </div>
 
               {/* Marks */}
               <div className="text-sm text-gray-600">
-                Marks: {r.marksAwarded} / {r.maxMarks}
+                Marks awarded:{' '}
+                <span className="font-medium">
+                  {r.marksAwarded} / {r.maxMarks}
+                </span>
               </div>
 
               {/* Feedback */}
               {r.feedback && (
                 <div>
-                  <p className="font-semibold text-sm mb-1">Feedback</p>
-                  <MarkdownRenderer content={r.feedback} />
+                  <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                    Feedback
+                  </p>
+                  <div className="prose prose-sm max-w-none">
+                    <MarkdownRenderer content={r.feedback} />
+                  </div>
                 </div>
               )}
 
               {/* Model Answer */}
               {r.aiGeneratedAnswer && (
-                <div className="bg-gray-50 border rounded p-3 text-sm">
-                  <strong>Model answer:</strong>
-                  <MarkdownRenderer content={r.aiGeneratedAnswer} />
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-blue-700 mb-1">
+                    Model Answer
+                  </p>
+                  <div className="prose prose-sm max-w-none">
+                    <MarkdownRenderer content={r.aiGeneratedAnswer} />
+                  </div>
                 </div>
               )}
             </div>
-
           ))}
         </div>
       )}
 
-      {/* Tutor / Next Action */}
-      {result.trigger_tutor ? (
-        <div className="bg-orange-50 p-6 rounded border border-orange-200">
-          <h3 className="font-bold text-orange-800 mb-2">
-            Recommended: AI Tutor
-          </h3>
+      {/* Tutor Recommendation / Next Steps */}
+      <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-bold text-orange-800">Recommended Next Step</h3>
 
-          <ul className="list-disc list-inside mb-4 text-sm">
-            {result.weak_concepts.map((c, i) => (
-              <li key={i}>{c}</li>
-            ))}
-          </ul>
+        <p className="text-sm text-orange-700">You may benefit from revisiting these concepts:</p>
 
-          <Button onClick={() => onStartTutor(result.weak_concepts[0])}>
-            Chat with AI Tutor
+        <ul className="list-disc list-inside text-sm text-orange-800">
+          {result.weak_concepts.map((c, i) => (
+            <li key={i}>{c}</li>
+          ))}
+        </ul>
+
+        <div className="flex justify-center">
+          <Button size="lg" onClick={onReturnDashboard}>
+            Return to Dashboard
           </Button>
         </div>
-      ) : (
-        <Button size="lg" onClick={onReturnDashboard}>
-          Return to Dashboard
-        </Button>
-      )}
+      </div>
     </div>
   );
 }
@@ -1759,7 +1791,7 @@ export default function QuizResultView({
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { QuizQuestion, QuizResult } from '@/types/api';
+import { QuizQuestion } from '@/types/api';
 import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface QuizViewProps {
@@ -1777,168 +1809,155 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
   };
 
   const handleSubmit = async () => {
-    const formattedResponses = questions.map(q => {
-      const val = answers[q.questionId] || "";
-      if (q.type === 'long_answer') {
-        return {
-          questionId: q.questionId,
-          userBulletPoints: val
-            .split('\n')
-            .filter(line => line.trim() !== '')
-        };
-      }
-      return { questionId: q.questionId, userAnswer: val };
-    });
+    const formattedResponses = questions.map(q => ({
+      questionId: q.questionId,
+      userAnswer: answers[q.questionId] || '',
+    }));
 
     await onSubmit(quizId, formattedResponses);
   };
 
+  const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold">Concept Check</h2>
-      
-      {questions.map((q, index) => (
-        <div key={q.questionId} className="bg-white p-6 rounded shadow-sm border">
-          <div className="flex justify-between items-start mb-4">
-            <span className="bg-gray-200 text-gray-700 px-2 py-1 text-xs rounded uppercase font-bold">{q.type.replace('_', ' ')}</span>
-            <span className="text-xs text-gray-500 capitalize">{q.difficulty}</span>
-          </div>
-          
-          <p className="font-medium text-lg mb-4">{index + 1}. {q.question}</p>
+    <div className="max-w-3xl mx-auto px-4 pb-24 space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Concept Check</h2>
+        <p className="text-gray-500 text-sm">
+          Answer all questions before submitting
+        </p>
 
+        {/* Progress */}
+        <div className="mt-4">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all"
+              style={{ width: `${(answeredCount / questions.length) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {answeredCount} / {questions.length} answered
+          </p>
+        </div>
+      </div>
+
+      {/* Questions */}
+      {questions.map((q, index) => (
+        <div
+          key={q.questionId}
+          className="bg-white rounded-xl border shadow-sm p-6 space-y-5"
+        >
+          {/* Meta */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="h-8 w-8 flex items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">
+                {index + 1}
+              </span>
+
+              <span className="text-xs uppercase tracking-wide px-2 py-1 rounded bg-gray-100 text-gray-600">
+                {q.type.replace('_', ' ')}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              {q.difficulty && (
+                <span className="capitalize px-2 py-1 rounded bg-gray-100">
+                  {q.difficulty}
+                </span>
+              )}
+              {q.maxMarks && (
+                <span>{q.maxMarks} mark{q.maxMarks > 1 ? 's' : ''}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Question */}
+          <p className="text-lg font-medium leading-relaxed">
+            {q.question}
+          </p>
+
+          {/* Multiple Choice */}
           {q.type === 'multiple_choice' && q.options && (
-            <div className="space-y-2">
-              {q.options.map((opt) => (
-                <label key={opt} className="flex items-center space-x-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name={q.questionId}
-                    value={opt}
-                    onChange={(e) => handleInputChange(q.questionId, e.target.value)}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <span>{opt}</span>
-                </label>
-              ))}
+            <div className="space-y-3">
+              {q.options.map((opt) => {
+                const selected = answers[q.questionId] === opt;
+                return (
+                  <label
+                    key={opt}
+                    className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition
+                      ${selected
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'hover:bg-gray-50'
+                      }`}
+                  >
+                    <input
+                      type="radio"
+                      name={q.questionId}
+                      value={opt}
+                      checked={selected}
+                      onChange={(e) =>
+                        handleInputChange(q.questionId, e.target.value)
+                      }
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <span className="text-sm">{opt}</span>
+                  </label>
+                );
+              })}
             </div>
           )}
 
+          {/* Short Answer */}
           {q.type === 'short_answer' && (
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Type your answer..."
-              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+              onChange={(e) =>
+                handleInputChange(q.questionId, e.target.value)
+              }
             />
           )}
 
+          {/* Long Answer */}
           {q.type === 'long_answer' && (
             <textarea
-              className="w-full p-2 border rounded h-32"
-              placeholder="Explain your reasoning (each line is a point)..."
-              onChange={(e) => handleInputChange(q.questionId, e.target.value)}
+              className="w-full rounded-lg border px-4 py-3 h-36 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Explain your reasoning clearly..."
+              onChange={(e) =>
+                handleInputChange(q.questionId, e.target.value)
+              }
             />
           )}
         </div>
       ))}
 
-      
-      <Button
-        onClick={async () => {
-          setSubmitting(true);
-          await handleSubmit();
-          setSubmitting(false);
-        }}
-        className="w-full gap-2"
-        disabled={submitting}
-      >
-        <LoadingButtonContent
-          loading={submitting}
-          loadingText="Submitting answers..."
-          idleIcon=""
-          idleText="Submit Quiz"
-        />
-      </Button>
-
-    </div>
-  );
-}
-
---- FILE: src\components\views\TutorView.tsx ---
-
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-
-interface Message {
-  role: 'user' | 'ai';
-  text: string;
-}
-
-interface TutorViewProps {
-  sessionId: string;
-  initialMessage?: string;
-  onSendMessage: (sessionId: string, message: string) => Promise<string>;
-  onEndSession: (sessionId: string) => void;
-}
-
-export default function TutorView({ sessionId, initialMessage, onSendMessage, onEndSession }: TutorViewProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    if (initialMessage && messages.length === 0) {
-      setMessages([{ role: 'user', text: initialMessage }]);
-      // Ideally trigger an AI response immediately here if the backend supports it, 
-      // otherwise we wait for user input.
-    }
-  }, [initialMessage]);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMsg = input;
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setInput('');
-    setSending(true);
-
-    const response = await onSendMessage(sessionId, userMsg);
-    setMessages(prev => [...prev, { role: 'ai', text: response }]);
-    setSending(false);
-  };
-
-  return (
-    <div className="flex flex-col h-[600px] bg-white border rounded shadow-lg">
-      <div className="p-4 bg-indigo-600 text-white flex justify-between items-center">
-        <h3 className="font-bold">AI Tutor</h3>
-        <Button size="sm" variant="secondary" onClick={() => onEndSession(sessionId)}>End Session</Button>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-lg ${
-              m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border text-gray-800'
-            }`}>
-              {m.text}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="p-4 border-t bg-white flex gap-2">
-        <input 
-          className="flex-1 border rounded px-3 py-2"
-          placeholder="Ask a question..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-        />
-        <Button onClick={handleSend} disabled={sending}>Send</Button>
+      {/* Sticky Submit */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="max-w-3xl mx-auto p-4">
+          <Button
+            onClick={async () => {
+              setSubmitting(true);
+              await handleSubmit();
+              setSubmitting(false);
+            }}
+            className="w-full h-12 text-base"
+            disabled={submitting}
+          >
+            <LoadingButtonContent
+              loading={submitting}
+              loadingText="Submitting answers..."
+              idleIcon=""
+              idleText="Submit Quiz"
+            />
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 --- FILE: src\lib\authConfig.ts ---
 
@@ -2008,7 +2027,12 @@ export function cn(...inputs: ClassValue[]) {
 export interface Subtopic {
   id: string;
   title: string;
-  status: 'not_started' | 'in_progress' | 'completed';
+  status?: 'not_started' | 'in_progress' | 'completed';
+  order?: number;
+  duration?: number | null;
+  concepts?: string[];
+  lessonId?: string | null;
+  generatedAt?: string | null;
 }
 
 export interface LessonPlan {
@@ -2046,6 +2070,7 @@ export interface QuizQuestion {
   question: string;
   options?: string[];
   difficulty: string;
+  maxMarks?: number;
 }
 
 export interface QuizMarkedResponse {
@@ -2056,7 +2081,7 @@ export interface QuizMarkedResponse {
   originalCorrectAnswer?: string | null;
 
   userAnswer?: string | null;
-  userBulletPoints?: string[] | null;
+  
 
   isCorrect: boolean | null;
   marksAwarded: number;

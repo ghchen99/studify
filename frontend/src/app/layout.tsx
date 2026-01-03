@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import ClientProviders from './providers';
+import AITutorChat from '@/components/AITutorChat';
 
 export const metadata: Metadata = {
   title: 'gpt-edu',
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <main className="container mx-auto p-4">
             {children}
           </main>
+          <AITutorChat />
         </ClientProviders>
       </body>
     </html>
