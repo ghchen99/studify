@@ -1,8 +1,8 @@
+// src/app/layout.tsx
 import './globals.css';
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
-import ClientProviders from './providers';
-import AITutorChat from '@/components/AITutorChat';
+import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
   title: 'gpt-edu',
@@ -16,13 +16,8 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className="bg-white text-gray-900 min-h-screen font-sans">
-        <ClientProviders>
-          <main className="container mx-auto p-4">
-            {children}
-          </main>
-          <AITutorChat />
-        </ClientProviders>
+      <body className="bg-white text-gray-900 font-sans overflow-hidden">
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, MessageCircle, Send } from 'lucide-react';
+import { X, MessageCircle, Send, Minimize2, Maximize2 } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Message {
@@ -10,8 +10,13 @@ interface Message {
   content: string;
 }
 
-export default function AITutorChat() {
+interface AITutorChatProps {
+  onStateChange: (state: { isOpen: boolean; isExpanded: boolean }) => void;
+}
+
+export default function AITutorChat({ onStateChange }: AITutorChatProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -21,6 +26,11 @@ export default function AITutorChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Notify parent of state changes
+  useEffect(() => {
+    onStateChange({ isOpen, isExpanded });
+  }, [isOpen, isExpanded, onStateChange]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -76,9 +86,18 @@ export default function AITutorChat() {
     }
   };
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setIsExpanded(false);
+  };
+
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Only show when closed */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -89,37 +108,53 @@ export default function AITutorChat() {
         </button>
       )}
 
-      {/* Chat Window */}
+      {/* Split Screen Panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border">
+        <div
+          className={`fixed top-0 right-0 h-screen bg-white shadow-2xl flex flex-col z-40 border-l transition-all duration-300 ease-in-out ${
+            isExpanded 
+              ? 'w-full md:w-3/4 lg:w-2/3' 
+              : 'w-full md:w-1/2 lg:w-2/5'
+          }`}
+        >
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-                <MessageCircle size={20} />
+              <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                <MessageCircle size={24} />
               </div>
               <div>
-                <h3 className="font-semibold">AI Tutor</h3>
-                <p className="text-xs text-blue-100">Always here to help</p>
+                <h3 className="font-semibold text-lg">AI Tutor</h3>
+                <p className="text-sm text-blue-100">Always here to help</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="hover:bg-white/20 rounded-lg p-1 transition-colors"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleExpand}
+                className="hover:bg-white/20 rounded-lg p-2 transition-colors"
+                aria-label={isExpanded ? 'Minimize' : 'Maximize'}
+              >
+                {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+              </button>
+              <button
+                onClick={handleClose}
+                className="hover:bg-white/20 rounded-lg p-2 transition-colors"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-3 ${
                     msg.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white border shadow-sm'
@@ -130,7 +165,7 @@ export default function AITutorChat() {
                       <MarkdownRenderer content={msg.content} />
                     </div>
                   ) : (
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-base whitespace-pre-wrap">{msg.content}</p>
                   )}
                 </div>
               </div>
@@ -138,11 +173,11 @@ export default function AITutorChat() {
             
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white border shadow-sm rounded-2xl px-4 py-2">
-                  <div className="flex gap-1">
-                    <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-white border shadow-sm rounded-2xl px-5 py-3">
+                  <div className="flex gap-1.5">
+                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -151,32 +186,40 @@ export default function AITutorChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="p-4 border-t bg-white rounded-b-2xl">
-            <div className="flex gap-2">
-              <input
-                type="text"
+          {/* Input Area */}
+          <div className="p-6 border-t bg-white shadow-lg">
+            <div className="flex gap-3">
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything..."
-                className="flex-1 rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[60px] max-h-[200px]"
                 disabled={loading}
+                rows={2}
               />
               <Button
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}
-                size="icon"
-                className="rounded-lg"
+                size="lg"
+                className="rounded-lg self-end h-[60px] px-6"
               >
-                <Send size={18} />
+                <Send size={20} />
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              Press Enter to send
+              Press Enter to send • Shift + Enter for new line
             </p>
           </div>
         </div>
+      )}
+
+      {/* Overlay when chat is open on mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-30 md:hidden"
+          onClick={handleClose}
+        />
       )}
     </>
   );
