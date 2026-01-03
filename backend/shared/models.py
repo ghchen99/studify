@@ -95,15 +95,7 @@ class QuizAttempt(BaseModel):
     score: Optional[Dict[str, Any]] = None
     completedAt: Optional[datetime]
 
-class TutorSession(BaseModel):
-    id: str
-    userId: str
-    type: str = "tutorSession"
-    trigger: Optional[str] = None
-    context: Optional[Dict[str, Any]]
-    conversation: Optional[List[Dict[str, Any]]] = []
-    resolved: Optional[bool] = False
-    createdAt: Optional[datetime]
+# TutorSession removed
 
 class Progress(BaseModel):
     id: str
@@ -385,59 +377,7 @@ class QuizResultResponse(BaseModel):
     weak_concepts: List[str]
 
 
-class StartTutorRequest(BaseModel):
-    """Request to start a tutor session"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "trigger": "quiz_struggle",
-            "lesson_id": "lesson123",
-            "subtopic_id": "sub1",
-            "concept": "variables",
-            "initial_message": "I'm confused about how variables work"
-        }
-    })
-    
-    user_id: str
-    trigger: str = Field(..., description="What triggered the session (e.g., 'quiz_struggle', 'manual')")
-    lesson_id: Optional[str] = None
-    subtopic_id: Optional[str] = None
-    question_id: Optional[str] = None
-    concept: Optional[str] = None
-    initial_message: Optional[str] = None
-
-
-class TutorResponse(BaseModel):
-    """Response from tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "session_id": "session123",
-            "message": "I understand you're finding variables confusing. Let's break it down...",
-            "context": {
-                "lesson_id": "lesson123",
-                "concept": "variables"
-            }
-        }
-    })
-    
-    session_id: str
-    message: str
-    context: Dict[str, Any]
-
-
-class SendTutorMessageRequest(BaseModel):
-    """Request to send message to tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "session_id": "session123",
-            "message": "Can you give me an example?"
-        }
-    })
-    
-    user_id: str
-    session_id: str
-    message: str
+# Tutor request/response models removed
 
 
 class DashboardResponse(BaseModel):
@@ -462,7 +402,7 @@ class DashboardResponse(BaseModel):
                     }
                 }
             ],
-            "active_tutor_sessions": 1,
+            
             "recommendations": [
                 "Continue Math - Algebra (25% complete)",
                 "Review Biology - Cells (average score: 55%)"
@@ -472,5 +412,5 @@ class DashboardResponse(BaseModel):
     
     user: Dict[str, Any]
     lesson_plans: List[Dict[str, Any]]
-    active_tutor_sessions: int
+    # active_tutor_sessions removed
     recommendations: List[str]

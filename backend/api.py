@@ -15,8 +15,8 @@ from shared.models import (
     LessonResponse,
     StartLessonRequest, ExpandSectionRequest, ExpandedSectionResponse,
     CompleteLessonRequest, CompletionResponse, QuizResponse,
-    StartQuizRequest, QuizSubmissionRequest, QuizResultResponse, TutorResponse,
-    StartTutorRequest, SendTutorMessageRequest)
+    StartQuizRequest, QuizSubmissionRequest, QuizResultResponse
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -439,114 +439,7 @@ async def submit_quiz(request: QuizSubmissionRequest):
         )
 
 
-# ==================== TUTOR ENDPOINTS ====================
-
-@api_router.post(
-    "/tutor/start",
-    response_model=TutorResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start a tutor session",
-    description="Start an AI tutoring session for personalized help"
-)
-async def start_tutor_session(request: StartTutorRequest):
-    """
-    Start a one-on-one AI tutoring session.
-    
-    The AI tutor will:
-    - Use Socratic method to guide learning
-    - Provide hints rather than direct answers
-    - Use analogies and examples
-    - Be patient and encouraging
-    """
-    try:
-        result = platform.start_tutor_session(
-            user_id=request.user_id,
-            trigger=request.trigger,
-            lesson_id=request.lesson_id,
-            subtopic_id=request.subtopic_id,
-            question_id=request.question_id,
-            concept=request.concept,
-            initial_message=request.initial_message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context=result["context"]
-        )
-    except Exception as e:
-        logger.error(f"Error starting tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start tutor session: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/message",
-    response_model=TutorResponse,
-    summary="Send message to tutor",
-    description="Send a message in an active tutor session"
-)
-async def send_tutor_message(request: SendTutorMessageRequest):
-    """
-    Send a message to the AI tutor in an active session.
-    
-    The tutor maintains conversation context and provides personalized guidance.
-    """
-    try:
-        result = platform.send_tutor_message(
-            user_id=request.user_id,
-            session_id=request.session_id,
-            message=request.message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context={}
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error sending tutor message: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/end/{user_id}/{session_id}",
-    response_model=Dict[str, str],
-    summary="End tutor session",
-    description="Mark a tutor session as resolved"
-)
-async def end_tutor_session(user_id: str, session_id: str):
-    """
-    End an active tutoring session.
-    """
-    try:
-        platform.end_tutor_session(user_id, session_id)
-        return {
-            "status": "resolved",
-            "session_id": session_id,
-            "message": "Tutor session ended successfully"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error ending tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to end session: {str(e)}"
-        )
+# Tutor functionality removed
 
 
 # ==================== HEALTH CHECK ====================
@@ -578,8 +471,7 @@ async def root():
         "endpoints": {
             "lesson_plans": "/api/lesson-plans",
             "lessons": "/api/lessons",
-            "quizzes": "/api/quizzes",
-            "tutor": "/api/tutor",
+            "quizzes": "/api/quizzes"
         }
     }
 

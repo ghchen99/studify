@@ -9,11 +9,10 @@ import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 // Import Views
 import LessonView from './views/LessonView';
 import QuizView from './views/QuizView';
-import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
 import QuizResultView from './views/QuizResultView';
 
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -31,7 +30,7 @@ export default function Platform() {
   const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
+  
   
   // Track which lessons have been generated and which is currently generating
   const [generatedLessons, setGeneratedLessons] = useState<Set<string>>(new Set());
@@ -217,35 +216,7 @@ export default function Platform() {
     }
   };
 
-  const startTutor = async (concept: string) => {
-    const data = await callApi('/api/tutor/start', 'POST', {
-      user_id: account?.localAccountId,
-      trigger: 'manual',
-      lesson_id: activeLesson?.lesson_id,
-      concept: concept,
-      initial_message: `I'm struggling with ${concept}`
-    });
-    
-    if (data) {
-      setTutorSessionId(data.session_id);
-      setView('TUTOR');
-    }
-  };
-
-  const tutorMessage = async (sessionId: string, message: string) => {
-    const res = await callApi('/api/tutor/message', 'POST', {
-      user_id: account?.localAccountId,
-      session_id: sessionId,
-      message
-    });
-    return res?.message || "I received your message."; 
-  };
-
-  const endTutor = async (sessionId: string) => {
-      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
-      setView('DASHBOARD');
-      loadDashboard();
-  };
+  
 
   if (!account) return <div>Please log in</div>;
 
@@ -426,18 +397,10 @@ export default function Platform() {
             setView('DASHBOARD');
             loadDashboard();
           }}
-          onStartTutor={(concept) => startTutor(concept)}
         />
       )}
 
-      {/* TUTOR VIEW */}
-      {view === 'TUTOR' && tutorSessionId && (
-        <TutorView 
-            sessionId={tutorSessionId}
-            onSendMessage={tutorMessage}
-            onEndSession={endTutor}
-        />
-      )}
+      {/* Tutor feature removed */}
     </div>
   );
 }

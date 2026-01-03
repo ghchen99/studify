@@ -7,13 +7,11 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 interface QuizResultViewProps {
   result: QuizResult;
   onReturnDashboard: () => void;
-  onStartTutor: (concept: string) => void;
 }
 
 export default function QuizResultView({
   result,
   onReturnDashboard,
-  onStartTutor,
 }: QuizResultViewProps) {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
@@ -145,36 +143,23 @@ export default function QuizResultView({
       )}
 
       {/* Tutor Recommendation / Next Steps */}
-      {result.trigger_tutor ? (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 space-y-4">
-          <h3 className="text-lg font-bold text-orange-800">
-            Recommended Next Step
-          </h3>
+      <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-bold text-orange-800">Recommended Next Step</h3>
 
-          <p className="text-sm text-orange-700">
-            You may benefit from revisiting these concepts:
-          </p>
+        <p className="text-sm text-orange-700">You may benefit from revisiting these concepts:</p>
 
-          <ul className="list-disc list-inside text-sm text-orange-800">
-            {result.weak_concepts.map((c, i) => (
-              <li key={i}>{c}</li>
-            ))}
-          </ul>
+        <ul className="list-disc list-inside text-sm text-orange-800">
+          {result.weak_concepts.map((c, i) => (
+            <li key={i}>{c}</li>
+          ))}
+        </ul>
 
-          <Button
-            className="mt-2"
-            onClick={() => onStartTutor(result.weak_concepts[0])}
-          >
-            Chat with AI Tutor
-          </Button>
-        </div>
-      ) : (
         <div className="flex justify-center">
           <Button size="lg" onClick={onReturnDashboard}>
             Return to Dashboard
           </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

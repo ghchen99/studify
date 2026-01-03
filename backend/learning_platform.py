@@ -8,7 +8,6 @@ from typing import Optional, List, Dict, Any
 from lesson_plans.lesson_plan_service import LessonPlanService
 from lessons.lesson_service import LessonService
 from quizzes.quiz_service import QuizService
-from tutor.tutor_service import TutorService
 from progress.progress_service import ProgressService
 
 from shared.models import (
@@ -30,7 +29,6 @@ class LearningPlatform:
         self.lesson_plans = LessonPlanService()
         self.lessons = LessonService()
         self.quizzes = QuizService()
-        self.tutor = TutorService()
         self.progress = ProgressService()
     
     # ==================== LESSON PLAN WORKFLOWS ====================
@@ -309,7 +307,7 @@ class LearningPlatform:
                 for r in attempt.responses
             ],
             "masteryLevel": progress.subtopicProgress.get(attempt.subtopicId, {}).get("masteryLevel"),
-            "nextAction": "tutor" if trigger_tutor else "continue",
+            "nextAction": "continue",
             "triggerTutor": trigger_tutor,
             "weakConcepts": weak_concepts
         }
