@@ -118,6 +118,8 @@ class QuizService:
             "- Use `-` or `*` for bullet points.\n"
             "- Use `1.` for numbered lists only when sequence matters.\n"
             "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"    
             "Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment."
         )
         
