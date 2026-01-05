@@ -2,13 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, MessageCircle, Send, Minimize2, Maximize2, Trash2, Image as ImageIcon } from 'lucide-react';
+import {
+  X,
+  MessageCircle,
+  Send,
+  Minimize2,
+  Maximize2,
+  Trash2,
+  Image as ImageIcon
+} from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  image?: string; // base64 image
+  image?: string;
 }
 
 interface AITutorChatProps {
@@ -27,6 +35,7 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
   ]);
   const [input, setInput] = useState('');
   const [image, setImage] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,15 +49,27 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const readImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
 
     const reader = new FileReader();
     reader.onloadend = () => {
       setImage(reader.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) readImageFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) readImageFile(file);
   };
 
   const sendMessage = async () => {
@@ -74,15 +95,13 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
         })
       });
 
-      if (!response.ok) throw new Error('Request failed');
-
       const data = await response.json();
 
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: data.content }
       ]);
-    } catch (err) {
+    } catch {
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: 'Sorry — something went wrong.' }
@@ -114,9 +133,9 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 z-50"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 z-50 flex items-center justify-center"
         >
-          <MessageCircle />
+          <MessageCircle size={24} className="relative top-[1px]" />
         </button>
       )}
 
@@ -125,7 +144,22 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
           className={`fixed top-0 right-0 h-screen bg-white shadow-xl flex flex-col z-40 border-l transition-all ${
             isExpanded ? 'w-full md:w-3/4 lg:w-2/3' : 'w-full md:w-1/2 lg:w-2/5'
           }`}
+          onDragOver={e => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
         >
+          {/* Drag Overlay */}
+          {isDragging && (
+            <div className="absolute inset-0 bg-blue-500/10 border-4 border-dashed border-blue-500 z-50 flex items-center justify-center pointer-events-none">
+              <p className="text-lg font-semibold text-blue-600">
+                Drop image to upload
+              </p>
+            </div>
+          )}
+
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between">
             <div>
@@ -148,7 +182,10 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-6">
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-3 ${
                     msg.role === 'user'
@@ -213,7 +250,7 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask something…"
+                placeholder="Ask something… or drop an image"
                 className="flex-1 border rounded-lg p-3 resize-none"
                 rows={2}
               />
