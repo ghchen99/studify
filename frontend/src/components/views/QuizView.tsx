@@ -148,24 +148,26 @@ export default function QuizView({ quizId, questions, onSubmit }: QuizViewProps)
       ))}
 
       {/* Sticky Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
-        <div className="max-w-3xl mx-auto p-4">
-          <Button
-            onClick={async () => {
-              setSubmitting(true);
-              await handleSubmit();
-              setSubmitting(false);
-            }}
-            className="w-full h-12 text-base"
-            disabled={submitting}
-          >
-            <LoadingButtonContent
-              loading={submitting}
-              loadingText="Submitting answers..."
-              idleIcon=""
-              idleText="Submit Quiz"
-            />
-          </Button>
+      <div className="sticky bottom-0">
+        <div className="max-w-3xl mx-auto px-4 pb-4">
+          <div className="bg-white border shadow-lg rounded-xl p-4">
+            <Button
+              onClick={async () => {
+                setSubmitting(true);
+                await handleSubmit();
+                setSubmitting(false);
+              }}
+              className="w-full h-12 text-base"
+              disabled={submitting}
+            >
+              <LoadingButtonContent
+                loading={submitting}
+                loadingText="Submitting answers..."
+                idleIcon=""
+                idleText="Submit Quiz"
+              />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
