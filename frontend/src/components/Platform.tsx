@@ -299,11 +299,11 @@ export default function Platform() {
                       <span className="text-xs text-gray-500 font-medium">
                         {plan.subtopic_count || 0} Lessons
                       </span>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => viewPlanDetails(planId!)}
-                        className="hover:bg-blue-600 hover:text-white transition-colors"
+                        className="text-sky-600 hover:bg-sky-50 hover:text-sky-700 transition-colors"
                       >
                         Open Course
                       </Button>
@@ -340,23 +340,24 @@ export default function Platform() {
                         <div className="font-medium">{sub.title}</div>
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
                       disabled={isGenerating}
                       className={`
-                        gap-2 transition-all
+                        gap-2 transition-all transform-gpu
                         ${isGenerated
-                          ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-400'
-                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300'}
+                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200'
+                          : 'bg-sky-50 text-sky-700 hover:bg-sky-100 active:bg-sky-200'}
                       `}
                     >
                       <LoadingButtonContent
                         loading={isGenerating}
-                        loadingText="Generating..."
-                        idleIcon={isGenerated ? "▶" : "✨"}
+                        loadingText="Loading..."
+                        idleIcon={isGenerated ? "👀" : "✨"}
                         idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
                       />
                     </Button>
+
 
                   </div>
                 );
