@@ -118,6 +118,11 @@ This follows Microsoft best practices for SPA → API security.
 #### Environment Variables (Backend)
 
 ```env
+COSMOS_DB_ENDPOINT=<endpoint-name>
+AZURE_OPENAI_ENDPOINT=https://<endpoint-name>.cognitiveservices.azure.com/
+AZURE_OPENAI_KEY=<api-key>
+DEPLOYMENT_NAME=<deployment-name>
+
 TENANT_ID=<your-tenant-id>
 CLIENT_ID=<backend-app-client-id>
 ```
