@@ -3,17 +3,12 @@ Learning Platform Facade
 Unified interface for all learning platform operations
 """
 import logging
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 
 from lesson_plans.lesson_plan_service import LessonPlanService
 from lessons.lesson_service import LessonService
 from quizzes.quiz_service import QuizService
-from tutor.tutor_service import TutorService
 from progress.progress_service import ProgressService
-
-from shared.models import (
-    LessonPlan, LessonPlanItem
-)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +25,6 @@ class LearningPlatform:
         self.lesson_plans = LessonPlanService()
         self.lessons = LessonService()
         self.quizzes = QuizService()
-        self.tutor = TutorService()
         self.progress = ProgressService()
     
     # ==================== LESSON PLAN WORKFLOWS ====================
@@ -68,7 +62,6 @@ class LearningPlatform:
         
         result = {
             "lessonPlan": lesson_plan,
-            "status": lesson_plan.status,
             "subtopics": [
                 {
                     "id": st.subtopicId,
@@ -81,43 +74,9 @@ class LearningPlatform:
             ]
         }
         
-        # Auto-approve if requested
-        if auto_approve:
-            approved_plan = self.approve_lesson_plan(user_id, lesson_plan.id)
-            result["lessonPlan"] = approved_plan
-            result["status"] = "approved"
-            result["progressInitialized"] = True
-        
         return result
     
-    def approve_lesson_plan(
-        self,
-        user_id: str,
-        plan_id: str,
-        modified_structure: Optional[List[LessonPlanItem]] = None
-    ) -> LessonPlan:
-        """
-        Approve a lesson plan and initialize progress tracking
-        
-        Args:
-            user_id: User identifier
-            plan_id: Lesson plan ID
-            modified_structure: Optional modified structure
-        
-        Returns:
-            Approved lesson plan
-        """
-        # Approve the plan
-        approved_plan = self.lesson_plans.approve_lesson_plan(
-            user_id=user_id,
-            plan_id=plan_id,
-            modified_structure=modified_structure
-        )
-        
-        # Initialize progress tracking
-        self.progress.initialize_progress(user_id, plan_id)
-        
-        return approved_plan
+    # Note: lesson-plan approval/status flow removed — plans are created without draft/approved states
     
     # ==================== LESSON WORKFLOWS ====================
     
@@ -273,7 +232,8 @@ class LearningPlatform:
                     "type": q.type,
                     "question": q.question,
                     "options": q.options if q.type == "multiple_choice" else None,
-                    "difficulty": q.difficulty
+                    "difficulty": q.difficulty,
+                    "maxMarks": q.maxMarks if getattr(q, 'maxMarks', None) is not None else None
                 }
                 for q in quiz.questions
             ],
@@ -316,7 +276,11 @@ class LearningPlatform:
         score_data = attempt.score
         trigger_tutor = score_data.get("triggerTutor", False)
         weak_concepts = score_data.get("weakConcepts", [])
-        
+
+        # Fetch the original quiz so we can echo the original question and correct answer
+        quiz = self.quizzes.get_quiz(user_id=user_id, quiz_id=quiz_id)
+        question_map = {q.questionId: q for q in (quiz.questions if quiz else [])}
+
         result = {
             "attemptId": attempt.id,
             "score": {
@@ -327,6 +291,9 @@ class LearningPlatform:
             "responses": [
                 {
                     "questionId": r.questionId,
+                    "originalQuestion": question_map.get(r.questionId).question if question_map.get(r.questionId) else None,
+                    "originalCorrectAnswer": question_map.get(r.questionId).correctAnswer if question_map.get(r.questionId) else None,
+                    "userAnswer": getattr(r, "userAnswer", None),
                     "isCorrect": r.isCorrect,
                     "marksAwarded": r.marksAwarded,
                     "maxMarks": r.maxMarks,
@@ -336,168 +303,9 @@ class LearningPlatform:
                 for r in attempt.responses
             ],
             "masteryLevel": progress.subtopicProgress.get(attempt.subtopicId, {}).get("masteryLevel"),
-            "nextAction": "tutor" if trigger_tutor else "continue",
+            "nextAction": "continue",
             "triggerTutor": trigger_tutor,
             "weakConcepts": weak_concepts
         }
         
         return result
-    
-    # ==================== TUTOR WORKFLOWS ====================
-    
-    def start_tutor_session(
-        self,
-        user_id: str,
-        trigger: str,
-        lesson_id: Optional[str] = None,
-        subtopic_id: Optional[str] = None,
-        question_id: Optional[str] = None,
-        concept: Optional[str] = None,
-        initial_message: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Start an AI tutor session
-        
-        Args:
-            user_id: User identifier
-            trigger: What triggered the session
-            lesson_id: Optional lesson context
-            subtopic_id: Optional subtopic context
-            question_id: Optional question context
-            concept: Optional concept being discussed
-            initial_message: Optional initial student message
-        
-        Returns:
-            Dict with session info and opening message
-        """
-        context = {
-            "lessonId": lesson_id,
-            "subtopicId": subtopic_id,
-            "questionId": question_id,
-            "concept": concept or "this topic"
-        }
-        
-        session = self.tutor.start_session(
-            user_id=user_id,
-            trigger=trigger,
-            context=context,
-            initial_message=initial_message
-        )
-        
-        # Get the tutor's opening message
-        opening_msg = session.conversation[-1] if session.conversation else None
-        
-        return {
-            "sessionId": session.id,
-            "message": opening_msg.get("content") if opening_msg else "",
-            "context": context
-        }
-    
-    def send_tutor_message(
-        self,
-        user_id: str,
-        session_id: str,
-        message: str
-    ) -> Dict[str, Any]:
-        """
-        Send a message in tutor session
-        
-        Returns:
-            Dict with tutor's response
-        """
-        session = self.tutor.send_message(
-            user_id=user_id,
-            session_id=session_id,
-            message=message
-        )
-        
-        # Get the latest tutor response
-        tutor_msg = session.conversation[-1] if session.conversation else None
-        
-        return {
-            "sessionId": session.id,
-            "message": tutor_msg.get("content") if tutor_msg else "",
-            "timestamp": tutor_msg.get("timestamp") if tutor_msg else None
-        }
-    
-    def end_tutor_session(self, user_id: str, session_id: str):
-        """End a tutor session"""
-        return self.tutor.resolve_session(user_id, session_id)
-    
-    # ==================== PROGRESS & ANALYTICS ====================
-    
-    def get_dashboard(self, user_id: str) -> Dict[str, Any]:
-        """
-        Get complete dashboard for user
-        
-        Returns:
-            Dict with all progress, plans, and recommendations
-        """
-        # Get all lesson plans
-        plans = self.lesson_plans.get_user_lesson_plans(user_id)
-        
-        # Get progress summary
-        progress_summary = self.progress.get_progress_summary(user_id)
-        
-        # Get active tutor sessions
-        active_sessions = self.tutor.get_user_sessions(user_id, resolved=False)
-        
-        return {
-            "user": {
-                "totalStudyTime": progress_summary.get("totalStudyTime"),
-                "overallProgress": progress_summary.get("overallPercentComplete"),
-                "averageScore": progress_summary.get("overallAverageScore")
-            },
-            "lessonPlans": [
-                {
-                    "id": plan.id,
-                    "subject": plan.subject,
-                    "topic": plan.topic,
-                    "status": plan.status,
-                    "subtopicCount": len(plan.structure),
-                    "progress": next(
-                            (p for p in progress_summary.get("lessonPlans", [])
-                             if p["lessonPlanId"] == plan.id),
-                            {}
-                        )
-                }
-                for plan in plans
-            ],
-            "activeTutorSessions": len(active_sessions),
-            "recommendations": self._generate_recommendations(user_id, plans, progress_summary)
-        }
-    
-    def _generate_recommendations(
-        self,
-        user_id: str,
-        plans: List[LessonPlan],
-        progress_summary: Dict[str, Any]
-    ) -> List[str]:
-        """Generate personalized recommendations"""
-        recommendations = []
-        
-        # Check for incomplete lesson plans
-        for plan_prog in progress_summary.get("lessonPlans", []):
-            if plan_prog["percentComplete"] < 100:
-                plan = next((p for p in plans if p.id == plan_prog["lessonPlanId"]), None)
-                if plan:
-                    recommendations.append(
-                        f"Continue {plan.subject} - {plan.topic} "
-                        f"({plan_prog['percentComplete']:.0f}% complete)"
-                    )
-        
-        # Check for low scores
-        for plan_prog in progress_summary.get("lessonPlans", []):
-            if 0 < plan_prog["averageScore"] < 60:
-                plan = next((p for p in plans if p.id == plan_prog["lessonPlanId"]), None)
-                if plan:
-                    recommendations.append(
-                        f"Review {plan.subject} - {plan.topic} "
-                        f"(average score: {plan_prog['averageScore']:.0f}%)"
-                    )
-        
-        # Suggest new topics if doing well
-        if progress_summary.get("overallAverageScore", 0) > 70:
-            recommendations.append("Start a new topic - you're doing great!")
-        
-        return recommendations[:3]  # Top 3 recommendations

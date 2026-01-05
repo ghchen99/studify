@@ -4,15 +4,15 @@ import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 // Import Views
 import LessonView from './views/LessonView';
 import QuizView from './views/QuizView';
-import TutorView from './views/TutorView';
 import CreateCourseView from './views/CreateCourseView';
+import QuizResultView from './views/QuizResultView';
 
-// 1. Added 'PLAN_DETAILS' to the state type
-type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'TUTOR' | 'CREATE_COURSE' | 'PLAN_DETAILS';
+type AppState = 'DASHBOARD' | 'LESSON' | 'QUIZ' | 'RESULT' | 'CREATE_COURSE' | 'PLAN_DETAILS';
 
 export default function Platform() {
   const { instance, accounts } = useMsal();
@@ -30,7 +30,11 @@ export default function Platform() {
   const [activeLesson, setActiveLesson] = useState<ActiveLesson | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-  const [tutorSessionId, setTutorSessionId] = useState<string | null>(null);
+  
+  
+  // Track which lessons have been generated and which is currently generating
+  const [generatedLessons, setGeneratedLessons] = useState<Set<string>>(new Set());
+  const [generatingLessonId, setGeneratingLessonId] = useState<string | null>(null);
 
   useEffect(() => {
     if (accounts.length > 0 && !instance.getActiveAccount()) {
@@ -111,25 +115,51 @@ export default function Platform() {
     });
   };
 
-  // 2. Modified to set view to 'PLAN_DETAILS'
   const viewPlanDetails = async (planId: string) => {
     const details = await callApi(`/api/lesson-plans/details/${planId}?user_id=${account?.localAccountId}`);
     if (details) {
       setActivePlan(details);
+      
+      // Mark subtopics that already have an associated lessonId as generated
+      const generated = new Set<string>();
+      details.subtopics?.forEach((sub: any) => {
+        if (sub.lessonId) generated.add(sub.id);
+      });
+      setGeneratedLessons(generated);
+      
       setView('PLAN_DETAILS');
     }
   };
 
   const startSubtopic = async (planId: string, subtopicId: string) => {
+    const isGenerated = generatedLessons.has(subtopicId);
+    
+    if (!isGenerated) {
+      setGeneratingLessonId(subtopicId);
+    }
+    
     const data = await callApi('/api/lessons/start', 'POST', {
       user_id: account?.localAccountId,
       lesson_plan_id: planId,
       subtopic_id: subtopicId
     });
+    
     if (data) {
+      setGeneratedLessons(prev => new Set([...prev, subtopicId]));
+      // Persist lessonId back to lesson plan so frontend and backend agree
+      try {
+        await callApi(`/api/lesson-plans/${planId}/subtopics/${subtopicId}/mark-generated`, 'POST', {
+          user_id: account?.localAccountId,
+          lessonId: data.lesson_id || data.lessonId || null
+        });
+      } catch (err) {
+        console.warn('Failed to mark subtopic as generated on server', err);
+      }
       setActiveLesson(data);
       setView('LESSON');
     }
+    
+    setGeneratingLessonId(null);
   };
 
   const expandLessonSection = async (sectionId: string) => {
@@ -155,11 +185,19 @@ export default function Platform() {
         lesson_id: lessonId,
         subtopic_id: activeLesson?.subtopic,
         difficulty: 'mixed',
-        question_count: 3
+        question_count: 5
       });
       
       if (quizData) {
-        setActiveQuiz({ id: quizData.quiz_id, questions: quizData.questions });
+            const normalized = (quizData.questions || []).map((q: any) => ({
+              questionId: q.questionId || q.question_id,
+              type: q.type,
+              question: q.question,
+              options: q.options,
+              difficulty: q.difficulty,
+              maxMarks: q.maxMarks ?? q.max_marks ?? (q.max ? q.max : undefined)
+            }));
+            setActiveQuiz({ id: quizData.quiz_id, questions: normalized });
         setView('QUIZ');
       }
     }
@@ -178,35 +216,7 @@ export default function Platform() {
     }
   };
 
-  const startTutor = async (concept: string) => {
-    const data = await callApi('/api/tutor/start', 'POST', {
-      user_id: account?.localAccountId,
-      trigger: 'manual',
-      lesson_id: activeLesson?.lesson_id,
-      concept: concept,
-      initial_message: `I'm struggling with ${concept}`
-    });
-    
-    if (data) {
-      setTutorSessionId(data.session_id);
-      setView('TUTOR');
-    }
-  };
-
-  const tutorMessage = async (sessionId: string, message: string) => {
-    const res = await callApi('/api/tutor/message', 'POST', {
-      user_id: account?.localAccountId,
-      session_id: sessionId,
-      message
-    });
-    return res?.message || "I received your message."; 
-  };
-
-  const endTutor = async (sessionId: string) => {
-      await callApi(`/api/tutor/end/${account?.localAccountId}/${sessionId}`, 'POST');
-      setView('DASHBOARD');
-      loadDashboard();
-  };
+  
 
   if (!account) return <div>Please log in</div>;
 
@@ -248,7 +258,6 @@ export default function Platform() {
               </Button>
           </div>
           
-          {/* UPDATED: Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
              {lessonPlans.length === 0 && !loading && (
                 <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
@@ -271,11 +280,7 @@ export default function Platform() {
                    className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
                  >
                    <div className="mb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] uppercase font-semibold text-gray-400">
-                          {plan.status}
-                        </span>
-                      </div>
+                      
                       <h3 className="font-bold text-lg leading-tight text-gray-900">
                         {plan.subject}
                       </h3>
@@ -283,7 +288,6 @@ export default function Platform() {
                         {plan.topic}
                       </p>
                       
-                      {/* ADDED: Description with line-clamping to keep tiles uniform */}
                       {plan.description && (
                         <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
                           "{plan.description}"
@@ -291,16 +295,15 @@ export default function Platform() {
                       )}
                    </div>
 
-                   {/* Pushes content to bottom so buttons align across the row */}
                    <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                       <span className="text-xs text-gray-500 font-medium">
                         {plan.subtopic_count || 0} Lessons
                       </span>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => viewPlanDetails(planId!)}
-                        className="hover:bg-blue-600 hover:text-white transition-colors"
+                        className="text-sky-600 hover:bg-sky-50 hover:text-sky-700 transition-colors"
                       >
                         Open Course
                       </Button>
@@ -312,7 +315,7 @@ export default function Platform() {
         </div>
       )}
 
-      {/* 3. NEW PLAN DETAILS VIEW */}
+      {/* PLAN DETAILS VIEW */}
       {view === 'PLAN_DETAILS' && activePlan && (
         <div className="space-y-6">
           <div className="border-b pb-4">
@@ -323,19 +326,42 @@ export default function Platform() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Course Curriculum</h3>
             <div className="grid gap-3">
-              {activePlan.subtopics?.map((sub, index) => (
-                <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
-                      {index + 1}
-                    </span>
-                    <span className="font-medium">{sub.title}</span>
+              {activePlan.subtopics?.map((sub, index) => {
+                const isGenerated = generatedLessons.has(sub.id);
+                const isGenerating = generatingLessonId === sub.id;
+                
+                return (
+                  <div key={sub.id} className="flex justify-between items-center bg-white border p-4 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <div className="font-medium">{sub.title}</div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}
+                      disabled={isGenerating}
+                      className={`
+                        gap-2 transition-all transform-gpu
+                        ${isGenerated
+                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200'
+                          : 'bg-sky-50 text-sky-700 hover:bg-sky-100 active:bg-sky-200'}
+                      `}
+                    >
+                      <LoadingButtonContent
+                        loading={isGenerating}
+                        loadingText="Loading..."
+                        idleIcon={isGenerated ? "👀" : "✨"}
+                        idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
+                      />
+                    </Button>
+
+
                   </div>
-                  <Button onClick={() => startSubtopic(activePlan.lesson_plan_id!, sub.id)}>
-                    Start Lesson
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -366,38 +392,16 @@ export default function Platform() {
 
       {/* RESULT VIEW */}
       {view === 'RESULT' && quizResult && (
-        <div className="text-center space-y-6 py-10">
-            <h2 className="text-3xl font-bold">Quiz Complete!</h2>
-            <div className="text-6xl font-bold text-blue-600">{quizResult.score.percentage}%</div>
-            <p className="text-gray-600">You scored {quizResult.score.marksAwarded} / {quizResult.score.maxMarks}</p>
-            
-            {quizResult.trigger_tutor ? (
-                <div className="bg-orange-50 p-6 rounded border border-orange-200 inline-block text-left max-w-lg">
-                    <h3 className="font-bold text-orange-800 mb-2">Needs Improvement</h3>
-                    <p className="mb-4">It looks like you struggled with: </p>
-                    <ul className="list-disc list-inside mb-4">
-                        {quizResult.weak_concepts.map((c, i) => <li key={i}>{c.substring(0, 50)}...</li>)}
-                    </ul>
-                    <Button className="w-full" onClick={() => startTutor(quizResult.weak_concepts[0])}>
-                        Chat with AI Tutor
-                    </Button>
-                </div>
-            ) : (
-                <Button size="lg" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
-                    Return to Dashboard
-                </Button>
-            )}
-        </div>
-      )}
-
-      {/* TUTOR VIEW */}
-      {view === 'TUTOR' && tutorSessionId && (
-        <TutorView 
-            sessionId={tutorSessionId}
-            onSendMessage={tutorMessage}
-            onEndSession={endTutor}
+        <QuizResultView
+          result={quizResult}
+          onReturnDashboard={() => {
+            setView('DASHBOARD');
+            loadDashboard();
+          }}
         />
       )}
+
+      {/* Tutor feature removed */}
     </div>
   );
 }

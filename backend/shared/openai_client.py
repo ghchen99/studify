@@ -1,6 +1,6 @@
 import os
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from openai import OpenAI
 from pprint import pprint
@@ -84,7 +84,7 @@ try:
         subject=llm_plan.subject,
         topic=llm_plan.topic,
         status="draft",
-        aiGeneratedAt=datetime.utcnow(),
+        aiGeneratedAt=datetime.now(timezone.utc),
         structure=[
             LessonPlanItem(
                 subtopicId=deterministic_id(lesson_plan_id, sub.title),

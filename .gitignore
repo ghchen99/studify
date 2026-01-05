@@ -206,3 +206,6 @@ marimo/_lsp/
 __marimo__/
 
 node_modules/
+
+snap.py
+flattened_repo.txt

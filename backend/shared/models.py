@@ -16,6 +16,9 @@ class LessonPlanItem(BaseModel):
     order: int
     estimatedDuration: Optional[int]
     concepts: List[str] = []
+    status: str = "not_started"
+    lessonId: Optional[str] = None
+    generatedAt: Optional[datetime] = None
 
 class LessonPlan(BaseModel):
     id: str
@@ -24,7 +27,6 @@ class LessonPlan(BaseModel):
     subject: str
     topic: str
     description: Optional[str] = None  # ADD THIS LINE
-    status: Optional[str] = None
     structure: List[LessonPlanItem] = []
     aiGeneratedAt: Optional[datetime] = None
     approvedAt: Optional[datetime] = None
@@ -48,7 +50,7 @@ class Lesson(BaseModel):
     subtopic: Optional[str] = None
     content: Dict[str, Any]
     mediaAssets: List[Dict[str, Any]] = []
-    status: Optional[str] = None
+    status: str = "not_started"
     completedAt: Optional[datetime] = None
 
 
@@ -59,6 +61,7 @@ class Question(BaseModel):
     options: Optional[List[str]] = None
     correctAnswer: Optional[Any] = None
     markScheme: Optional[List[str]] = None
+    maxMarks: Optional[float] = None
     difficulty: Optional[str] = None
 
 class Quiz(BaseModel):
@@ -92,15 +95,7 @@ class QuizAttempt(BaseModel):
     score: Optional[Dict[str, Any]] = None
     completedAt: Optional[datetime]
 
-class TutorSession(BaseModel):
-    id: str
-    userId: str
-    type: str = "tutorSession"
-    trigger: Optional[str] = None
-    context: Optional[Dict[str, Any]]
-    conversation: Optional[List[Dict[str, Any]]] = []
-    resolved: Optional[bool] = False
-    createdAt: Optional[datetime]
+# TutorSession removed
 
 class Progress(BaseModel):
     id: str
@@ -140,7 +135,6 @@ class LessonPlanResponse(BaseModel):
             "subject": "Math",
             "topic": "Algebra",
             "description": "An introduction to algebraic concepts.",
-            "status": "draft",
             "subtopics": [
                 {
                     "id": "sub1",
@@ -150,7 +144,6 @@ class LessonPlanResponse(BaseModel):
                     "concepts": ["variables", "constants", "expressions"]
                 }
             ],
-            "progress_initialized": False
         }
     })
     
@@ -158,22 +151,10 @@ class LessonPlanResponse(BaseModel):
     subject: str
     topic: str
     description: str
-    status: str
     subtopics: List[Dict[str, Any]]
-    progress_initialized: bool = False
 
 
-class ApproveLessonPlanRequest(BaseModel):
-    """Request to approve a lesson plan"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "plan_id": "abc123"
-        }
-    })
-    
-    user_id: str
-    plan_id: str
+# Note: ApproveLessonPlanRequest removed; lesson plan status/progress flag removed
 
 
 class StartLessonRequest(BaseModel):
@@ -342,17 +323,11 @@ class QuizSubmissionRequest(BaseModel):
                 },
                 {
                     "questionId": "q2",
-                    "userAnswer": "Variables represent values that can change.",
-                    "userBulletPoints": None
+                    "userAnswer": "Variables represent values that can change."
                 },
                 {
                     "questionId": "q3",
-                    "userAnswer": None,
-                    "userBulletPoints": [
-                        "Variables can store different values",
-                        "They are represented by letters",
-                        "Used in equations and expressions"
-                    ]
+                    "userAnswer": "Variables can store different values. They are represented by letters and used in equations."
                 }
             ]
         }
@@ -362,7 +337,7 @@ class QuizSubmissionRequest(BaseModel):
     quiz_id: str
     responses: List[Dict[str, Any]] = Field(
         ...,
-        description="List of responses with questionId and userAnswer/userBulletPoints"
+        description="List of responses with questionId and userAnswer"
     )
 
 
@@ -402,59 +377,7 @@ class QuizResultResponse(BaseModel):
     weak_concepts: List[str]
 
 
-class StartTutorRequest(BaseModel):
-    """Request to start a tutor session"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "trigger": "quiz_struggle",
-            "lesson_id": "lesson123",
-            "subtopic_id": "sub1",
-            "concept": "variables",
-            "initial_message": "I'm confused about how variables work"
-        }
-    })
-    
-    user_id: str
-    trigger: str = Field(..., description="What triggered the session (e.g., 'quiz_struggle', 'manual')")
-    lesson_id: Optional[str] = None
-    subtopic_id: Optional[str] = None
-    question_id: Optional[str] = None
-    concept: Optional[str] = None
-    initial_message: Optional[str] = None
-
-
-class TutorResponse(BaseModel):
-    """Response from tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "session_id": "session123",
-            "message": "I understand you're finding variables confusing. Let's break it down...",
-            "context": {
-                "lesson_id": "lesson123",
-                "concept": "variables"
-            }
-        }
-    })
-    
-    session_id: str
-    message: str
-    context: Dict[str, Any]
-
-
-class SendTutorMessageRequest(BaseModel):
-    """Request to send message to tutor"""
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "user_id": "alice123",
-            "session_id": "session123",
-            "message": "Can you give me an example?"
-        }
-    })
-    
-    user_id: str
-    session_id: str
-    message: str
+# Tutor request/response models removed
 
 
 class DashboardResponse(BaseModel):
@@ -479,7 +402,7 @@ class DashboardResponse(BaseModel):
                     }
                 }
             ],
-            "active_tutor_sessions": 1,
+            
             "recommendations": [
                 "Continue Math - Algebra (25% complete)",
                 "Review Biology - Cells (average score: 55%)"
@@ -489,5 +412,5 @@ class DashboardResponse(BaseModel):
     
     user: Dict[str, Any]
     lesson_plans: List[Dict[str, Any]]
-    active_tutor_sessions: int
+    # active_tutor_sessions removed
     recommendations: List[str]

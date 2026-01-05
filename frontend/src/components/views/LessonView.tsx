@@ -2,9 +2,15 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ActiveLesson, LessonSection } from '@/types/api';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
 interface LessonViewProps {
   lesson: ActiveLesson;
@@ -23,8 +29,10 @@ export default function LessonView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [expandedDialogOpen, setExpandedDialogOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const currentSection = sections[currentIndex];
+  const progress = ((currentIndex + 1) / sections.length) * 100;
 
   const handleExpand = async (sectionId: string) => {
     setLoadingId(sectionId);
@@ -43,53 +51,78 @@ export default function LessonView({
   };
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 pb-24 space-y-10">
       {/* Lesson Header */}
-      <div className="bg-white p-6 rounded shadow-sm border">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {lesson.subtopic}
-        </h2>
-        <p className="text-gray-600 mt-2">
-          {lesson.introduction}
-        </p>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 space-y-4">
+        <div className="text-3xl font-bold tracking-tight text-gray-900">
+          <MarkdownRenderer content={lesson.subtopic} />
+        </div>
+
+        <div className="text-gray-600 leading-relaxed">
+          <MarkdownRenderer content={lesson.introduction} />
+        </div>
+
+        {/* Progress */}
+        <div className="pt-4">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-sky-500 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Section {currentIndex + 1} of {sections.length}
+          </p>
+        </div>
       </div>
 
       {/* Section Card */}
-      <div className="bg-gray-50 p-6 rounded border space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-xl">
-            {currentSection.title}
-          </h3>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="h-8 w-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold border border-gray-200">
+              {currentIndex + 1}
+            </span>
+            <h3 className="text-xl font-semibold text-gray-900">
+              {currentSection.title}
+            </h3>
+          </div>
+
           <span className="text-sm text-gray-500">
-            Section {currentIndex + 1} of {sections.length}
+            {currentIndex + 1} / {sections.length}
           </span>
         </div>
 
         {/* Section Content */}
-        <MarkdownRenderer content={currentSection.content} />
+        <div className="prose max-w-none text-gray-700">
+          <MarkdownRenderer content={currentSection.content} />
+        </div>
 
         {/* Key Points */}
-        {currentSection.keyPoints?.length > 0 && (
-          <ul className="list-disc list-inside bg-blue-50 p-4 rounded">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+          <p className="text-sm font-semibold text-gray-900 mb-2">
+            Key Takeaways
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
             {currentSection.keyPoints.map((kp, i) => (
-              <li key={i} className="text-sm text-blue-800">
-                {kp}
+              <li key={i}>
+                <MarkdownRenderer content={kp} />
               </li>
             ))}
           </ul>
-        )}
+        </div>
 
-        {/* Expand Button */}
-        <div className="flex gap-2">
+        {/* AI Deep Dive */}
+        <div className="flex">
           {currentSection.expanded ? (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setExpandedDialogOpen(true)}
-              className="gap-2"
+              className="gap-2 text-sky-700 border-sky-200 hover:bg-sky-50"
             >
-              <span className="text-lg">📖</span>
-              View Detailed Explanation
+              📖 View Detailed Explanation
             </Button>
           ) : (
             <Button
@@ -97,17 +130,16 @@ export default function LessonView({
               size="sm"
               onClick={() => handleExpand(currentSection.sectionId)}
               disabled={loadingId === currentSection.sectionId}
-              className="gap-2"
+              className="gap-2 text-sky-700 border-sky-200 hover:bg-sky-50"
             >
               {loadingId === currentSection.sectionId ? (
                 <>
                   <span className="animate-spin">⏳</span>
-                  Generating...
+                  Generating…
                 </>
               ) : (
                 <>
-                  <span className="text-lg">✨</span>
-                  Get AI Deep Dive
+                  ✨ Get AI Deep Dive
                 </>
               )}
             </Button>
@@ -117,19 +149,20 @@ export default function LessonView({
 
       {/* Expanded Content Modal */}
       <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="text-2xl text-gray-900">
               Deep Dive: {currentSection.title}
             </DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none mt-4">
+
+          <div className="prose max-w-none mt-6 text-gray-700">
             <MarkdownRenderer content={currentSection.expanded || ''} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Pagination Controls */}
+      {/* Navigation */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
@@ -150,11 +183,21 @@ export default function LessonView({
       {/* Complete Lesson */}
       {currentIndex === sections.length - 1 && (
         <Button
-          onClick={() => onComplete(lesson.lesson_id)}
-          className="w-full"
           size="lg"
+          className="w-full h-12"
+          disabled={completing}
+          onClick={async () => {
+            setCompleting(true);
+            await onComplete(lesson.lesson_id);
+            setCompleting(false);
+          }}
         >
-          Complete Lesson & Start Quiz
+          <LoadingButtonContent
+            loading={completing}
+            loadingText="Preparing quiz..."
+            idleIcon=""
+            idleText="Complete Lesson & Start Quiz"
+          />
         </Button>
       )}
     </div>

@@ -3,20 +3,20 @@ FastAPI Learning Platform API
 RESTful API for the AI-powered learning platform
 """
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, status, Depends, APIRouter
-from auth import verify_access_token
+from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, Body
+from users.auth import verify_access_token
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from learning_platform import LearningPlatform
 from shared.models import (
     CreateLessonPlanRequest, LessonPlanResponse,
-    ApproveLessonPlanRequest, LessonResponse,
+    LessonResponse,
     StartLessonRequest, ExpandSectionRequest, ExpandedSectionResponse,
     CompleteLessonRequest, CompletionResponse, QuizResponse,
-    StartQuizRequest, QuizSubmissionRequest, QuizResultResponse, TutorResponse,
-    StartTutorRequest, SendTutorMessageRequest, DashboardResponse)
+    StartQuizRequest, QuizSubmissionRequest, QuizResultResponse
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -44,7 +44,7 @@ app.add_middleware(
 
 api_router = APIRouter(
     prefix="/api",
-    # dependencies=[Depends(verify_access_token)]
+    dependencies=[Depends(verify_access_token)]
 )
 
 # Initialize platform
@@ -79,10 +79,8 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
             lesson_plan_id=result["lessonPlan"].id,
             subject=result["lessonPlan"].subject,
             topic=result["lessonPlan"].topic,
-            description=result["lessonPlan"].description,  # ADD THIS LINE
-            status=result["status"],
+            description=result["lessonPlan"].description,
             subtopics=result["subtopics"],
-            progress_initialized=result.get("progressInitialized", False)
         )
     except Exception as e:
         logger.error(f"Error creating lesson plan: {e}")
@@ -92,40 +90,7 @@ async def create_lesson_plan(request: CreateLessonPlanRequest):
         )
 
 
-@api_router.post(
-    "/lesson-plans/approve",
-    response_model=Dict[str, str],
-    summary="Approve a lesson plan",
-    description="Approve a lesson plan and initialize progress tracking"
-)
-async def approve_lesson_plan(request: ApproveLessonPlanRequest):
-    """
-    Approve a lesson plan and initialize progress tracking.
-    
-    Once approved, the student can start working through the lessons.
-    """
-    try:
-        approved_plan = platform.approve_lesson_plan(
-            user_id=request.user_id,
-            plan_id=request.plan_id
-        )
-        
-        return {
-            "status": "approved",
-            "lesson_plan_id": approved_plan.id,
-            "message": "Lesson plan approved and progress initialized"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error approving lesson plan: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to approve lesson plan: {str(e)}"
-        )
+# Note: approve endpoint removed; lesson-plan approval/status handled differently now
 
 
 @api_router.get(
@@ -144,7 +109,7 @@ async def get_lesson_plans(user_id: str):
                 "subject": plan.subject,
                 "topic": plan.topic,
                 "description": plan.description, 
-                "status": plan.status,
+                
                 "subtopic_count": len(plan.structure),
                 "created_at": plan.aiGeneratedAt.isoformat() if plan.aiGeneratedAt else None
             }
@@ -184,28 +149,25 @@ async def get_lesson_plan_details(plan_id: str, user_id: str):
                 detail=f"Lesson plan {plan_id} not found"
             )
         
-        # Check if progress has been initialized
-        progress = platform.progress.get_progress(user_id, plan_id)
-        progress_initialized = progress is not None
-        
         return LessonPlanResponse(
             lesson_plan_id=plan.id,
             subject=plan.subject,
             topic=plan.topic,
             description=plan.description,
-            status=plan.status,
-            subtopics=[
-                {
-                    "id": st.subtopicId,
-                    "title": st.title,
-                    "order": st.order,
-                    "duration": st.estimatedDuration,
-                    "concepts": st.concepts
-                }
-                for st in plan.structure
-            ],
-            progress_initialized=progress_initialized
+                subtopics=[
+                    {
+                        "id": st.subtopicId,
+                        "title": st.title,
+                        "order": st.order,
+                        "duration": st.estimatedDuration,
+                        "concepts": st.concepts,
+                        "lessonId": st.lessonId,
+                        "generatedAt": st.generatedAt.isoformat() if st.generatedAt else None
+                    }
+                    for st in plan.structure
+                ],
         )
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -214,6 +176,49 @@ async def get_lesson_plan_details(plan_id: str, user_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve lesson plan details: {str(e)}"
         )
+
+
+@api_router.post(
+    "/lesson-plans/{plan_id}/subtopics/{subtopic_id}/mark-generated",
+    summary="Mark subtopic as generated",
+    description="Record that a lesson has been generated for a subtopic"
+)
+async def mark_subtopic_generated(plan_id: str, subtopic_id: str, payload: Dict[str, str] = Body(...)):
+    """
+    Mark a subtopic within a lesson plan as having an associated generated lesson.
+
+    Expects JSON body: { "user_id": "<user>", "lessonId": "<lesson-id>" }
+    """
+    user_id = payload.get("user_id")
+    lesson_id = payload.get("lessonId")
+    if not user_id or not lesson_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_id and lessonId required")
+    try:
+        plan = platform.lesson_plans.get_lesson_plan(user_id, plan_id)
+        if not plan:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson plan not found")
+
+        # find the subtopic and set lessonId/generatedAt
+        found_item = None
+        for item in plan.structure:
+            if item.subtopicId == subtopic_id:
+                item.lessonId = lesson_id
+                item.generatedAt = datetime.now(timezone.utc)
+                found_item = item
+                break
+
+        if not found_item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtopic not found")
+
+        # persist updated structure
+        updated = platform.lesson_plans.update_lesson_plan_structure(user_id, plan_id, plan.structure)
+
+        return {"ok": True, "lessonId": lesson_id, "generatedAt": found_item.generatedAt.isoformat()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking subtopic as generated: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to mark generated: {str(e)}")
 
 # ==================== LESSON ENDPOINTS ====================
 
@@ -357,9 +362,22 @@ async def start_quiz(request: StartQuizRequest):
             question_count=request.question_count
         )
         
+        # Ensure `maxMarks` is present on each question for the frontend
+        questions_with_marks = [
+            {
+                "questionId": q.get("questionId") or q.get("question_id"),
+                "type": q.get("type"),
+                "question": q.get("question"),
+                "options": q.get("options") if q.get("type") == "multiple_choice" else None,
+                "difficulty": q.get("difficulty"),
+                "maxMarks": q.get("maxMarks") if q.get("maxMarks") is not None else q.get("max_marks") if q.get("max_marks") is not None else q.get("max") if q.get("max") is not None else None
+            }
+            for q in (result.get("questions") or [])
+        ]
+
         return QuizResponse(
             quiz_id=result["quizId"],
-            questions=result["questions"],
+            questions=questions_with_marks,
             total_questions=result["totalQuestions"]
         )
     except ValueError as e:
@@ -388,7 +406,6 @@ async def submit_quiz(request: QuizSubmissionRequest):
     The system will:
     - Grade multiple choice questions automatically
     - Use AI to grade written answers based on mark schemes
-    - Convert bullet points to coherent answers
     - Provide detailed feedback on each response
     - Calculate mastery level
     - Determine if tutoring is needed
@@ -422,186 +439,6 @@ async def submit_quiz(request: QuizSubmissionRequest):
         )
 
 
-# ==================== TUTOR ENDPOINTS ====================
-
-@api_router.post(
-    "/tutor/start",
-    response_model=TutorResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Start a tutor session",
-    description="Start an AI tutoring session for personalized help"
-)
-async def start_tutor_session(request: StartTutorRequest):
-    """
-    Start a one-on-one AI tutoring session.
-    
-    The AI tutor will:
-    - Use Socratic method to guide learning
-    - Provide hints rather than direct answers
-    - Use analogies and examples
-    - Be patient and encouraging
-    """
-    try:
-        result = platform.start_tutor_session(
-            user_id=request.user_id,
-            trigger=request.trigger,
-            lesson_id=request.lesson_id,
-            subtopic_id=request.subtopic_id,
-            question_id=request.question_id,
-            concept=request.concept,
-            initial_message=request.initial_message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context=result["context"]
-        )
-    except Exception as e:
-        logger.error(f"Error starting tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start tutor session: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/message",
-    response_model=TutorResponse,
-    summary="Send message to tutor",
-    description="Send a message in an active tutor session"
-)
-async def send_tutor_message(request: SendTutorMessageRequest):
-    """
-    Send a message to the AI tutor in an active session.
-    
-    The tutor maintains conversation context and provides personalized guidance.
-    """
-    try:
-        result = platform.send_tutor_message(
-            user_id=request.user_id,
-            session_id=request.session_id,
-            message=request.message
-        )
-        
-        return TutorResponse(
-            session_id=result["sessionId"],
-            message=result["message"],
-            context={}
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error sending tutor message: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {str(e)}"
-        )
-
-
-@api_router.post(
-    "/tutor/end/{user_id}/{session_id}",
-    response_model=Dict[str, str],
-    summary="End tutor session",
-    description="Mark a tutor session as resolved"
-)
-async def end_tutor_session(user_id: str, session_id: str):
-    """
-    End an active tutoring session.
-    """
-    try:
-        platform.end_tutor_session(user_id, session_id)
-        return {
-            "status": "resolved",
-            "session_id": session_id,
-            "message": "Tutor session ended successfully"
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Error ending tutor session: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to end session: {str(e)}"
-        )
-
-
-# ==================== PROGRESS & DASHBOARD ENDPOINTS ====================
-
-@api_router.get(
-    "/dashboard/{user_id}",
-    response_model=DashboardResponse,
-    summary="Get user dashboard",
-    description="Get comprehensive dashboard with progress, plans, and recommendations"
-)
-async def get_dashboard(user_id: str):
-    """
-    Get the complete user dashboard including:
-    - Overall progress and statistics
-    - All lesson plans with their progress
-    - Active tutor sessions
-    - Personalized recommendations
-    """
-    try:
-        result = platform.get_dashboard(user_id)
-        
-        return DashboardResponse(
-            user=result["user"],
-            lesson_plans=result["lessonPlans"],
-            active_tutor_sessions=result["activeTutorSessions"],
-            recommendations=result["recommendations"]
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving dashboard: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve dashboard: {str(e)}"
-        )
-
-
-@api_router.get(
-    "/progress/{user_id}/{lesson_plan_id}",
-    response_model=Dict[str, Any],
-    summary="Get progress for a lesson plan",
-    description="Get detailed progress for a specific lesson plan"
-)
-async def get_progress(user_id: str, lesson_plan_id: str):
-    """
-    Get detailed progress information for a specific lesson plan.
-    
-    Includes subtopic-by-subtopic progress, scores, and mastery levels.
-    """
-    try:
-        progress = platform.progress.get_progress(user_id, lesson_plan_id)
-        
-        if not progress:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Progress not found"
-            )
-        
-        return {
-            "lesson_plan_id": progress.lessonPlanId,
-            "subtopic_progress": progress.subtopicProgress,
-            "overall_progress": progress.overallProgress,
-            "updated_at": progress.updatedAt.isoformat() if progress.updatedAt else None
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error retrieving progress: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve progress: {str(e)}"
-        )
-
-
 # ==================== HEALTH CHECK ====================
 
 @app.get(
@@ -613,7 +450,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "1.0.0"
     }
 
@@ -631,10 +468,7 @@ async def root():
         "endpoints": {
             "lesson_plans": "/api/lesson-plans",
             "lessons": "/api/lessons",
-            "quizzes": "/api/quizzes",
-            "tutor": "/api/tutor",
-            "dashboard": "/api/dashboard/{user_id}",
-            "progress": "/api/progress/{user_id}/{lesson_plan_id}"
+            "quizzes": "/api/quizzes"
         }
     }
 

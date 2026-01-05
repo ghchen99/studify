@@ -1,9 +1,13 @@
-'use client';
-
+// src/app/layout.tsx
 import './globals.css';
-import { MsalProvider } from '@azure/msal-react';
-import { msalInstance } from '@/lib/msalInstance';
+import type { Metadata } from 'next';
 import { ReactNode } from 'react';
+import ClientLayout from './ClientLayout';
+
+export const metadata: Metadata = {
+  title: 'gpt-edu',
+  description: 'AI-powered learning platform',
+};
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -12,13 +16,8 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className="bg-white text-gray-900 min-h-screen font-sans">
-        {/* MSAL Provider wraps the whole app */}
-        <MsalProvider instance={msalInstance}>
-          <main className="container mx-auto p-4">
-            {children}
-          </main>
-        </MsalProvider>
+      <body className="bg-white text-gray-900 font-sans overflow-hidden">
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

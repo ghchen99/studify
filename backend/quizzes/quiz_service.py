@@ -4,7 +4,7 @@ Handles quiz generation, submission, and grading
 """
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from openai import OpenAI
 from pydantic import BaseModel
@@ -23,6 +23,7 @@ class QuestionLLM(BaseModel):
     options: Optional[List[str]] = None
     correctAnswer: Optional[str] = None
     markScheme: Optional[List[str]] = None
+    maxMarks: Optional[float] = None
     difficulty: str
 
 
@@ -108,7 +109,18 @@ class QuizService:
             f"Difficulty: {difficulty}\n\n"
             "Distribute questions across the content. "
             "For multiple choice, provide 4 options. "
-            "For short/long answers, provide detailed mark schemes."
+            "For short/long answers, provide detailed mark schemes. "
+            "For every question include a numeric `maxMarks` field indicating the total marks available. "
+            "For multiple choice questions, use 1 mark unless there is a reason to use more. "
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"    
+            "Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment."
         )
         
         try:
@@ -130,6 +142,8 @@ class QuizService:
                 lessonId=lesson_id,
                 subtopicId=subtopic_id,
                 questions=[
+                    # Determine per-question marks: prefer explicit mark scheme length,
+                    # otherwise fall back to sensible defaults by type.
                     Question(
                         questionId=f"q{i+1}",
                         type=q.type,
@@ -137,11 +151,12 @@ class QuizService:
                         options=q.options,
                         correctAnswer=q.correctAnswer,
                         markScheme=q.markScheme,
+                        maxMarks=float(q.maxMarks),
                         difficulty=q.difficulty
                     )
                     for i, q in enumerate(llm_quiz.questions)
                 ],
-                createdAt=datetime.utcnow()
+                createdAt=datetime.now(timezone.utc)
             )
             
             created_quiz = self.cosmos.create_item("Quizzes", quiz)
@@ -183,7 +198,6 @@ class QuizService:
         for resp in responses:
             question_id = resp.get("questionId")
             user_answer = resp.get("userAnswer")
-            user_bullets = resp.get("userBulletPoints", [])
             
             question = next(
                 (q for q in quiz.questions if q.questionId == question_id),
@@ -195,32 +209,33 @@ class QuizService:
             
             if question.type == "multiple_choice":
                 is_correct = user_answer == question.correctAnswer
+                q_max = float(question.maxMarks) if getattr(question, 'maxMarks', None) is not None else 1.0
+                awarded = q_max if is_correct else 0.0
                 graded_responses.append(QuizAttemptResponse(
                     questionId=question_id,
                     userAnswer=user_answer,
                     isCorrect=is_correct,
-                    marksAwarded=1.0 if is_correct else 0.0,
-                    maxMarks=1.0,
+                    marksAwarded=awarded,
+                    maxMarks=q_max,
                     feedback="Correct!" if is_correct else f"The correct answer is {question.correctAnswer}"
                 ))
                 if is_correct:
                     total_correct += 1
-                total_marks += 1.0 if is_correct else 0.0
-                max_marks += 1.0
+                total_marks += awarded
+                max_marks += q_max
             
             else:
                 grading = self._grade_written_answer(
                     question=question.question,
                     mark_scheme=question.markScheme or [],
                     user_answer=user_answer or "",
-                    user_bullets=user_bullets,
-                    question_type=question.type
+                    question_type=question.type,
+                    question_max_marks=getattr(question, 'maxMarks', None)
                 )
                 
                 graded_responses.append(QuizAttemptResponse(
                     questionId=question_id,
                     userAnswer=user_answer,
-                    userBulletPoints=user_bullets if user_bullets else None,
                     aiGeneratedAnswer=grading.generatedAnswer,
                     marksAwarded=grading.marksAwarded,
                     maxMarks=grading.maxMarks,
@@ -251,7 +266,7 @@ class QuizService:
                 "triggerTutor": trigger_tutor,
                 "weakConcepts": weak_concepts
             },
-            completedAt=datetime.utcnow()
+            completedAt=datetime.now(timezone.utc)
         )
         
         created_attempt = self.cosmos.create_item("QuizAttempts", attempt)
@@ -264,41 +279,41 @@ class QuizService:
         question: str,
         mark_scheme: List[str],
         user_answer: str,
-        user_bullets: List[str],
         question_type: str
+        ,
+        question_max_marks: Optional[float] = None
     ) -> QuizGradingLLM:
         """Grade a written answer using AI"""
         
-        max_marks = len(mark_scheme) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
+        # Prefer the explicit per-question max provided when the quiz was generated.
+        if question_max_marks is not None:
+            max_marks = float(question_max_marks)
+        else:
+            max_marks = float(len(mark_scheme)) if mark_scheme else (3.0 if question_type == "short_answer" else 6.0)
         
         generated_answer = None
-        if user_bullets:
-            gen_prompt = (
-                f"Convert these bullet points into a coherent answer:\n"
-                f"Question: {question}\n\n"
-                f"Bullet Points:\n" + "\n".join(f"- {b}" for b in user_bullets)
-            )
-            
-            gen_response = self.client.chat.completions.create(
-                model=self.deployment,
-                messages=[
-                    {"role": "system", "content": "Convert bullet points into a clear, cohesive answer."},
-                    {"role": "user", "content": gen_prompt}
-                ],
-                temperature=0.7
-            )
-            generated_answer = gen_response.choices[0].message.content
-            user_answer = generated_answer
-        
+        # Grade based only on the student's submitted answer. Bullet-point
+        # entry was removed from the backend — do not rely on any notes.
+        original_student_answer = user_answer or ""
+
         mark_scheme_text = "\n".join(f"{i+1}. {m}" for i, m in enumerate(mark_scheme))
-        
+
         grade_prompt = (
             f"Grade this answer according to the mark scheme:\n\n"
             f"Question: {question}\n\n"
             f"Mark Scheme ({max_marks} marks total):\n{mark_scheme_text}\n\n"
-            f"Student Answer: {user_answer}\n\n"
-            "Award partial marks for partially correct points. "
+            f"Student Answer: {original_student_answer}\n\n"
+            "Award partial marks for partially correct points based on the student's answer. "
             "Provide constructive feedback on what was good and what was missing."
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"    
+            "Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment."
         )
         
         try:

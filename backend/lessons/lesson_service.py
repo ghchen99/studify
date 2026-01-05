@@ -5,7 +5,7 @@ Handles lesson content generation, expansion, and management
 """
 import os
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 from pydantic import BaseModel
@@ -100,9 +100,10 @@ class LessonService:
             f"You are an expert {level} teacher. "
             "Generate comprehensive, engaging lesson content that is clear and age-appropriate. "
             "Break down complex concepts into understandable sections. "
-            "Include examples and analogies where helpful."
+            "Include examples and analogies where helpful. "
+            "Output the lesson in **Markdown format**, using proper headings, bullet points, numbered lists, and LaTeX math where appropriate."
         )
-        
+
         concepts_str = ", ".join(subtopic_item.concepts)
         user_prompt = (
             f"Create a detailed {level} lesson for:\n"
@@ -110,13 +111,31 @@ class LessonService:
             f"Topic: {lesson_plan.topic}\n"
             f"Subtopic: {subtopic_item.title}\n"
             f"Key Concepts: {concepts_str}\n\n"
-            f"The lesson should take approximately {subtopic_item.estimatedDuration} minutes. "
-            "Structure it with:\n"
-            "1. A brief introduction\n"
-            "2. 2-4 main sections covering the concepts\n"
-            "3. A concise summary\n"
-            "4. List of key terms students should know"
+            f"The lesson should take approximately {subtopic_item.estimatedDuration} minutes.\n\n"
+            "Lesson structure requirements:\n"
+            "• Use clear, descriptive section titles instead of numeric labels (avoid formats like 1.1, 1.2).\n"
+            "• Organize the lesson in a natural instructional flow that feels like a real classroom lesson.\n\n"
+            "Include the following sections:\n\n"
+            "## Introduction\n"
+            "- Briefly introduce the subtopic and explain why it is important or relevant.\n\n"
+            "## Core Lesson Sections\n"
+            "- Create 2–4 main sections, each with an engaging, meaningful heading (e.g., conceptual names, guiding questions, or real-world connections).\n"
+            "- Each section should clearly explain one or more key concepts using examples, explanations, or short activities where appropriate.\n\n"
+            "## Summary & Key Takeaways\n"
+            "- Concisely recap the most important ideas students should remember.\n\n"
+            "## Key Terms\n"
+            "- Provide a bullet-point list of essential vocabulary with brief definitions.\n\n"
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"    
+            "Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment."
         )
+
         
         try:
             completion = self.client.beta.chat.completions.parse(
@@ -227,6 +246,14 @@ class LessonService:
             "- 2-3 concrete examples\n"
             "- Step-by-step breakdowns where applicable\n"
             "- Real-world applications or analogies"
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"  
         )
         
         try:
@@ -271,7 +298,7 @@ class LessonService:
             raise ValueError(f"Lesson {lesson_id} not found")
         
         lesson.status = "completed"
-        lesson.completedAt = datetime.utcnow()
+        lesson.completedAt = datetime.now(timezone.utc)
         
         return self.cosmos.update_item("Lessons", lesson)
     

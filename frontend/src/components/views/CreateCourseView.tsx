@@ -2,39 +2,45 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
-const SUBJECTS = ['Math', 'Physics', 'Chemistry', 'Biology', 'Computer Science'];
+const SUBJECT_SUGGESTIONS = [
+  'Math',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Computer Science'
+];
+
 const LEVELS = ['GCSE', 'A-Level', 'Undergraduate'];
+
+type CreateCourseData = {
+  subject: string;
+  topic: string;
+  level: string;
+};
 
 export default function CreateCourseView({
   onCreate
 }: {
-  onCreate: (data: {
-    subject: string;
-    topic: string;
-    level: string;
-  }) => void;
+  onCreate: (data: CreateCourseData) => void;
 }) {
   const [subject, setSubject] = useState('');
   const [level, setLevel] = useState('GCSE');
   const [topicInput, setTopicInput] = useState('');
   const [topics, setTopics] = useState<string[]>([]);
-  const [focus, setFocus] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const addTopic = () => {
-    if (topicInput.trim() && !topics.includes(topicInput.trim())) {
-      setTopics([...topics, topicInput.trim()]);
-      setTopicInput('');
-    }
+    const trimmed = topicInput.trim();
+    if (!trimmed || topics.includes(trimmed)) return;
+    setTopics((prev) => [...prev, trimmed]);
+    setTopicInput('');
   };
 
-  const buildTopicString = () => {
-    return [
-      ...topics,
-      focus && `Focus on: ${focus}`
-    ]
-      .filter(Boolean)
-      .join('; ');
+  const removeTopic = (topic: string) => {
+    setTopics((prev) => prev.filter((t) => t !== topic));
   };
 
   return (
@@ -44,35 +50,23 @@ export default function CreateCourseView({
       {/* Subject */}
       <div>
         <label className="block font-medium mb-1">Subject</label>
-        <select
+        <input
+          list="subject-suggestions"
           className="w-full border rounded p-2"
+          placeholder="e.g. Mathematics, Economics, Data Science"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-        >
-          <option value="">Select a subject</option>
-          {SUBJECTS.map(s => (
-            <option key={s} value={s}>{s}</option>
+        />
+        <datalist id="subject-suggestions">
+          {SUBJECT_SUGGESTIONS.map((s) => (
+            <option key={s} value={s} />
           ))}
-        </select>
-      </div>
-
-      {/* Level */}
-      <div>
-        <label className="block font-medium mb-1">Level</label>
-        <select
-          className="w-full border rounded p-2"
-          value={level}
-          onChange={(e) => setLevel(e.target.value)}
-        >
-          {LEVELS.map(l => (
-            <option key={l}>{l}</option>
-          ))}
-        </select>
+        </datalist>
       </div>
 
       {/* Topics */}
       <div>
-        <label className="block font-medium mb-1">Topics / Subtopics</label>
+        <label className="block font-medium mb-1">Topics</label>
 
         <div className="flex gap-2">
           <input
@@ -93,40 +87,65 @@ export default function CreateCourseView({
         </div>
 
         {topics.length > 0 && (
-          <ul className="mt-2 text-sm text-gray-600 list-disc list-inside">
-            {topics.map((t) => (
-              <li key={t}>{t}</li>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {topics.map((topic) => (
+              <span
+                key={topic}
+                className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm"
+              >
+                {topic}
+                <button
+                  type="button"
+                  onClick={() => removeTopic(topic)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={14} />
+                </button>
+              </span>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
-      {/* Focus / Intent */}
+      {/* Level */}
       <div>
-        <label className="block font-medium mb-1">
-          Learning focus (optional)
-        </label>
-        <textarea
+        <label className="block font-medium mb-1">Level</label>
+        <select
           className="w-full border rounded p-2"
-          placeholder="e.g. exam-style questions, step-by-step explanations"
-          value={focus}
-          onChange={(e) => setFocus(e.target.value)}
-        />
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+        >
+          {LEVELS.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
       </div>
 
+      {/* Create Button */}
       <Button
         size="lg"
-        disabled={!subject || topics.length === 0}
-        onClick={() =>
-          onCreate({
+        disabled={!subject || topics.length === 0 || creating}
+        onClick={async () => {
+          setCreating(true);
+          await onCreate({
             subject,
             level,
-            topic: buildTopicString()
-          })
-        }
+            topic: topics.join('; ')
+          });
+          setCreating(false);
+        }}
+        className="gap-2"
       >
-        Generate Course
+        <LoadingButtonContent
+          loading={creating}
+          loadingText="Generating course..."
+          idleIcon=""
+          idleText="Generate Course"
+        />
       </Button>
+
     </div>
   );
 }

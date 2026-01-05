@@ -1,7 +1,12 @@
 export interface Subtopic {
   id: string;
   title: string;
-  status: 'not_started' | 'in_progress' | 'completed';
+  status?: 'not_started' | 'in_progress' | 'completed';
+  order?: number;
+  duration?: number | null;
+  concepts?: string[];
+  lessonId?: string | null;
+  generatedAt?: string | null;
 }
 
 export interface LessonPlan {
@@ -39,12 +44,33 @@ export interface QuizQuestion {
   question: string;
   options?: string[];
   difficulty: string;
+  maxMarks?: number;
 }
+
+export interface QuizMarkedResponse {
+  questionId: string;
+  questionText?: string; // legacy
+
+  originalQuestion?: string | null;
+  originalCorrectAnswer?: string | null;
+
+  userAnswer?: string | null;
+  
+
+  isCorrect: boolean | null;
+  marksAwarded: number;
+  maxMarks: number;
+
+  feedback: string;
+  aiGeneratedAnswer?: string | null;
+}
+
 
 export interface QuizResult {
   score: { percentage: number; marksAwarded: number; maxMarks: number };
   trigger_tutor: boolean;
   next_action: string;
   weak_concepts: string[];
-  feedback?: string; // aggregated or specific
+  mastery_level?: string;
+  responses?: QuizMarkedResponse[]; // 👈 ADD THIS
 }
