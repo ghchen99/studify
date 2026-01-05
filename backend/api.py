@@ -4,7 +4,7 @@ RESTful API for the AI-powered learning platform
 """
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, status, Depends, APIRouter, Body
-from auth import verify_access_token
+from users.auth import verify_access_token
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 import logging
@@ -44,7 +44,7 @@ app.add_middleware(
 
 api_router = APIRouter(
     prefix="/api",
-    # dependencies=[Depends(verify_access_token)]
+    dependencies=[Depends(verify_access_token)]
 )
 
 # Initialize platform

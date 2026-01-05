@@ -3,16 +3,12 @@ Learning Platform Facade
 Unified interface for all learning platform operations
 """
 import logging
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 
 from lesson_plans.lesson_plan_service import LessonPlanService
 from lessons.lesson_service import LessonService
 from quizzes.quiz_service import QuizService
 from progress.progress_service import ProgressService
-
-from shared.models import (
-    LessonPlan, LessonPlanItem
-)
 
 logger = logging.getLogger(__name__)
 
