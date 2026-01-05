@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, MessageCircle, Send, Minimize2, Maximize2 } from 'lucide-react';
+import { X, MessageCircle, Send, Minimize2, Maximize2, Trash2, Image as ImageIcon } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  image?: string; // base64 image
 }
 
 interface AITutorChatProps {
@@ -20,32 +21,48 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! I\'m your AI tutor assistant. Ask me anything about your lessons, concepts, or get help with problems you\'re working on!'
+      content:
+        "Hi! I'm your AI tutor assistant. Ask me anything about your lessons, concepts, or problems you're working on."
     }
   ]);
   const [input, setInput] = useState('');
+  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Notify parent of state changes
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     onStateChange({ isOpen, isExpanded });
   }, [isOpen, isExpanded, onStateChange]);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && !image) || loading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
+    const userMessage: Message = {
+      role: 'user',
+      content: input || 'Analyze this image',
+      ...(image && { image })
+    };
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setImage(null);
     setLoading(true);
 
     try {
@@ -57,26 +74,32 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error('Request failed');
 
       const data = await response.json();
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.content
-      };
 
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.'
-      }]);
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: data.content }
+      ]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: 'Sorry — something went wrong.' }
+      ]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearConversation = () => {
+    setMessages([
+      {
+        role: 'assistant',
+        content:
+          "Hi! I'm your AI tutor assistant. Ask me anything about your lessons, concepts, or problems you're working on."
+      }
+    ]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -86,73 +109,46 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
     }
   };
 
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    setIsExpanded(false);
-  };
-
   return (
     <>
-      {/* Floating Button - Only show when closed */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all hover:scale-110 flex items-center justify-center z-50"
-          aria-label="Open AI Tutor"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 z-50"
         >
-          <MessageCircle size={24} />
+          <MessageCircle />
         </button>
       )}
 
-      {/* Split Screen Panel */}
       {isOpen && (
         <div
-          className={`fixed top-0 right-0 h-screen bg-white shadow-2xl flex flex-col z-40 border-l transition-all duration-300 ease-in-out ${
-            isExpanded 
-              ? 'w-full md:w-3/4 lg:w-2/3' 
-              : 'w-full md:w-1/2 lg:w-2/5'
+          className={`fixed top-0 right-0 h-screen bg-white shadow-xl flex flex-col z-40 border-l transition-all ${
+            isExpanded ? 'w-full md:w-3/4 lg:w-2/3' : 'w-full md:w-1/2 lg:w-2/5'
           }`}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                <MessageCircle size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">AI Tutor</h3>
-                <p className="text-sm text-blue-100">Always here to help</p>
-              </div>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between">
+            <div>
+              <h3 className="font-semibold">AI Tutor</h3>
+              <p className="text-sm text-blue-100">Always here to help</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleExpand}
-                className="hover:bg-white/20 rounded-lg p-2 transition-colors"
-                aria-label={isExpanded ? 'Minimize' : 'Maximize'}
-              >
-                {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            <div className="flex gap-2">
+              <button onClick={clearConversation} title="Clear chat">
+                <Trash2 size={18} />
               </button>
-              <button
-                onClick={handleClose}
-                className="hover:bg-white/20 rounded-lg p-2 transition-colors"
-                aria-label="Close"
-              >
-                <X size={20} />
+              <button onClick={() => setIsExpanded(!isExpanded)}>
+                {isExpanded ? <Minimize2 /> : <Maximize2 />}
+              </button>
+              <button onClick={() => setIsOpen(false)}>
+                <X />
               </button>
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50">
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-6">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-3 ${
                     msg.role === 'user'
@@ -160,66 +156,74 @@ export default function AITutorChat({ onStateChange }: AITutorChatProps) {
                       : 'bg-white border shadow-sm'
                   }`}
                 >
+                  {msg.image && (
+                    <img
+                      src={msg.image}
+                      alt="Upload"
+                      className="rounded-lg mb-2 max-h-64"
+                    />
+                  )}
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none">
-                      <MarkdownRenderer content={msg.content} />
-                    </div>
+                    <MarkdownRenderer content={msg.content} />
                   ) : (
-                    <p className="text-base whitespace-pre-wrap">{msg.content}</p>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
                   )}
                 </div>
               </div>
             ))}
-            
+
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white border shadow-sm rounded-2xl px-5 py-3">
-                  <div className="flex gap-1.5">
-                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="h-2.5 w-2.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
+              <div className="text-sm text-gray-400">AI is typing…</div>
             )}
-            
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="p-6 border-t bg-white shadow-lg">
-            <div className="flex gap-3">
+          {/* Input */}
+          <div className="p-4 border-t bg-white">
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+            />
+
+            {image && (
+              <div className="mb-2 relative">
+                <img src={image} className="max-h-40 rounded border" />
+                <button
+                  className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full"
+                  onClick={() => setImage(null)}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImageIcon />
+              </Button>
+
               <textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={e => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
-                className="flex-1 rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[60px] max-h-[200px]"
-                disabled={loading}
+                placeholder="Ask something…"
+                className="flex-1 border rounded-lg p-3 resize-none"
                 rows={2}
               />
-              <Button
-                onClick={sendMessage}
-                disabled={!input.trim() || loading}
-                size="lg"
-                className="rounded-lg self-end h-[60px] px-6"
-              >
-                <Send size={20} />
+
+              <Button onClick={sendMessage} disabled={loading}>
+                <Send />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Press Enter to send • Shift + Enter for new line
-            </p>
           </div>
         </div>
-      )}
-
-      {/* Overlay when chat is open on mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-30 md:hidden"
-          onClick={handleClose}
-        />
       )}
     </>
   );
