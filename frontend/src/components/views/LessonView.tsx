@@ -53,8 +53,8 @@ export default function LessonView({
   return (
     <div className="max-w-4xl mx-auto px-4 pb-24 space-y-10">
       {/* Lesson Header */}
-      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4">
-        <div className="text-3xl font-bold tracking-tight">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 space-y-4">
+        <div className="text-3xl font-bold tracking-tight text-gray-900">
           <MarkdownRenderer content={lesson.subtopic} />
         </div>
 
@@ -66,7 +66,7 @@ export default function LessonView({
         <div className="pt-4">
           <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-600 transition-all duration-300"
+              className="h-full bg-sky-500 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -77,14 +77,14 @@ export default function LessonView({
       </div>
 
       {/* Section Card */}
-      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 space-y-6">
         {/* Section Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+            <span className="h-8 w-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold border border-gray-200">
               {currentIndex + 1}
             </span>
-            <h3 className="text-xl font-semibold">
+            <h3 className="text-xl font-semibold text-gray-900">
               {currentSection.title}
             </h3>
           </div>
@@ -95,16 +95,16 @@ export default function LessonView({
         </div>
 
         {/* Section Content */}
-        <div className="prose max-w-none">
+        <div className="prose max-w-none text-gray-700">
           <MarkdownRenderer content={currentSection.content} />
         </div>
 
         {/* Key Points */}
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
-          <p className="text-sm font-semibold text-blue-800 mb-2">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+          <p className="text-sm font-semibold text-gray-900 mb-2">
             Key Takeaways
           </p>
-          <ul className="list-disc pl-5 space-y-2 text-sm">
+          <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
             {currentSection.keyPoints.map((kp, i) => (
               <li key={i}>
                 <MarkdownRenderer content={kp} />
@@ -120,7 +120,7 @@ export default function LessonView({
               variant="outline"
               size="sm"
               onClick={() => setExpandedDialogOpen(true)}
-              className="gap-2"
+              className="gap-2 text-sky-700 border-sky-200 hover:bg-sky-50"
             >
               📖 View Detailed Explanation
             </Button>
@@ -130,7 +130,7 @@ export default function LessonView({
               size="sm"
               onClick={() => handleExpand(currentSection.sectionId)}
               disabled={loadingId === currentSection.sectionId}
-              className="gap-2"
+              className="gap-2 text-sky-700 border-sky-200 hover:bg-sky-50"
             >
               {loadingId === currentSection.sectionId ? (
                 <>
@@ -151,12 +151,12 @@ export default function LessonView({
       <Dialog open={expandedDialogOpen} onOpenChange={setExpandedDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">
+            <DialogTitle className="text-2xl text-gray-900">
               Deep Dive: {currentSection.title}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="prose max-w-none mt-6">
+          <div className="prose max-w-none mt-6 text-gray-700">
             <MarkdownRenderer content={currentSection.expanded || ''} />
           </div>
         </DialogContent>

@@ -17,14 +17,16 @@ export default function QuizResultView({
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
       {/* Summary */}
       <div className="text-center space-y-4">
-        <h2 className="text-4xl font-bold tracking-tight">Quiz Complete 🎉</h2>
+        <h2 className="text-4xl font-bold tracking-tight text-gray-900">
+          Quiz Complete
+        </h2>
 
         <div className="flex justify-center">
-          <div className="h-32 w-32 rounded-full bg-blue-50 border-4 border-blue-600 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-blue-600">
+          <div className="h-32 w-32 rounded-full bg-gray-50 border-4 border-gray-300 flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold text-gray-800">
               {result.score.percentage.toFixed(1)}%
             </span>
-            <span className="text-xs text-blue-600 font-medium">Score</span>
+            <span className="text-xs text-gray-500 font-medium">Score</span>
           </div>
         </div>
 
@@ -45,17 +47,19 @@ export default function QuizResultView({
       {/* Question Feedback */}
       {result.responses && (
         <div className="space-y-6">
-          <h3 className="text-2xl font-semibold">Question Breakdown</h3>
+          <h3 className="text-2xl font-semibold text-gray-900">
+            Question Breakdown
+          </h3>
 
           {result.responses.map((r, i) => (
             <div
               key={r.questionId}
-              className="bg-white rounded-xl border shadow-sm p-6 space-y-5"
+              className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5"
             >
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="h-8 w-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-sm font-semibold">
+                  <span className="h-8 w-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-semibold border border-gray-200">
                     {i + 1}
                   </span>
                   <span className="text-sm font-medium text-gray-700">
@@ -66,10 +70,10 @@ export default function QuizResultView({
                 <span
                   className={`text-xs font-semibold px-3 py-1 rounded-full ${
                     r.isCorrect === true
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                       : r.isCorrect === false
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}
                 >
                   {r.isCorrect === true
@@ -85,7 +89,7 @@ export default function QuizResultView({
                 <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
                   Question
                 </p>
-                <div className="prose prose-sm max-w-none">
+                <div className="prose prose-sm max-w-none text-gray-700">
                   <MarkdownRenderer
                     content={
                       r.originalQuestion || r.questionText || ''
@@ -99,7 +103,7 @@ export default function QuizResultView({
                 <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
                   Your Answer
                 </p>
-                <div className="bg-gray-50 border rounded-lg p-4 prose prose-sm max-w-none">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 prose prose-sm max-w-none text-gray-700">
                   <MarkdownRenderer
                     content={r.userAnswer || '_No answer provided_'}
                   />
@@ -120,7 +124,7 @@ export default function QuizResultView({
                   <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
                     Feedback
                   </p>
-                  <div className="prose prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none text-gray-700">
                     <MarkdownRenderer content={r.feedback} />
                   </div>
                 </div>
@@ -128,11 +132,11 @@ export default function QuizResultView({
 
               {/* Model Answer */}
               {r.aiGeneratedAnswer && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-xs uppercase tracking-wide text-blue-700 mb-1">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-xs uppercase tracking-wide text-gray-700 mb-1 font-medium">
                     Model Answer
                   </p>
-                  <div className="prose prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none text-gray-700">
                     <MarkdownRenderer content={r.aiGeneratedAnswer} />
                   </div>
                 </div>
@@ -141,6 +145,13 @@ export default function QuizResultView({
           ))}
         </div>
       )}
+
+      {/* Return */}
+      <div className="flex justify-center pt-6">
+        <Button onClick={onReturnDashboard}>
+          Return to Dashboard
+        </Button>
+      </div>
     </div>
   );
 }

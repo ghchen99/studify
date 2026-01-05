@@ -246,6 +246,14 @@ class LessonService:
             "- 2-3 concrete examples\n"
             "- Step-by-step breakdowns where applicable\n"
             "- Real-world applications or analogies"
+            "Formatting and style guidelines:\n"
+            "- Use Markdown for all formatting.\n"
+            "- Use `#` and `##` for headings and subheadings.\n"
+            "- Use `-` or `*` for bullet points.\n"
+            "- Use `1.` for numbered lists only when sequence matters.\n"
+            "- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n"
+            "- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n"
+            "- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n"  
         )
         
         try:
