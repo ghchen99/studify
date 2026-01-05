@@ -185,7 +185,7 @@ export default function Platform() {
         lesson_id: lessonId,
         subtopic_id: activeLesson?.subtopic,
         difficulty: 'mixed',
-        question_count: 3
+        question_count: 5
       });
       
       if (quizData) {
