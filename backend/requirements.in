@@ -1,0 +1,9 @@
+azure-cosmos
+azure-identity
+python-dotenv
+pydantic
+openai
+fastapi
+uvicorn
+python-jose[cryptography] 
+requests
