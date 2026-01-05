@@ -141,27 +141,6 @@ export default function QuizResultView({
           ))}
         </div>
       )}
-
-      {/* Tutor Recommendation / Next Steps */}
-      <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 space-y-4">
-        <h3 className="text-lg font-bold text-orange-800">Recommended Next Step</h3>
-
-        <p className="text-sm text-orange-700">You may benefit from revisiting these concepts:</p>
-
-        <ul className="list-disc list-inside text-sm text-orange-800">
-          {result.weak_concepts.map((c, i) => (
-            <li key={i} className="prose-sm max-w-none">
-              <MarkdownRenderer content={c} />
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex justify-center">
-          <Button size="lg" onClick={onReturnDashboard}>
-            Return to Dashboard
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
