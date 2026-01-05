@@ -3,9 +3,6 @@ Frontend Bug Fixes
 - notifications for post requests e.g., geenrating lesson for... top right panel notification
 
 - allow image upload to tutor
-- improve system prompt
-- allow math different markdown support in tutor
-- code support in tutor
 - add clear conversion
 
 - submit quiz button doesnt dynamic flex with chat
