@@ -74,5 +74,7 @@ jobs:
         with:
           app-name: 'gpt-edu-api'
           slot-name: 'Production'
+          package: .
 
           
+
