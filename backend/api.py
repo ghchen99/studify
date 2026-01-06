@@ -34,6 +34,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS configuration
 allowed_origins = [
     "http://localhost:3000",
 ]
