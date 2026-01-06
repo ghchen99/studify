@@ -131,6 +131,27 @@ export default function Platform() {
     }
   };
 
+  const deleteLessonPlan = async (planId: string) => {
+    if (!account) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this course?\n\nAll lessons and progress for this course will be permanently removed.'
+    );
+
+    if (!confirmed) return;
+
+    const res = await callApi(
+      `/api/lesson-plans/${planId}?user_id=${account.localAccountId}`,
+      'DELETE'
+    );
+
+    if (res?.ok) {
+      setActivePlan(null);
+      setView('DASHBOARD');
+      await loadDashboard();
+    }
+  };
+
   const startSubtopic = async (planId: string, subtopicId: string) => {
     const isGenerated = generatedLessons.has(subtopicId);
     
@@ -318,10 +339,22 @@ export default function Platform() {
       {/* PLAN DETAILS VIEW */}
       {view === 'PLAN_DETAILS' && activePlan && (
         <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h2 className="text-3xl font-bold text-gray-900">{activePlan.subject}</h2>
-            <p className="text-xl text-gray-600">{activePlan.topic}</p>
+          <div className="border-b pb-4 flex justify-between items-start">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">{activePlan.subject}</h2>
+              <p className="text-xl text-gray-600">{activePlan.topic}</p>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-gray-500 hover:text-red-600 hover:border-red-300"
+              onClick={() => deleteLessonPlan(activePlan.lesson_plan_id!)}
+            >
+              🗑 Delete Course
+            </Button>
           </div>
+
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Course Curriculum</h3>

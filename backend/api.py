@@ -219,6 +219,49 @@ async def mark_subtopic_generated(plan_id: str, subtopic_id: str, payload: Dict[
     except Exception as e:
         logger.error(f"Error marking subtopic as generated: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to mark generated: {str(e)}")
+    
+@api_router.delete(
+    "/lesson-plans/{plan_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete a lesson plan",
+    description="Delete a lesson plan and all associated lessons"
+)
+async def delete_lesson_plan(plan_id: str, user_id: str):
+    try:
+        # 🔥 Delete lessons first
+        deleted_lessons = platform.lessons.delete_lessons_for_plan(
+            user_id=user_id,
+            lesson_plan_id=plan_id
+        )
+
+        # 🔥 Delete lesson plan
+        deleted_plan = platform.lesson_plans.delete_lesson_plan(
+            user_id=user_id,
+            plan_id=plan_id
+        )
+
+        if not deleted_plan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Lesson plan not found"
+            )
+
+        return {
+            "ok": True,
+            "deletedPlanId": plan_id,
+            "deletedLessons": deleted_lessons
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting lesson plan cascade: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete lesson plan: {str(e)}"
+        )
+
+
 
 # ==================== LESSON ENDPOINTS ====================
 
