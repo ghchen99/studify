@@ -525,13 +525,6 @@ Body (JSON):
   ]
 }
 
-
-📌 Watch for:
-
-score.percentage
-
-trigger_tutor
-
 {
     "attempt_id": "3b2e3636-e5cd-4157-973e-50fbc737823b",
     "score": {
@@ -574,63 +567,3 @@ trigger_tutor
     ]
 }
 
-🔟 Start Tutor Session (Optional)
-
-Method: POST
-URL:
-
-http://localhost:8000/api/tutor/start
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "trigger": "manual",
-  "lesson_id": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-  "concept": "variables",
-  "initial_message": "I'm still confused about variables"
-}
-
-
-📌 Save session_id
-
-{
-    "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-    "message": "",
-    "context": {
-        "lessonId": "c0d45ada24971da763edd2c2f6dcd005335fdb40073e5b3b51d7343948d4fe01",
-        "subtopicId": null,
-        "questionId": null,
-        "concept": "variables"
-    }
-}
-
-1️⃣1️⃣ Send Message to Tutor
-
-Method: POST
-URL:
-
-http://localhost:8000/api/tutor/message
-
-
-Body (JSON):
-
-{
-  "user_id": "test_user_1",
-  "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-  "message": "Can you give me a simple example?"
-}
-
-1️⃣2️⃣ End Tutor Session
-
-Method: POST
-URL:
-
-http://localhost:8000/api/tutor/end/test_user_1/e601f0c6-07b5-47c7-ae64-748cf7056563
-
-{
-    "status": "resolved",
-    "session_id": "e601f0c6-07b5-47c7-ae64-748cf7056563",
-    "message": "Tutor session ended successfully"
-}
