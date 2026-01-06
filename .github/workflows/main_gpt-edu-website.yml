@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - gpt-edu-website
+name: Build and deploy Next.js app to Azure Web App - gpt-edu-website
 
 on:
   push:
@@ -18,39 +18,48 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '24.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: npm install, build, and test
+      - name: Install dependencies & build
         working-directory: frontend
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm ci
+          npm run build
 
-      - name: Upload artifact for deployment job
+      - name: Prepare standalone artifact
+        run: |
+          mkdir -p artifact
+          cp -r frontend/.next/standalone/* artifact/
+          cp -r frontend/.next/static artifact/.next/
+          cp -r frontend/public artifact/public
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: frontend
+          path: artifact
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -58,12 +67,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F4042848C0B44770A80B4054767C53EA }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E42D6B1A87D54C7395B58222256FEA6A }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'gpt-edu-website'
           slot-name: 'Production'
           package: .
-
-          
-
