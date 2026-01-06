@@ -34,6 +34,10 @@ jobs:
           npm ci
           npm run build
 
+      - name: Patch Next.js standalone server for Azure
+        run: |
+          sed -i "s/process.env.HOSTNAME || '0.0.0.0'/'0.0.0.0'/g" frontend/.next/standalone/server.js
+
       - name: Prepare standalone artifact
         run: |
           mkdir -p artifact
@@ -73,3 +77,4 @@ jobs:
           app-name: 'gpt-edu-website'
           slot-name: 'Production'
           package: .
+
