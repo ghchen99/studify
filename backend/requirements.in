@@ -4,6 +4,7 @@ python-dotenv
 pydantic
 openai
 fastapi
-uvicorn
+uvicorn[standard]
 python-jose[cryptography] 
 requests
+gunicorn
