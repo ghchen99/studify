@@ -338,3 +338,24 @@ class LessonService:
         )
         return lessons[0] if lessons else None
     
+    
+    def delete_lessons_for_plan(self, user_id: str, lesson_plan_id: str) -> int:
+        """
+        Delete all lessons associated with a lesson plan.
+        
+        Returns number of deleted lessons.
+        """
+        lessons = self.get_lessons_for_plan(user_id, lesson_plan_id)
+
+        deleted_count = 0
+        for lesson in lessons:
+            self.cosmos.delete_item(
+                container="Lessons",
+                item_id=lesson.id,
+                partition_key=user_id
+            )
+            deleted_count += 1
+
+        logger.info(f"Deleted {deleted_count} lessons for plan {lesson_plan_id}")
+        return deleted_count
+
