@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node node_modules/next/dist/bin/next start -p $PORT",
+    "start": "node node_modules/next/dist/bin/next.js start -p $PORT",
     "lint": "eslint"
   },
   "dependencies": {
