@@ -3,6 +3,16 @@
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { LessonPlan, ActiveLesson, QuizQuestion, QuizResult } from '@/types/api';
 import { LoadingButtonContent } from '@/components/ui/LoadingButtonContent';
 
@@ -31,10 +41,12 @@ export default function Platform() {
   const [activeQuiz, setActiveQuiz] = useState<{id: string, questions: QuizQuestion[]} | null>(null);
   const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
   
-  
   // Track which lessons have been generated and which is currently generating
   const [generatedLessons, setGeneratedLessons] = useState<Set<string>>(new Set());
   const [generatingLessonId, setGeneratingLessonId] = useState<string | null>(null);
+
+  // Delete confirmation dialog state
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (accounts.length > 0 && !instance.getActiveAccount()) {
@@ -131,21 +143,20 @@ export default function Platform() {
     }
   };
 
-  const deleteLessonPlan = async (planId: string) => {
-    if (!account) return;
+  const confirmDelete = (planId: string) => {
+    setDeleteTarget(planId);
+  };
 
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this course?\n\nAll lessons and progress for this course will be permanently removed.'
-    );
-
-    if (!confirmed) return;
+  const deleteLessonPlan = async () => {
+    if (!deleteTarget || !account) return;
 
     const res = await callApi(
-      `/api/lesson-plans/${planId}?user_id=${account.localAccountId}`,
+      `/api/lesson-plans/${deleteTarget}?user_id=${account.localAccountId}`,
       'DELETE'
     );
 
     if (res?.ok) {
+      setDeleteTarget(null);
       setActivePlan(null);
       setView('DASHBOARD');
       await loadDashboard();
@@ -210,15 +221,15 @@ export default function Platform() {
       });
       
       if (quizData) {
-            const normalized = (quizData.questions || []).map((q: any) => ({
-              questionId: q.questionId || q.question_id,
-              type: q.type,
-              question: q.question,
-              options: q.options,
-              difficulty: q.difficulty,
-              maxMarks: q.maxMarks ?? q.max_marks ?? (q.max ? q.max : undefined)
-            }));
-            setActiveQuiz({ id: quizData.quiz_id, questions: normalized });
+        const normalized = (quizData.questions || []).map((q: any) => ({
+          questionId: q.questionId || q.question_id,
+          type: q.type,
+          question: q.question,
+          options: q.options,
+          difficulty: q.difficulty,
+          maxMarks: q.maxMarks ?? q.max_marks ?? (q.max ? q.max : undefined)
+        }));
+        setActiveQuiz({ id: quizData.quiz_id, questions: normalized });
         setView('QUIZ');
       }
     }
@@ -237,8 +248,6 @@ export default function Platform() {
     }
   };
 
-  
-
   if (!account) return <div>Please log in</div>;
 
   return (
@@ -246,24 +255,19 @@ export default function Platform() {
       <header className="flex justify-between items-center mb-8 pb-4 border-b">
         <h1 className="text-xl font-bold text-gray-800">Learning Platform</h1>
         <div className="flex gap-4">
-            {view !== 'DASHBOARD' && (
-                <Button variant="ghost" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
-                    Back to Dashboard
-                </Button>
-            )}
-            <div className="flex items-center gap-3">
-              <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                {account.username}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-              >
-                Log out
-              </Button>
+          {view !== 'DASHBOARD' && (
+            <Button variant="ghost" onClick={() => { setView('DASHBOARD'); loadDashboard(); }}>
+              Back to Dashboard
+            </Button>
+          )}
+          <div className="flex items-center gap-3">
+            <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+              {account.username}
             </div>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              Log out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -273,65 +277,72 @@ export default function Platform() {
       {view === 'DASHBOARD' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-             <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
-             <Button onClick={() => setView('CREATE_COURSE')}>
+            <h2 className="text-2xl font-bold text-gray-900">Your Courses</h2>
+            <Button onClick={() => setView('CREATE_COURSE')}>
               + Create New Course
-              </Button>
+            </Button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-             {lessonPlans.length === 0 && !loading && (
-                <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
-                  <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    Create your first course by choosing a subject and topics you want to learn.
-                  </p>
-                  <Button size="lg" onClick={() => setView('CREATE_COURSE')}>
-                    Create Your First Course
-                  </Button>
-                </div>
-              )}
+            {lessonPlans.length === 0 && !loading && (
+              <div className="col-span-full text-center py-12 border rounded-lg bg-gray-50">
+                <h3 className="text-xl font-semibold mb-2">No courses yet</h3>
+                <p className="text-gray-600 mb-6">
+                  Create your first course by choosing a subject and topics you want to learn.
+                </p>
+                <Button size="lg" onClick={() => setView('CREATE_COURSE')}>
+                  Create Your First Course
+                </Button>
+              </div>
+            )}
              
-             {lessonPlans.map(plan => {
-               const planId = plan.lesson_plan_id || plan.id;
+            {lessonPlans.map(plan => {
+              const planId = plan.lesson_plan_id || plan.id;
                
-               return (
-                 <div 
-                   key={planId} 
-                   className="flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
-                 >
-                   <div className="mb-4">
-                      
-                      <h3 className="font-bold text-lg leading-tight text-gray-900">
-                        {plan.subject}
-                      </h3>
-                      <p className="text-sm font-medium text-gray-500 mb-3">
-                        {plan.topic}
-                      </p>
-                      
-                      {plan.description && (
-                        <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
-                          "{plan.description}"
-                        </p>
-                      )}
-                   </div>
+              return (
+                <div 
+                  key={planId} 
+                  className="relative group flex flex-col border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200"
+                >
+                  <button
+                    onClick={() => confirmDelete(planId!)}
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-white hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all rounded-full p-2 shadow-sm border border-gray-200 hover:border-red-200"
+                    aria-label="Delete course"
+                  >
+                    🗑
+                  </button>
 
-                   <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
-                      <span className="text-xs text-gray-500 font-medium">
-                        {plan.subtopic_count || 0} Lessons
-                      </span>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => viewPlanDetails(planId!)}
-                        className="text-sky-600 hover:bg-sky-50 hover:text-sky-700 transition-colors"
-                      >
-                        Open Course
-                      </Button>
-                   </div>
-                 </div>
-               );
-             })}
+                  <div className="mb-4">
+                    <h3 className="font-bold text-lg leading-tight text-gray-900">
+                      {plan.subject}
+                    </h3>
+                    <p className="text-sm font-medium text-gray-500 mb-3">
+                      {plan.topic}
+                    </p>
+                    
+                    {plan.description && (
+                      <p className="text-sm text-gray-600 line-clamp-3 mb-4 italic">
+                        "{plan.description}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {plan.subtopic_count || 0} Lessons
+                    </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => viewPlanDetails(planId!)}
+                      className="text-sky-600 hover:bg-sky-50 hover:text-sky-700 transition-colors"
+                    >
+                      Open Course
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -349,12 +360,11 @@ export default function Platform() {
               variant="outline"
               size="sm"
               className="text-gray-500 hover:text-red-600 hover:border-red-300"
-              onClick={() => deleteLessonPlan(activePlan.lesson_plan_id!)}
+              onClick={() => confirmDelete(activePlan.lesson_plan_id!)}
             >
               🗑 Delete Course
             </Button>
           </div>
-
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Course Curriculum</h3>
@@ -390,8 +400,6 @@ export default function Platform() {
                         idleText={isGenerated ? "View Lesson" : "Generate Lesson"}
                       />
                     </Button>
-
-
                   </div>
                 );
               })}
@@ -407,19 +415,19 @@ export default function Platform() {
       {/* LESSON VIEW */}
       {view === 'LESSON' && activeLesson && (
         <LessonView 
-            lesson={activeLesson} 
-            userId={account.localAccountId} 
-            onExpandSection={expandLessonSection}
-            onComplete={completeLesson}
+          lesson={activeLesson} 
+          userId={account.localAccountId} 
+          onExpandSection={expandLessonSection}
+          onComplete={completeLesson}
         />
       )}
 
       {/* QUIZ VIEW */}
       {view === 'QUIZ' && activeQuiz && (
         <QuizView 
-            quizId={activeQuiz.id} 
-            questions={activeQuiz.questions} 
-            onSubmit={submitQuiz}
+          quizId={activeQuiz.id} 
+          questions={activeQuiz.questions} 
+          onSubmit={submitQuiz}
         />
       )}
 
@@ -434,7 +442,26 @@ export default function Platform() {
         />
       )}
 
-      {/* Tutor feature removed */}
+      {/* DELETE CONFIRMATION DIALOG */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this course?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the course, all lessons, and your progress. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteLessonPlan}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Course
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
