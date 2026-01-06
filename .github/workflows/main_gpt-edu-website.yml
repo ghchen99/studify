@@ -63,6 +63,7 @@ jobs:
         with:
           app-name: 'gpt-edu-website'
           slot-name: 'Production'
-          package: frontend
+          package: .
 
           
+
