@@ -209,3 +209,6 @@ node_modules/
 
 snap.py
 flattened_repo.txt
+
+antenv/
+__pycache__/
