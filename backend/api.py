@@ -8,6 +8,7 @@ from users.auth import verify_access_token
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 import logging
+import os
 
 from learning_platform import LearningPlatform
 from shared.models import (
@@ -33,10 +34,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+allowed_origins = [
+    "http://localhost:3000",
+]
+
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

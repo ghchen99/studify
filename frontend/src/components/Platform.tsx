@@ -70,8 +70,10 @@ export default function Platform() {
         scopes: ['api://c36c0096-67af-4aba-9b01-e9a31f550c67/access_as_user'],
         account: account!,
       });
-      
-      const res = await fetch(`http://localhost:8000${endpoint}`, {
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
+
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method,
         headers: {
           Authorization: `Bearer ${tokenRes.accessToken}`,
