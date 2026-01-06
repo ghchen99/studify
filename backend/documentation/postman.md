@@ -566,4 +566,3 @@ Body (JSON):
         "Explain how you would simplify the expression 4(2y"
     ]
 }
-
