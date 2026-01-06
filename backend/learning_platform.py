@@ -1,0 +1,311 @@
+"""
+Learning Platform Facade
+Unified interface for all learning platform operations
+"""
+import logging
+from typing import List, Dict, Any
+
+from lesson_plans.lesson_plan_service import LessonPlanService
+from lessons.lesson_service import LessonService
+from quizzes.quiz_service import QuizService
+from progress.progress_service import ProgressService
+
+logger = logging.getLogger(__name__)
+
+
+class LearningPlatform:
+    """
+    Unified interface for the learning platform
+    
+    This facade simplifies frontend interactions by providing
+    a single entry point for all learning operations.
+    """
+    
+    def __init__(self):
+        self.lesson_plans = LessonPlanService()
+        self.lessons = LessonService()
+        self.quizzes = QuizService()
+        self.progress = ProgressService()
+    
+    # ==================== LESSON PLAN WORKFLOWS ====================
+    
+    def create_lesson_plan(
+        self,
+        user_id: str,
+        subject: str,
+        topic: str,
+        level: str = "GCSE",
+        auto_approve: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Create a new lesson plan
+        
+        Args:
+            user_id: User identifier
+            subject: Subject name (e.g., "Math", "Biology")
+            topic: Topic name (e.g., "Algebra", "Cell Biology")
+            level: Education level
+            auto_approve: If True, automatically approve and initialize progress
+        
+        Returns:
+            Dict with lesson plan and status
+        """
+        logger.info(f"Creating lesson plan: {subject} - {topic}")
+        
+        # Generate the lesson plan
+        lesson_plan = self.lesson_plans.generate_lesson_plan(
+            user_id=user_id,
+            subject=subject,
+            topic=topic,
+            level=level
+        )
+        
+        result = {
+            "lessonPlan": lesson_plan,
+            "subtopics": [
+                {
+                    "id": st.subtopicId,
+                    "title": st.title,
+                    "order": st.order,
+                    "duration": st.estimatedDuration,
+                    "concepts": st.concepts
+                }
+                for st in lesson_plan.structure
+            ]
+        }
+        
+        return result
+    
+    # Note: lesson-plan approval/status flow removed — plans are created without draft/approved states
+    
+    # ==================== LESSON WORKFLOWS ====================
+    
+    def start_lesson(
+        self,
+        user_id: str,
+        lesson_plan_id: str,
+        subtopic_id: str
+    ) -> Dict[str, Any]:
+        """
+        Start a lesson for a subtopic
+        
+        Args:
+            user_id: User identifier
+            lesson_plan_id: Lesson plan ID
+            subtopic_id: Subtopic ID
+        
+        Returns:
+            Dict with lesson content and metadata
+        """
+        logger.info(f"Starting lesson for subtopic: {subtopic_id}")
+        
+        # Check if lesson already exists
+        existing_lesson = self.lessons.get_lesson_for_subtopic(user_id, subtopic_id)
+        
+        if existing_lesson:
+            lesson = existing_lesson
+        else:
+            # Generate new lesson
+            lesson = self.lessons.generate_lesson(
+                user_id=user_id,
+                lesson_plan_id=lesson_plan_id,
+                subtopic_id=subtopic_id
+            )
+        
+        return {
+            "lessonId": lesson.id,
+            "subject": lesson.subject,
+            "topic": lesson.topic,
+            "subtopic": lesson.subtopic,
+            "introduction": lesson.content.get("introduction"),
+            "sections": lesson.content.get("sections"),
+            "summary": lesson.content.get("summary"),
+            "keyTerms": lesson.content.get("keyTerms"),
+            "status": lesson.status
+        }
+    
+    def expand_lesson_section(
+        self,
+        user_id: str,
+        lesson_id: str,
+        section_id: str
+    ) -> Dict[str, Any]:
+        """
+        Expand a section for more detail
+        
+        Returns:
+            Dict with expanded content
+        """
+        updated_lesson = self.lessons.expand_section(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            section_id=section_id
+        )
+        
+        # Find the expanded section
+        section = next(
+            (s for s in updated_lesson.content.get("sections", [])
+             if s.get("sectionId") == section_id),
+            None
+        )
+        
+        return {
+            "sectionId": section_id,
+            "expandedContent": section.get("expanded") if section else None
+        }
+    
+    def complete_lesson(
+        self,
+        user_id: str,
+        lesson_id: str,
+        study_time: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Mark lesson as complete and update progress
+        
+        Args:
+            user_id: User identifier
+            lesson_id: Lesson ID
+            study_time: Time spent in minutes
+        
+        Returns:
+            Dict with completion status and updated progress
+        """
+        # Mark lesson complete
+        lesson = self.lessons.mark_lesson_complete(user_id, lesson_id)
+        
+        # Update progress
+        progress = self.progress.update_lesson_completion(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            study_time=study_time
+        )
+        
+        return {
+            "lessonCompleted": True,
+            "nextAction": "quiz",
+            "progress": {
+                "percentComplete": progress.overallProgress.get("percentComplete"),
+                "totalStudyTime": progress.overallProgress.get("totalStudyTime")
+            }
+        }
+    
+    # ==================== QUIZ WORKFLOWS ====================
+    
+    def start_quiz(
+        self,
+        user_id: str,
+        lesson_id: str,
+        subtopic_id: str,
+        difficulty: str = "mixed",
+        question_count: int = 5
+    ) -> Dict[str, Any]:
+        """
+        Generate and start a quiz
+        
+        Args:
+            user_id: User identifier
+            lesson_id: Lesson ID
+            subtopic_id: Subtopic ID
+            difficulty: Difficulty level
+            question_count: Number of questions
+        
+        Returns:
+            Dict with quiz questions
+        """
+        logger.info(f"Starting quiz for lesson: {lesson_id}")
+        
+        # Generate quiz
+        quiz = self.quizzes.generate_quiz(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            subtopic_id=subtopic_id,
+            difficulty=difficulty,
+            count=question_count
+        )
+        
+        return {
+            "quizId": quiz.id,
+            "questions": [
+                {
+                    "questionId": q.questionId,
+                    "type": q.type,
+                    "question": q.question,
+                    "options": q.options if q.type == "multiple_choice" else None,
+                    "difficulty": q.difficulty,
+                    "maxMarks": q.maxMarks if getattr(q, 'maxMarks', None) is not None else None
+                }
+                for q in quiz.questions
+            ],
+            "totalQuestions": len(quiz.questions)
+        }
+    
+    def submit_quiz(
+        self,
+        user_id: str,
+        quiz_id: str,
+        responses: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Submit quiz and get results
+        
+        Args:
+            user_id: User identifier
+            quiz_id: Quiz ID
+            responses: List of responses
+        
+        Returns:
+            Dict with results and next actions
+        """
+        logger.info(f"Submitting quiz: {quiz_id}")
+        
+        # Submit and grade
+        attempt = self.quizzes.submit_quiz(
+            user_id=user_id,
+            quiz_id=quiz_id,
+            responses=responses
+        )
+        
+        # Update progress
+        progress = self.progress.update_quiz_completion(
+            user_id=user_id,
+            quiz_attempt_id=attempt.id
+        )
+        
+        # Prepare results
+        score_data = attempt.score
+        trigger_tutor = score_data.get("triggerTutor", False)
+        weak_concepts = score_data.get("weakConcepts", [])
+
+        # Fetch the original quiz so we can echo the original question and correct answer
+        quiz = self.quizzes.get_quiz(user_id=user_id, quiz_id=quiz_id)
+        question_map = {q.questionId: q for q in (quiz.questions if quiz else [])}
+
+        result = {
+            "attemptId": attempt.id,
+            "score": {
+                "percentage": score_data.get("percentage"),
+                "marksAwarded": score_data.get("marksAwarded"),
+                "maxMarks": score_data.get("maxMarks")
+            },
+            "responses": [
+                {
+                    "questionId": r.questionId,
+                    "originalQuestion": question_map.get(r.questionId).question if question_map.get(r.questionId) else None,
+                    "originalCorrectAnswer": question_map.get(r.questionId).correctAnswer if question_map.get(r.questionId) else None,
+                    "userAnswer": getattr(r, "userAnswer", None),
+                    "isCorrect": r.isCorrect,
+                    "marksAwarded": r.marksAwarded,
+                    "maxMarks": r.maxMarks,
+                    "feedback": r.feedback,
+                    "aiGeneratedAnswer": r.aiGeneratedAnswer
+                }
+                for r in attempt.responses
+            ],
+            "masteryLevel": progress.subtopicProgress.get(attempt.subtopicId, {}).get("masteryLevel"),
+            "nextAction": "continue",
+            "triggerTutor": trigger_tutor,
+            "weakConcepts": weak_concepts
+        }
+        
+        return result
