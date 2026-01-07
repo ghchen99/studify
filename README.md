@@ -1,6 +1,76 @@
-# AI Learning Platform
+# 🎓 Studify — An AI-Powered Adaptive Learning Platform
 
-An AI-powered adaptive learning platform with lesson plans, interactive lessons, quizzes, and an optional AI tutor. The system consists of a **FastAPI backend** and a **Next.js (App Router) frontend**, secured using **Microsoft Entra ID External (CIAM)**.
+**Studify** is an end-to-end AI learning platform that helps learners go from **zero to mastery** in any subject through structured courses, AI-generated lessons, adaptive quizzes, and an optional interactive AI tutor — all secured with **Microsoft Entra ID External (CIAM)** authentication.
+
+It is designed to feel like a **personalized digital classroom**: you define what you want to learn, and the platform builds, teaches, tests, and guides you step-by-step.
+
+---
+
+## 🧭 How It Works (End-to-End Experience)
+
+### 🔐 Secure Login with Microsoft Entra ID
+
+Users sign in using **Microsoft Entra External ID (CIAM)**. Authentication is handled via OAuth 2.0 / OpenID Connect, ensuring enterprise-grade security from the very first interaction.
+
+![Demo GIF](./assets/login.gif)
+
+After login, users land on their **dashboard**, where they can view all existing courses or start a new one.
+
+---
+
+### 📚 Create AI-Generated Courses in Seconds
+
+Users can create a new course by specifying:
+- **Subject**
+- **Subtopics**
+- **Difficulty level**
+
+Studify uses AI to generate a **structured curriculum** tailored to the learner’s intent and skill level.
+
+![Demo GIF](./assets/login.gif)
+
+Each course is broken down into clear, focused lessons—one per subtopic.
+
+---
+
+### 🧠 AI-Generated Lessons with an Interactive Tutor
+
+For every subtopic, Studify dynamically generates:
+- Clear explanations
+- Structured lesson sections
+- Progressive depth based on difficulty
+
+Learners can optionally enable an **AI Tutor**, which opens in a split-screen layout. The tutor can:
+- Answer questions about the lesson
+- Clarify confusing concepts
+- Accept text and image input
+
+![Demo GIF](./assets/lesson-generation.gif)
+
+---
+
+### 📝 Adaptive Quizzes to Test Understanding
+
+After completing a lesson, users can generate a **quiz** to test their understanding.  
+Questions are dynamically created based on lesson content and learning objectives.
+
+![Demo GIF](./assets/quiz.gif)
+
+---
+
+### ✅ AI Grading with Actionable Feedback
+
+Once submitted, quizzes are:
+- Automatically graded by AI
+- Evaluated for correctness and reasoning
+- Annotated with **helpful feedback and improvement advice**
+
+For incorrect answers, Studify explains:
+- Why the answer is wrong
+- What the correct approach is
+- How to avoid similar mistakes in the future
+
+![Demo GIF](./assets/quiz-grading.gif)
 
 ---
 
@@ -74,6 +144,9 @@ An AI-powered adaptive learning platform with lesson plans, interactive lessons,
 ---
 
 ## 🧠 Architecture Overview
+
+The system consists of a **FastAPI backend** and a **Next.js (App Router) frontend**, secured using **Microsoft Entra ID External (CIAM)**.
+
 
 - **Frontend**: Next.js (React, App Router) using `@azure/msal-react`
 - **Backend**: FastAPI with JWT validation via Microsoft Entra External ID
