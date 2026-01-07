@@ -2,7 +2,7 @@
 
 **Studify** is an end-to-end AI learning platform that helps learners go from **zero to mastery** in any subject through structured courses, AI-generated lessons, adaptive quizzes, and an optional interactive AI tutor — all secured with **Microsoft Entra ID External (CIAM)** authentication.
 
-It is designed to feel like a **personalized digital classroom**: you define what you want to learn, and the platform builds, teaches, tests, and guides you step-by-step.
+It is designed to feel like a **personalised digital classroom**: you define what you want to learn, and the platform builds, teaches, tests, and guides you step-by-step.
 
 ---
 
@@ -27,7 +27,7 @@ After login, users land on their **dashboard**, where they can view all existing
 
 ### 🧠 AI-Generated Lessons with an Interactive Tutor
 
-Studify uses AI to generate a **structured curriculum** tailored to the learner’s intent and skill level.
+Studify uses AI to generate a **structured curriculum** tailored to the learner's intent and skill level.
 
 Learners can optionally enable an **AI Tutor**, which opens in a split-screen layout. The tutor can:
 
@@ -71,7 +71,7 @@ For incorrect answers, Studify explains:
 - Adaptive quizzes with AI grading
 - Progress tracking
 - Optional AI Tutor chat (text + image input)
-- Secure authentication & authorization with Microsoft Entra External ID
+- Secure authentication & authorisation with Microsoft Entra External ID
 
 ---
 
@@ -140,7 +140,7 @@ The system consists of a **FastAPI backend** and a **Next.js (App Router) fronte
 
 - **Frontend**: Next.js (React, App Router) using `@azure/msal-react`
 - **Backend**: FastAPI with JWT validation via Microsoft Entra External ID
-- **Auth**: OAuth2 / OpenID Connect (Authorization Code + PKCE)
+- **Auth**: OAuth2 / OpenID Connect (Authorisation Code + PKCE)
 - **Storage**: Azure Cosmos DB
 - **AI**: Azure OpenAI APIs for content generation and grading
 
@@ -153,7 +153,7 @@ This project uses **two app registrations**:
 1. **Frontend (SPA) App Registration**
 2. **Backend (Web API) App Registration**
 
-This follows Microsoft best practices for SPA → API security.
+This follows Microsoft best practises for SPA → API security.
 
 ---
 
@@ -317,7 +317,6 @@ http://localhost:3000
 
 ---
 
-## 📜 License
+## 📜 Licence
 
-MIT License
-
+This project is licensed under the terms of the [MIT Licence](LICENSE).
