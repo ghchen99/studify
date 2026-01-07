@@ -5,8 +5,13 @@ import { ReactNode } from 'react';
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
-  title: 'gpt-edu',
-  description: 'AI-powered learning platform',
+  title: 'Studify',
+  description: 'An AI tutor for when your teacher makes zero sense.',
+  icons: {
+    icon: [
+      { url: '/logo-big.png', sizes: '32x32', type: 'image/png' },
+    ],
+  },
 };
 
 interface RootLayoutProps {
