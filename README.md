@@ -1,4 +1,4 @@
-# 🎓 Studify: An AI-Powered Adaptive Learning Platform
+# <img src="./assets/logo.png" alt="Studify Logo" width="25" height="25"> Studify: An AI-Powered Adaptive Learning Platform
 
 **Studify** is an end-to-end AI learning platform that helps learners go from **zero to mastery** in any subject through structured courses, AI-generated lessons, adaptive quizzes, and an optional interactive AI tutor — all secured with **Microsoft Entra ID External (CIAM)** authentication.
 
