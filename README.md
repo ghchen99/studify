@@ -1,4 +1,4 @@
-# <img src="./assets/logo.png" alt="Studify Logo" width="35" height="35"> Studify
+# <img src="./assets/logo.png" alt="Studify Logo" width="35" height="35"> Studify: Make Learning Great Again
 
 **Studify** is an end-to-end AI learning platform that helps learners go from **zero to mastery** in any subject through structured courses, AI-generated lessons, adaptive quizzes, and an optional interactive AI tutor — all secured with **Microsoft Entra ID External (CIAM)** authentication.
 
