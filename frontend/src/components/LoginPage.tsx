@@ -20,19 +20,25 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300 -z-10" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-200" />
 
-      {/* Content */}
+      {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="w-full max-w-lg rounded-3xl bg-white/80 backdrop-blur-xl shadow-2xl p-10 text-center"
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="
+          w-full max-w-lg rounded-3xl
+          bg-white/75 backdrop-blur-xl
+          border border-white/40
+          shadow-[0_25px_60px_rgba(99,102,241,0.3)]
+          p-10 text-center
+        "
       >
         {/* Logo */}
         <motion.div
           animate={{ y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+          transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
           className="flex justify-center mb-6"
         >
           <Image
@@ -41,27 +47,38 @@ export default function LoginPage() {
             width={120}
             height={120}
             priority
-            className="object-contain"
+            className="object-contain drop-shadow-md"
           />
         </motion.div>
 
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to <span className="text-blue-600">Studify</span>
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">
+          Welcome to{' '}
+          <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            Studify
+          </span>
         </h1>
 
+        {/* Subheading */}
         <p className="text-gray-600 mb-8 leading-relaxed">
-          Your personalized learning hub for courses, assignments, and academic success.
+          Your AI-powered study buddy for assignments, courses,
+          and those moments when your teacher makes zero sense.
         </p>
 
         {/* Login Button */}
-        <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
+        <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
           <Button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-base font-semibold rounded-xl shadow-lg"
+            className="
+              w-full rounded-full py-4 text-base font-semibold text-white
+              bg-gradient-to-r from-indigo-500 to-purple-500
+              shadow-lg shadow-indigo-500/30
+              transition-all
+              hover:shadow-xl hover:shadow-purple-500/40
+            "
           >
-            {loading ? 'Signing in...' : 'Sign in with Microsoft'}
+            {loading ? 'Signing you in…' : 'Sign in with Microsoft'}
           </Button>
         </motion.div>
 
