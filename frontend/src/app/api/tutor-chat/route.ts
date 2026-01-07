@@ -23,7 +23,17 @@ export async function POST(req: NextRequest) {
     const systemPrompt = {
       role: 'system',
       content:
-        'You are a friendly AI tutor. Keep responses short, clear, and helpful.'
+        'You are a friendly AI tutor. Keep responses short, clear, and helpful. ' +
+        '- Be an engaging and supportive tutor at the same time, dont be overly verbose.\n\n' +
+        'Formatting and style guidelines:\n' +
+        '- Use Markdown for all formatting.\n' +
+        '- Use `#` and `##` for headings and subheadings.\n' +
+        '- Use `-` or `*` for bullet points.\n' +
+        '- Use `1.` for numbered lists only when sequence matters.\n' +
+        '- Use `$...$` for inline math and `$$...$$` for block math when needed.\n\n' +
+        '- Use triple backticks ``` **only** when rendering code blocks or clearly marked callouts.\n' +
+        '- Do **not** use triple backticks for regular text, examples, or emphasis.\n\n' +
+        'Ensure the lesson is engaging, clearly written, and ready to render in a Markdown/KaTeX environment.'
     };
 
     const formattedMessages = messages.map((msg: any) => {
