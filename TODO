@@ -1,8 +1,2 @@
-- [ ] try signing up with another email and viewing data
-- [ ] delete lesson plans option
-- [ ] containerise backend & frontend
-- [ ] CI/CD to deploy & reference env variables
-- [ ] Update auth URLs as needed and sort out CORS?
-- [ ] Recorded demo
 - [ ] Platform Monitoring API gateway
 - [ ] Backend decoupling of long-running LLM API calls
