@@ -12,12 +12,6 @@ It is designed to feel like a **personalized digital classroom**: you define wha
 
 Users sign in using **Microsoft Entra External ID (CIAM)**. Authentication is handled via OAuth 2.0 / OpenID Connect, ensuring enterprise-grade security from the very first interaction.
 
-![Demo GIF](./assets/login.gif)
-
-After login, users land on their **dashboard**, where they can view all existing courses or start a new one.
-
----
-
 ### 📚 Create AI-Generated Courses in Seconds
 
 Users can create a new course by specifying:
@@ -25,22 +19,18 @@ Users can create a new course by specifying:
 - **Subtopics**
 - **Difficulty level**
 
-Studify uses AI to generate a **structured curriculum** tailored to the learner’s intent and skill level.
-
 ![Demo GIF](./assets/login.gif)
 
-Each course is broken down into clear, focused lessons—one per subtopic.
+After login, users land on their **dashboard**, where they can view all existing courses or start a new one.
 
 ---
 
 ### 🧠 AI-Generated Lessons with an Interactive Tutor
 
-For every subtopic, Studify dynamically generates:
-- Clear explanations
-- Structured lesson sections
-- Progressive depth based on difficulty
+Studify uses AI to generate a **structured curriculum** tailored to the learner’s intent and skill level.
 
 Learners can optionally enable an **AI Tutor**, which opens in a split-screen layout. The tutor can:
+
 - Answer questions about the lesson
 - Clarify confusing concepts
 - Accept text and image input
