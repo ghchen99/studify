@@ -135,8 +135,9 @@ For incorrect answers, Studify explains:
 
 ## 🧠 Architecture Overview
 
-The system consists of a **FastAPI backend** and a **Next.js (App Router) frontend**, secured using **Microsoft Entra ID External (CIAM)**.
+![System Architecture](./assets/architecture.png)
 
+The system consists of a **FastAPI backend** and a **Next.js (App Router) frontend**, secured using **Microsoft Entra ID External (CIAM)**.
 
 - **Frontend**: Next.js (React, App Router) using `@azure/msal-react`
 - **Backend**: FastAPI with JWT validation via Microsoft Entra External ID
